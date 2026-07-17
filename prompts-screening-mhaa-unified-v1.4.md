@@ -14,21 +14,22 @@ AI-component requirement of Code 4 into a positive test the model must satisfy a
 time, rather than an implicit part of the "digital and AI-delivered" phrase. Every other rule
 is unchanged from unified v1.3.
 
-**Calibration result on the 250-record EPPI seed (v1.2 actual → v1.3 projected → v1.4
-projected):**
+**Calibration result on the 462-record EPPI seed (v1.4 actual → v1.4.3 actual),
+Claude Sonnet 4 + GLM-5.2, k=5, critic = Mistral Large:**
 
-| Metric | v1.2 actual | v1.3 projected | v1.4 projected |
-|---|---|---|---|
-| Sensitivity | 1.000 | 1.000 | **1.000** |
-| Specificity | 0.840 | ~0.877 | **~0.899** |
-| Precision | 0.528 | ~0.594 | **~0.634** |
-| Cohen's κ | 0.614 | ~0.685 | **~0.740** |
-| ECE (proxy) | 0.308 | ~0.20 | **~0.15** |
-| ECE with k=5 vote share | – | – | **~0.06–0.09** (projected) |
+| Metric | v1.4 | v1.4.1 | v1.4.2 | v1.4.3 | Threshold |
+|---|---|---|---|---|---|
+| Sensitivity | 0.851 | 0.977 | 0.885 | **0.943** | ≥0.95 |
+| Specificity | 0.891 | 0.856 | 0.907 | **0.891** | — |
+| Cohen's κ | 0.660 | 0.678 | 0.713 | **0.719** | ≥0.70 |
+| ECE | 0.063 | 0.113 | 0.068 | **0.081** | ≤0.10 |
+| FN / FP | 13 / 41 | 2 / 54 | 10 / 35 | **5 / 41** | — |
 
-Edit 4 flips ~4 additional false-positives from INCLUDE_TA to EXCLUDE_TOPIC — records that are
-digital MH tools without a clearly asserted AI component. Combined with Edit 5 (v1.3), it
-should push κ above the 0.70 threshold on the 250 seed.
+v1.4 actuals are measured on `data/output/results_k5_462.jsonl` (Claude + GPT-4o-mini
+panel; sens 0.851 because GPT-4o-mini underscreenss). The v1.4 column in the earlier
+250-record projection table (sens 1.000, κ ~0.74) was a projection that did **not**
+reproduce on the 462 seed and is superseded by the measured values above. See Appendix C
+for the per-version change log and `reports/metrics.json` for the live numbers.
 
 ## Prompting framework applied
 
@@ -414,25 +415,34 @@ Same JSON schema as the primary screener, with two added fields:
 
 ## 3. Calibration against ground truth — confusion matrix
 
-Unchanged. Three thresholds: sensitivity ≥ 0.95, κ ≥ 0.70, ECE ≤ 0.10.
+Three thresholds: sensitivity ≥ 0.95, κ ≥ 0.70, ECE ≤ 0.10. Measured on the 462-record
+EPPI seed (Claude Sonnet 4 + GLM-5.2, k=5, critic = Mistral Large). Source files in
+`data/output/`; live numbers in `reports/metrics.json`.
 
-**Projected performance on 250-record EPPI seed:**
+**Confusion-matrix metrics by version (final critic-adjudicated run for each):**
 
-| Metric | v1.2 actual | v1.4 projected |
-|---|---|---|
-| TP | 38 | 38 |
-| FP | 34 | ~22–25 |
-| FN | 0 | 0 |
-| Sensitivity | 1.000 | **1.000** |
-| Specificity | 0.840 | **~0.899** |
-| Precision | 0.528 | **~0.634** |
-| Cohen's κ | 0.614 | **~0.74** |
-| ECE (single-pass proxy) | 0.308 | **~0.15** |
-| ECE with k=5 sampled vote share | – | **~0.06–0.09 (projected)** |
+| Version | TP | FP | FN | TN | Sensitivity | Specificity | Cohen's κ | ECE | Pass? |
+|---|---|---|---|---|---|---|---|---|---|
+| v1.4    | 74 | 41 | 13 | 334 | 0.851 | 0.891 | 0.660 | 0.063 | κ,ECE / sens ✗ |
+| v1.4.1  | 85 | 54 |  2 | 321 | 0.977 | 0.856 | 0.678 | 0.113 | sens / κ,ECE ✗ |
+| v1.4.2  | 77 | 35 | 10 | 340 | 0.885 | 0.907 | 0.713 | 0.068 | κ,ECE / sens ✗ |
+| v1.4.3  | 82 | 41 |  5 | 334 | 0.943 | 0.891 | 0.719 | 0.081 | κ,ECE / sens ✗ |
 
-Edit 4 targets ~4–7 additional FPs where the LLM inferred an AI component from a "digital"
-label. Combined with Edit 5 (v1.3) and the k=5 sampled pipeline (see `k5_runner.py`), all
-three protocol thresholds should clear on this seed.
+Each version's numbers come from the corresponding `results_v14X_critic_462.jsonl` file
+(`results_critic_462.jsonl` for v1.4). The earlier 250-record projection (sens 1.000,
+κ ~0.74) did not reproduce on the 462 seed and is superseded by these measured values.
+
+Per-model breakdown for v1.4.3 (from `reports/metrics.json`):
+
+| Model | Sensitivity | Specificity | κ | ECE |
+|---|---|---|---|---|
+| anthropic/claude-sonnet-4 | 0.908 | 0.899 | 0.712 | 0.080 |
+| z-ai/glm-5.2 | 0.977 | 0.883 | 0.725 | 0.099 |
+| Inter-model agreement | — | — | κ 0.889 | — |
+
+v1.4.3 clears κ (0.719 ≥ 0.70) and ECE (0.081 ≤ 0.10); sensitivity (0.943) remains just
+below the 0.95 threshold. The 5 remaining FNs are borderline education/physical-activity
+records where both models agree on EXCLUDE (likely GT labeling lag).
 
 ## Appendix C — Change log
 

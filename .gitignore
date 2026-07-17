@@ -6,7 +6,8 @@ __pycache__/
 *.pyc
 
 # Data outputs (regenerable, large)
-data/output/
+data/output/*
+!data/output/results_v143_critic_462.jsonl
 data/checkpoints/
 data/records_*.jsonl
 data/gt_*.json
