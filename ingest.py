@@ -33,12 +33,14 @@ def _clean(v, default: str = "NA") -> str:
 
 
 def load_dataframe(path: str, header_row: int) -> pd.DataFrame:
-    """Read CSV or Excel; header_row is 0-indexed position of the header line."""
+    """Read CSV or Excel as all-string, so numeric IDs/years don't get a '.0' suffix
+    and unicode stays intact. header_row is 0-indexed position of the header line."""
     p = Path(path)
     if p.suffix.lower() in (".xlsx", ".xls"):
-        return pd.read_excel(p, header=header_row, engine="openpyxl")
+        return pd.read_excel(p, header=header_row, engine="openpyxl", dtype=str)
     if p.suffix.lower() == ".csv":
-        return pd.read_csv(p, header=header_row)
+        # encoding="utf-8" handles the BOM correctly; dtype=str prevents float coercion.
+        return pd.read_csv(p, header=header_row, dtype=str, encoding="utf-8")
     raise ValueError(f"Unsupported file type: {p.suffix}")
 
 
@@ -81,12 +83,75 @@ def build_outputs(
     return records_path, gt_path
 
 
+def build_outputs_paired(
+    df: pd.DataFrame,
+    out_dir: str,
+    col_id: str = "Item ID",
+    col_year: str = "Year",
+    col_title: str = "Title",
+    col_abstract: str = "Abstract",
+    col_decision: str = "TAS Human Coding",
+) -> tuple[Path, Path]:
+    """Build records.jsonl + gt.json from the StrongMinds paired-row CSV layout.
+
+    The StrongMinds groundtruth.csv stores each record on one row (with Item ID,
+    Title, Year, Abstract populated) and the TAS decision on the *following* row,
+    which is blank except for the decision value in `col_decision`. This function
+    walks the dataframe, and for each row where `col_id` is non-null it pairs the
+    next row's decision value.
+
+    Also writes `screening_level: "review"` into each record so the ULCM prompt
+    gets the mandatory metadata field without the caller having to pass it.
+    """
+    out = Path(out_dir)
+    out.mkdir(parents=True, exist_ok=True)
+
+    id_rows = df[df[col_id].notna()].index.tolist()
+    records: list[dict] = []
+    gt: dict[str, str] = {}
+
+    for i in id_rows:
+        rid = _clean(df[col_id].iloc[i])
+        # Decision lives on the next row (its Item ID is NaN).
+        decision = "NA"
+        if i + 1 < len(df) and pd.isna(df[col_id].iloc[i + 1]):
+            decision = _clean(df[col_decision].iloc[i + 1])
+        records.append({
+            "record_id": rid,
+            "year": _clean(df[col_year].iloc[i]),
+            "title": _clean(df[col_title].iloc[i], default=""),
+            "abstract": _clean(df[col_abstract].iloc[i]),
+            "screening_level": "review",
+        })
+        gt[rid] = decision
+
+    n = len(records)
+    records_path = out / f"records_{n}.jsonl"
+    with records_path.open("w", encoding="utf-8") as f:
+        for rec in records:
+            f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+
+    gt_path = out / f"gt_{n}.json"
+    gt_path.write_text(json.dumps(gt, ensure_ascii=False, indent=2), encoding="utf-8")
+
+    return records_path, gt_path
+
+
 def main():
     p = argparse.ArgumentParser(description="Ingest CSV/Excel → records.jsonl + gt.json for k5_runner.")
     p.add_argument("--input", required=True, help="Path to CSV or Excel file.")
     p.add_argument("--out-dir", default="data", help="Output directory.")
-    p.add_argument("--header-row", type=int, default=1,
-                   help="0-indexed header row position (default 1 for ground_truth.xlsx).")
+    p.add_argument("--format", default="auto",
+                   choices=["auto", "mhaa", "strongminds_csv"],
+                   help="Input format preset. 'strongminds_csv' uses the paired-row "
+                        "StrongMinds groundtruth.csv layout (record + decision on the "
+                        "next row). 'mhaa' is the original EPPI layout (one row per "
+                        "record with a decision column). 'auto' keeps the old behaviour "
+                        "(column flags below).")
+    p.add_argument("--header-row", type=int, default=None,
+                   help="0-indexed header row position. Defaults to 1 for 'mhaa'/'auto' "
+                        "(ground_truth.xlsx has a title row above the header) and 0 for "
+                        "'strongminds_csv' (header is the first row).")
     p.add_argument("--col-id", default="EPPI ID", help="Column for record_id.")
     p.add_argument("--col-year", default="PY", help="Column for publication year.")
     p.add_argument("--col-title", default="T1", help="Column for title.")
@@ -95,9 +160,30 @@ def main():
                    help="Ground-truth label column (set to '' to skip gt.json).")
     args = p.parse_args()
 
+    if args.header_row is None:
+        args.header_row = 0 if args.format == "strongminds_csv" else 1
+
     df = load_dataframe(args.input, args.header_row)
     print(f"Loaded {len(df)} rows, {len(df.columns)} columns: {list(df.columns)}")
 
+    if args.format == "strongminds_csv":
+        # StrongMinds paired-row layout: hard-coded column names, decision on the next row.
+        for c in ("Item ID", "Title", "Year", "Abstract", "TAS Human Coding"):
+            if c not in df.columns:
+                raise SystemExit(f"Column {c!r} not found in {list(df.columns)} "
+                                 f"(required for --format strongminds_csv)")
+        records_path, gt_path = build_outputs_paired(df, args.out_dir)
+        print(f"\nWrote {records_path}")
+        print(f"Wrote {gt_path}")
+        gt = json.loads(gt_path.read_text(encoding="utf-8"))
+        from collections import Counter
+        dist = Counter(gt.values())
+        print("\nGround-truth label distribution:")
+        for label, cnt in sorted(dist.items(), key=lambda kv: -kv[1]):
+            print(f"  {cnt:>4}  {label}")
+        return
+
+    # Original MHAA / auto path
     for c in (args.col_id, args.col_year, args.col_title, args.col_abstract):
         if c not in df.columns:
             raise SystemExit(f"Column {c!r} not found in {list(df.columns)}")

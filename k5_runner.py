@@ -59,8 +59,12 @@ except ImportError:
 # ------------------------- Utility -------------------------
 
 CODES = {
+    # MHAA
     "EXCLUDE_LANGUAGE","EXCLUDE_YEAR","EXCLUDE_POPULATION","EXCLUDE_TOPIC",
     "EXCLUDE_EVIDENCE_TYPE","EXCLUDE_DUPLICATE","INCLUDE_TA",
+    # ULCM (StrongMinds) — shares EXCLUDE_POPULATION and INCLUDE_TA with MHAA
+    "EXCLUDE_STUDY_DESIGN","EXCLUDE_INTERVENTION_TOPIC","EXCLUDE_OUTCOME",
+    "EXCLUDE_CONTEXT_GEOGRAPHY","EXCLUDE_TIME_LANGUAGE",
 }
 
 def norm(s: str) -> str:
@@ -105,31 +109,60 @@ def verify_quote(quote_field: str, title: str, abstract: str, year: str = "") ->
 
 # ------------------------- Prompt loader -------------------------
 
-SYSTEM_MSG_START_MARKER = "### System message"
-SYSTEM_MSG_END_MARKER = "### User message"
+# Flexible markers: match headings like "## System message", "### System message",
+# "# System message", possibly with trailing whitespace. The fenced block after the
+# heading may use ``` or ```text or ```json — the language tag is stripped uniformly.
+SYSTEM_MSG_START_RE = re.compile(r"^#{1,6}\s*System\s+message\s*$", re.MULTILINE | re.IGNORECASE)
+SYSTEM_MSG_END_RE = re.compile(r"^#{1,6}\s*User\s+message\s*$", re.MULTILINE | re.IGNORECASE)
 
-def _extract_fenced_block(text: str, after_marker: str) -> str:
-    """From `text`, jump past `after_marker`, return the first ``` fenced block."""
-    if after_marker not in text:
-        raise ValueError(f"Cannot find '{after_marker}' in prompt file")
-    text = text[text.index(after_marker):]
-    text = text[text.index("```")+3:]
-    text = text[:text.index("```")]
-    return text.strip()
+def _extract_fenced_block(text: str, start_re: re.Pattern[str]) -> str:
+    """Jump past the first heading matching `start_re`, return the first fenced block.
+
+    Works with ``` and ```text / ```json fences. Raises ValueError if the heading
+    or a fenced block cannot be found.
+    """
+    m = start_re.search(text)
+    if not m:
+        raise ValueError(
+            f"Cannot find heading matching {start_re.pattern!r} in prompt file"
+        )
+    text = text[m.end():]
+    # Find the first fence opening.
+    fence_m = re.search(r"^```[a-zA-Z]*\s*$", text, re.MULTILINE)
+    if not fence_m:
+        raise ValueError("Cannot find opening ``` fence after the System message heading")
+    body_start = fence_m.end()
+    close_m = re.search(r"^```\s*$", text[body_start:], re.MULTILINE)
+    if not close_m:
+        raise ValueError("Cannot find closing ``` fence for the System message block")
+    body = text[body_start: body_start + close_m.start()]
+    return body.strip()
+
+def _section_text(text: str, section_number: str) -> str:
+    """Return the slice of `text` starting at the `# N.` / `## N.` top-level section heading.
+
+    Matches a level-1 or level-2 heading (1-2 hash marks) followed by the section
+    number and a dot, e.g. `## 1.` or `# 2.`. Avoids matching deeper subsection
+    headings like `### 2. Study design` (used for criterion detail) by restricting
+    to 1-2 hashes.
+    """
+    pattern = re.compile(r"^#{1,2}\s+" + re.escape(section_number) + r"(?=\s|$)", re.MULTILINE)
+    m = pattern.search(text)
+    if m:
+        text = text[m.start():]
+    return text
 
 def load_system_message(prompt_md_path: str) -> str:
-    """Extract the ``` fenced system message from §1 (primary screener)."""
+    """Extract the fenced system message from the primary-screener section (§1)."""
     text = Path(prompt_md_path).read_text(encoding="utf-8")
-    if "## 1." in text:
-        text = text[text.index("## 1."):]
-    return _extract_fenced_block(text, SYSTEM_MSG_START_MARKER)
+    text = _section_text(text, "1.")
+    return _extract_fenced_block(text, SYSTEM_MSG_START_RE)
 
 def load_critic_message(prompt_md_path: str) -> str:
-    """Extract the ``` fenced system message from §2 (critic/adjudicator)."""
+    """Extract the fenced system message from the adjudicator/§2 section."""
     text = Path(prompt_md_path).read_text(encoding="utf-8")
-    if "## 2." in text:
-        text = text[text.index("## 2."):]
-    return _extract_fenced_block(text, SYSTEM_MSG_START_MARKER)
+    text = _section_text(text, "2.")
+    return _extract_fenced_block(text, SYSTEM_MSG_START_RE)
 
 USER_TEMPLATE = (
     "RECORD_ID: {record_id}\n\n"
@@ -152,6 +185,59 @@ CRITIC_USER_TEMPLATE = (
     "Independently re-screen this record. Confirm or override. Return the JSON object now."
 )
 
+# ULCM (StrongMinds) user-message templates. Mirrors the schema in
+# strongminds/ulcm-tas-screening-prompts-hierarchical.md §1/§2. The caller supplies
+# screening_level per record (default "review"); other metadata fields default to NA
+# since the ground-truth CSV and RIS exports don't carry them.
+ULCM_USER_TEMPLATE = (
+    "RECORD_ID: {record_id}\n\n"
+    "SCREENING_LEVEL: {screening_level}\n\n"
+    "PUBLICATION_YEAR: {year}\n\n"
+    "LANGUAGE_METADATA: {language_metadata}\n\n"
+    "TITLE: {title}\n\n"
+    "ABSTRACT: {abstract}\n\n"
+    "KEYWORDS: {keywords}\n\n"
+    "SOURCE_REVIEW_ID: {source_review_id}\n\n"
+    "SOURCE_REVIEW_IN_SCOPE: {source_review_in_scope}\n\n"
+    "Screen this record using the ULCM hierarchical TAS rules. Return the JSON object now."
+)
+
+ULCM_CRITIC_USER_TEMPLATE = (
+    "RECORD_ID: {record_id}\n\n"
+    "SCREENING_LEVEL: {screening_level}\n\n"
+    "PUBLICATION_YEAR: {year}\n\n"
+    "LANGUAGE_METADATA: {language_metadata}\n\n"
+    "TITLE: {title}\n\n"
+    "ABSTRACT: {abstract}\n\n"
+    "KEYWORDS: {keywords}\n\n"
+    "SOURCE_REVIEW_ID: {source_review_id}\n\n"
+    "SOURCE_REVIEW_IN_SCOPE: {source_review_in_scope}\n\n"
+    "PRIMARY_SCREENER_VERDICT:\n"
+    "  screening_code: {primary_code}\n"
+    "  screening_decision: {primary_decision}\n"
+    "  explanation: {primary_explanation}\n"
+    "  supporting_quote: {primary_quote}\n\n"
+    "Independently re-screen this record. Confirm or override. Return the JSON object now."
+)
+
+# Per-project config: user/critic templates, default screening_level, max_tokens.
+# max_tokens is raised for ULCM because its response schema includes a 6-step
+# hierarchical_trace with rationale + quote per step.
+PROJECT_CONFIG = {
+    "mhaa": {
+        "user_template": USER_TEMPLATE,
+        "critic_template": CRITIC_USER_TEMPLATE,
+        "screening_level": None,          # MHAA prompt doesn't use screening_level
+        "max_tokens": 1500,
+    },
+    "strongminds": {
+        "user_template": ULCM_USER_TEMPLATE,
+        "critic_template": ULCM_CRITIC_USER_TEMPLATE,
+        "screening_level": "review",      # default for the review-level GT set
+        "max_tokens": 3000,
+    },
+}
+
 # ------------------------- OpenRouter client -------------------------
 
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
@@ -167,7 +253,7 @@ def _openrouter_headers() -> dict[str, str]:
         "X-Title": os.environ.get("X_TITLE", "MHAA Screening"),
     }
 
-def call_openrouter(model: str, system: str, user: str, temperature: float) -> str:
+def call_openrouter(model: str, system: str, user: str, temperature: float, max_tokens: int = 1500) -> str:
     """Single OpenRouter chat completion. Returns raw text content."""
     import httpx
     from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
@@ -182,7 +268,7 @@ def call_openrouter(model: str, system: str, user: str, temperature: float) -> s
         payload = {
             "model": model,
             "temperature": temperature,
-            "max_tokens": 1500,
+            "max_tokens": max_tokens,
             "messages": [
                 {"role": "system", "content": system},
                 {"role": "user", "content": user},
@@ -200,9 +286,9 @@ def call_openrouter(model: str, system: str, user: str, temperature: float) -> s
 
     return _do()
 
-def dispatch(model: str, system: str, user: str, temperature: float) -> str:
+def dispatch(model: str, system: str, user: str, temperature: float, max_tokens: int = 1500) -> str:
     """Route to OpenRouter (all model families go through the same endpoint)."""
-    return call_openrouter(model, system, user, temperature)
+    return call_openrouter(model, system, user, temperature, max_tokens=max_tokens)
 
 # ------------------------- Screen one record -------------------------
 
@@ -226,17 +312,94 @@ def extract_json(text: str) -> dict[str, Any] | None:
             except Exception: return None
     return None
 
-def screen_once(system: str, record: dict, model: str, temperature: float) -> dict:
-    user = USER_TEMPLATE.format(
-        record_id=record["record_id"],
-        year=record.get("year", "NA"),
-        title=record.get("title", ""),
-        abstract=record.get("abstract", "NA"),
-    )
+def _fill_ulcm_extras(record: dict, project_cfg: dict) -> dict:
+    """Build the ULCM-specific template variables not present in a plain MHAA record.
+
+    ULCM needs screening_level, language_metadata, keywords, source_review_id,
+    source_review_in_scope. Each defaults to NA / the project default unless the
+    record JSONL carries it (so callers can override per record).
+    """
+    return {
+        "screening_level": record.get("screening_level") or project_cfg["screening_level"] or "review",
+        "language_metadata": record.get("language_metadata", "NA"),
+        "keywords": record.get("keywords", "NA"),
+        "source_review_id": record.get("source_review_id", "NA"),
+        "source_review_in_scope": record.get("source_review_in_scope", "NA"),
+    }
+
+# Field-name aliases the runner accepts when a model improvises the JSON schema.
+# Maps to the canonical top-level keys the aggregation/calibration code reads.
+_FIELD_ALIASES = {
+    "screening_code": ("final_code", "code", "screening_code"),
+    "screening_decision": ("final_decision", "decision", "screening_decision"),
+    "supporting_quote": ("quote", "supporting_quote", "evidence_quote"),
+    "explanation": ("rationale", "explanation", "summary"),
+    "needs_second_opinion": ("needs_second_opinion", "flag_for_review", "uncertain"),
+    "confidence": ("confidence", "confidence_level"),
+}
+
+def normalize_response(result: dict) -> dict:
+    """Map a model's response onto the canonical schema keys the runner depends on.
+
+    Models sometimes improvise field names (e.g. `final_code` instead of
+    `screening_code`, `quote` instead of `supporting_quote`). This copies each
+    canonical key from whichever alias is present, leaving the original keys intact
+    (so the full hierarchical_trace / scope_route / rq_tags etc. are preserved).
+
+    Also derives `screening_decision` from `screening_code` when missing, since the
+    prompt schema requires it but models occasionally omit it.
+    """
+    if not isinstance(result, dict):
+        return result
+    for canonical, aliases in _FIELD_ALIASES.items():
+        if canonical in result:
+            continue
+        for alias in aliases:
+            if alias in result and result[alias] not in (None, ""):
+                result[canonical] = result[alias]
+                break
+    # Derive screening_decision from screening_code if the model omitted it.
+    code = result.get("screening_code")
+    if code and not result.get("screening_decision"):
+        result["screening_decision"] = "INCLUDE" if code == "INCLUDE_TA" else "EXCLUDE"
+    # Pull the decisive quote from the hierarchical_trace if no top-level quote was given.
+    if not result.get("supporting_quote") or result.get("supporting_quote") == "NA":
+        trace = result.get("hierarchical_trace")
+        if isinstance(trace, dict):
+            # Find the first FAIL criterion's quote (the decisive one), else the first PASS quote.
+            decisive_quote = None
+            for key in sorted(trace.keys()):
+                crit = trace.get(key)
+                if not isinstance(crit, dict):
+                    continue
+                verdict = crit.get("verdict", "")
+                quote = crit.get("supporting_quote") or crit.get("quote")
+                if verdict == "FAIL" and quote and quote != "NA":
+                    decisive_quote = quote
+                    break
+                if verdict == "PASS" and quote and quote != "NA" and not decisive_quote:
+                    decisive_quote = quote
+            if decisive_quote:
+                result["supporting_quote"] = decisive_quote
+    return result
+
+def screen_once(system: str, record: dict, model: str, temperature: float, project: str = "mhaa") -> dict:
+    project_cfg = PROJECT_CONFIG[project]
+    template = project_cfg["user_template"]
+    fmt_kwargs = {
+        "record_id": record["record_id"],
+        "year": record.get("year", "NA"),
+        "title": record.get("title", ""),
+        "abstract": record.get("abstract", "NA"),
+    }
+    if project == "strongminds":
+        fmt_kwargs.update(_fill_ulcm_extras(record, project_cfg))
+    user = template.format(**fmt_kwargs)
     for attempt in range(2):
-        raw = dispatch(model, system, user, temperature)
+        raw = dispatch(model, system, user, temperature, max_tokens=project_cfg["max_tokens"])
         result = extract_json(raw)
         if not result: continue
+        result = normalize_response(result)
         # Verbatim-quote check
         q = result.get("supporting_quote", "NA")
         if q and q != "NA":
@@ -271,6 +434,7 @@ def screen_critic(
     primary_result: dict,
     model: str,
     temperature: float,
+    project: str = "mhaa",
 ) -> dict:
     """Adjudicate a flagged record with the §2 critic prompt.
 
@@ -278,20 +442,26 @@ def screen_critic(
     Reuses the verbatim-quote validation; on 2 failures keeps the critic's code but
     forces needs_second_opinion (escalates to human).
     """
-    user = CRITIC_USER_TEMPLATE.format(
-        record_id=record["record_id"],
-        year=record.get("year", "NA"),
-        title=record.get("title", ""),
-        abstract=record.get("abstract", "NA"),
-        primary_code=primary_result.get("screening_code", "NA"),
-        primary_decision=primary_result.get("screening_decision", "NA"),
-        primary_explanation=primary_result.get("explanation", "NA"),
-        primary_quote=primary_result.get("supporting_quote", "NA"),
-    )
+    project_cfg = PROJECT_CONFIG[project]
+    template = project_cfg["critic_template"]
+    fmt_kwargs = {
+        "record_id": record["record_id"],
+        "year": record.get("year", "NA"),
+        "title": record.get("title", ""),
+        "abstract": record.get("abstract", "NA"),
+        "primary_code": primary_result.get("screening_code", "NA"),
+        "primary_decision": primary_result.get("screening_decision", "NA"),
+        "primary_explanation": primary_result.get("explanation", "NA"),
+        "primary_quote": primary_result.get("supporting_quote", "NA"),
+    }
+    if project == "strongminds":
+        fmt_kwargs.update(_fill_ulcm_extras(record, project_cfg))
+    user = template.format(**fmt_kwargs)
     for attempt in range(2):
-        raw = dispatch(model, critic_system, user, temperature)
+        raw = dispatch(model, critic_system, user, temperature, max_tokens=project_cfg["max_tokens"])
         result = extract_json(raw)
         if not result: continue
+        result = normalize_response(result)
         q = result.get("supporting_quote", "NA")
         if q and q != "NA":
             if not verify_quote(q, record.get("title",""), record.get("abstract",""), str(record.get("year",""))):
@@ -300,8 +470,22 @@ def screen_critic(
                     continue
                 result["needs_second_opinion"] = True
                 result.setdefault("_flags", []).append("quote_validation_failed")
-        result.setdefault("adjudication", "confirm")
-        result.setdefault("overridden_code", "NA")
+        # Normalize the adjudication field. MHAA returns {adjudication: "confirm"|"override"};
+        # ULCM returns an {adjudication: {...}} object. Collapse both to the canonical
+        # top-level "confirm"/"override" string the runner stores.
+        adj = result.get("adjudication")
+        if isinstance(adj, dict):
+            # ULCM shape: {prior_disagreement_summary, hierarchy_or_carveout_issue,
+            #             final_basis, human_review_priority}. An override is signalled
+            # by the critic's screening_code differing from the primary's.
+            primary_code = primary_result.get("screening_code")
+            critic_code = result.get("screening_code", primary_code)
+            adjudication_str = "override" if critic_code != primary_code else "confirm"
+            result["adjudication"] = adjudication_str
+            result.setdefault("overridden_code", primary_code if adjudication_str == "override" else "NA")
+        else:
+            result.setdefault("adjudication", "confirm")
+            result.setdefault("overridden_code", "NA")
         result.setdefault("_model", model)
         result.setdefault("_temperature", temperature)
         return result
@@ -438,7 +622,7 @@ def process_one_record(rec: dict, system: str, critic_system: str, args) -> dict
         futures = []
         for model in args.models:
             for k in range(args.k):
-                futures.append((model, inner.submit(screen_once, system, rec, model, args.temperature)))
+                futures.append((model, inner.submit(screen_once, system, rec, model, args.temperature, args.project)))
         for model, fut in futures:
             try:
                 runs_by_model[model].append(fut.result())
@@ -472,7 +656,7 @@ def process_one_record(rec: dict, system: str, critic_system: str, args) -> dict
         }
         critic_result = screen_critic(
             critic_system, rec, primary_for_critic,
-            args.critic_model, args.temperature,
+            args.critic_model, args.temperature, args.project,
         )
         critic_block = {
             "applied": True,
@@ -545,6 +729,7 @@ def run(args):
 # ------------------------- Calibration (ECE / Brier / reliability) -------------------------
 
 LABEL_MAP = {
+    # MHAA human labels (EPPI TAS decision)
     "EXCLUDE on language":"EXCLUDE_LANGUAGE",
     "EXCLUDE on publication year (< 2015)":"EXCLUDE_YEAR",
     "EXCLUDE on population":"EXCLUDE_POPULATION",
@@ -552,6 +737,17 @@ LABEL_MAP = {
     "EXCLUDE on evidence/record type":"EXCLUDE_EVIDENCE_TYPE",
     "EXCLUDE on duplicate publication":"EXCLUDE_DUPLICATE",
     "INCLUDE on title & abstract":"INCLUDE_TA",
+    # ULCM (StrongMinds) human labels — match the project's GT CSV verbatim.
+    # EXCLUDE_POPULATION and INCLUDE_TA are shared with MHAA; the ones below are
+    # ULCM-specific. The StrongMinds CSV uses "EXCLUDE on intervention" etc.
+    "EXCLUDE on intervention":"EXCLUDE_INTERVENTION_TOPIC",
+    "EXCLUDE on study design":"EXCLUDE_STUDY_DESIGN",
+    "EXCLUDE on outcome":"EXCLUDE_OUTCOME",
+    "EXCLUDE on context/geography":"EXCLUDE_CONTEXT_GEOGRAPHY",
+    "EXCLUDE on time/language":"EXCLUDE_TIME_LANGUAGE",
+    "EXCLUDE - duplicate (provide ID in info box)":"EXCLUDE_DUPLICATE",
+    # "Screen on Title & Abstract" is the screen-stage marker (not a final decision);
+    # treat it as no label (dropped by load_ground_truth) rather than mapping it.
 }
 
 def load_ground_truth(path: str) -> dict[str, int]:
@@ -873,6 +1069,10 @@ def main():
                    help="OpenRouter model slug for the §2 critic/adjudicator, applied to flagged records.")
     p.add_argument("--uncertainty-band", nargs=2, type=float, default=[0.4, 0.6])
     p.add_argument("--workers", type=int, default=5)
+    p.add_argument("--project", type=str, default="mhaa", choices=list(PROJECT_CONFIG.keys()),
+                   help="Project adapter: selects user/critic message template, default "
+                        "screening_level, and max_tokens. 'mhaa' for the MHAA pipeline, "
+                        "'strongminds' for the ULCM adult-depression prompt set.")
     p.add_argument("--calibrate", type=str, default=None,
                    help="Instead of running, load this aggregated JSONL and compute ECE/kappa/sensitivity.")
     args = p.parse_args()

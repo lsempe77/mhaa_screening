@@ -12,8 +12,15 @@ data/checkpoints/
 data/records_*.jsonl
 data/gt_*.json
 
+# StrongMinds data outputs (regenerable, large)
+strongminds/data/output/
+strongminds/data/checkpoints/
+strongminds/data/records_*.jsonl
+strongminds/data/gt_*.json
+
 # Reports (regenerable)
 reports/
+strongminds/reports/
 
 # Temp scripts
 _*.py
