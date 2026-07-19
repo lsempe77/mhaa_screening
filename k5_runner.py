@@ -277,7 +277,7 @@ PROJECT_CONFIG = {
         "user_template": ULCM_USER_TEMPLATE,
         "critic_template": ULCM_CRITIC_USER_TEMPLATE,
         "screening_level": "review",      # default for the review-level GT set
-        "max_tokens": 3000,
+        "max_tokens": 4000,
     },
 }
 
