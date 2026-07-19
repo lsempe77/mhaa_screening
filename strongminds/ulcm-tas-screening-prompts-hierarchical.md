@@ -1,6 +1,6 @@
 ---
 title: "LLM Prompts - Title and Abstract Screening (ULCM Adult Depression Rapid Review)"
-version: "draft-v1.2"
+version: "draft-v1.1"
 project: "StrongMinds Ultra-Low-Cost Model (ULCM) for Adult Depression"
 stage: "Title and abstract screening"
 output:
@@ -379,22 +379,8 @@ CRITERION 1 - POPULATION
 
 ROUTE CHECK FIRST. Re-read the rq_tags you assigned. The population test is route-conditional: only depression-relevant adult populations pass the standard routes, but RQ11 and RQ18 have explicit carve-outs.
 
-DEPRESSION-FOCUS POSITIVE TEST (v1.2). For the standard intervention routes, the
-population must have a SUBSTANTIVE depression or common-mental-disorder focus —
-not merely mention depression among other outcomes. Apply this test:
-  - PASS: the record's population is adults with depression, depressive symptoms,
-    dysthymia, MDD, mixed anxiety-depression, common mental disorder, or elevated
-    psychological distress as a PRIMARY focus.
-  - FAIL: the record's population is a non-depression group (e.g. "prisoners",
-    "healthcare workers", "students in higher education", "medical staff",
-    "adolescent mothers") where depression is merely a co-occurring or measured
-    outcome of a non-depression primary focus. The presence of a depression
-    measure does NOT by itself make the population eligible.
-  - UNCLEAR: if the population is plausibly depression-focused but the abstract
-    does not state it explicitly, retain with uncertainty.
-
 Pass or mark unclear when the record plausibly concerns:
-- adults aged 18 or older with depression, depressive symptoms, dysthymia, MDD, mixed anxiety-depression, common mental disorder, or psychological distress AS A PRIMARY FOCUS (per the depression-focus test above);
+- adults aged 18 or older with depression, depressive symptoms, dysthymia, MDD, mixed anxiety-depression, common mental disorder, or psychological distress;
 - antenatal, perinatal, or postnatal women meeting depression criteria;
 - a mixed adult/adolescent sample for which adult subgroup reporting cannot be determined at TAS;
 - RQ11 non-case or universal-prevention populations (ONLY when an in-scope intervention reports a depression-relevant spillover outcome);
@@ -403,15 +389,7 @@ Pass or mark unclear when the record plausibly concerns:
 Fail when the text clearly shows:
 - all participants are children or adolescents under 18, with no eligible adult or perinatal component (e.g. "adolescents aged 12-17", "children with ADHD", "pediatric anxiety");
 - the sole population is a non-depression clinical group outside all ULCM routes (e.g. dementia-only, bipolar-only, schizophrenia-only, eating-disorders-only, substance-use-only) UNLESS the record also meets a route-specific carve-out (RQ7-9/12/14 dose evidence, RQ11 spillover, RQ18 measurement);
-- the population is a non-depression group (e.g. "prisoners", "healthcare workers",
-  "students", "medical staff", "adolescent mothers") where depression is merely
-  one of several measured outcomes and no depression-specific intervention is
-  studied. This is a v1.2 tightening — these records were wrongly included under
-  v1.1 because they mentioned depression without being depression-focused.
-- older adults (aged 65+) FAIL only when the record has NO depression focus
-  (e.g. "cognitive decline in healthy aging"). Older adults WITH a depression
-  focus (e.g. "depression in older adults", "dementia and depression") PASS —
-  do not exclude a depression-focused record merely for being about older adults.
+- the population is explicitly older adults (aged 65+) without a depression focus, or a population with no plausible depression-relevant outcome.
 
 Do not exclude on missing age — retain with uncertainty. Do not exclude a perinatal population for being "adult female" — perinatal women with depression are eligible.
 
@@ -442,45 +420,16 @@ ROUTE-CONDITIONAL TESTS:
 
 INTERVENTION TEST (applies only when (b) is triggered):
 
-POSITIVE INTERVENTION-SIGNAL TEST (v1.2). To PASS the intervention test, the
-record must NAME a specific psychological or psychosocial intervention type, or
-clearly describe an intervention with psychological content. Do NOT pass on the
-basis of "mentions depression" or "is a review of mental health" alone — the
-record must identify an actual intervention being studied, evaluated, or reviewed.
+Pass when a brief structured psychological intervention with human facilitation
+and plausible group/non-specialist delivery is present or cannot be ruled out.
+Eligible content includes psychoeducation, problem solving, PM+, behavioral
+activation, IPT/IPT-G, peer support, motivational interviewing, SSI, brief
+multi-session intervention, guided self-help with human support, and stepped care.
 
-Accepted positive signals (the abstract or title names at least one of):
-  - A specific intervention type: psychoeducation, problem-solving therapy or
-    Problem Management Plus (PM+), behavioral activation, interpersonal therapy
-    (IPT/IPT-G), peer support, motivational interviewing, single-session
-    intervention (SSI), brief multi-session psychological intervention, guided
-    self-help with human support, stepped or sequenced psychological care,
-    cognitive behavioral therapy (CBT), behavioral therapy, acceptance and
-    commitment therapy (ACT), mindfulness-based intervention, or a named brief
-    psychological intervention.
-  - A generic but specific phrase: "psychological intervention", "psychosocial
-    intervention", "brief intervention", "talk therapy", "counselling"
-    (delivered as an intervention, not as "lack of counselling" as a risk factor).
-  - A clearly-described intervention: even without a label, if the abstract
-    describes sessions, facilitators, groups, or a structured psychological
-    programme being delivered to participants, that is a positive signal.
-
-FAIL signals (no positive intervention signal):
-  - The record mentions depression only as an outcome of a non-psychological
-    exposure (e.g. "vegetarian diet and depression", "trace elements and
-    depression", "cutaneous leishmaniasis and depression", "spiritual health
-    and depression"). A dietary, pharmacological, environmental, or medical
-    exposure that happens to measure depression is NOT a psychological
-    intervention.
-  - The record is an epidemiology or prevalence review of depression with no
-    intervention component (this should route to RQ1, not the intervention
-    routes — if mis-routed, the intervention test correctly fails here).
-  - The record is about a general "mental health" topic (e.g. "mental health of
-    prisoners", "mental health of healthcare workers") with no named
-    psychological intervention.
-
-When the record names a psychological intervention, also check delivery format:
-pass when human facilitation and plausible group/non-specialist delivery is
-present or cannot be ruled out. Carve-outs below may override the format check.
+Fail pharmacotherapy-only, neurostimulation-only, fully digital/self-guided
+intervention without human facilitation, purely diagnostic/screening work outside
+RQ18, clearly individual specialist psychotherapy outside RQ7/RQ8/RQ9/RQ12/RQ14,
+or a topic unrelated to every ULCM route.
 
 CARVE-OUTS (override the intervention test for these routes):
 - RQ7, RQ8, RQ9, RQ12, RQ14: specialist-delivered brief/SSI/dose/stepped evidence
@@ -1006,40 +955,4 @@ precede the route-conditional tests.
   substance-use that the GT excluded on population.
 - Version bumped to draft-v1.1. No change to the response schema, exclusion codes,
   user message template, critic prompt, or calibration routine.
-
-**draft-v1.1 → draft-v1.2** (2026-07-19):
-
-v1.1 calibration on the 510-record seed: sens 0.703, κ 0.495, ECE 0.110 — improved
-on all metrics but still failing all three thresholds. Two-sided population problem:
-8/22 FNs were `EXCLUDE_POPULATION` wrongly applied to depression-in-older-adults
-records, and 22/53 FPs were population exclusions the model failed to fire
-(prisoners, healthcare workers, students, adolescent mothers where depression was
-merely a measured outcome). 28/53 FPs were `EXCLUDE on intervention` — records
-mentioning depression but studying a non-psychological exposure (diet, trace
-elements, spiritual healing, leishmaniasis).
-
-- **Criterion 1 (population): depression-focus positive test added.** The
-  population must have a SUBSTANTIVE depression/CMD focus, not merely mention
-  depression among other outcomes. Explicit FAIL signal added for non-depression
-  populations (prisoners, healthcare workers, students, medical staff, adolescent
-  mothers) where depression is merely a co-occurring outcome. Softened the
-  older-adults rule: older adults (65+) FAIL only when there is NO depression
-  focus; "depression in older adults" and "dementia and depression" now PASS.
-  **Motivation:** v1.1's older-adults rule excluded legitimate
-  depression-in-older-adults records (8 FNs), and the lack of a
-  depression-focus test let non-depression populations through (22 FPs).
-- **Criterion 3 (intervention): positive intervention-signal test added.** To
-  PASS the intervention test, the record must NAME a specific psychological/
-  psychosocial intervention type (CBT, PM+, IPT, behavioral activation, etc.) or
-  clearly describe an intervention with psychological content. Do NOT pass on
-  "mentions depression" alone. Explicit FAIL signals added for dietary,
-  pharmacological, environmental, or medical exposures that merely measure
-  depression as an outcome (vegetarian diet, trace elements, spiritual healing,
-  leishmaniasis).
-  **Motivation:** v1.1's "plausibly delivered in a group" bar was too low — the
-  model included any record mentioning depression + an exposure. The positive
-  signal test requires an actual intervention to be named.
-- Version bumped to draft-v1.2. No change to the response schema, exclusion codes,
-  user message template, critic prompt, or calibration routine. Calibrated on a
-  150-record stratified subset (no critic) for iteration speed.
 

@@ -373,12 +373,22 @@ def _fill_ulcm_extras(record: dict, project_cfg: dict) -> dict:
 # Field-name aliases the runner accepts when a model improvises the JSON schema.
 # Maps to the canonical top-level keys the aggregation/calibration code reads.
 _FIELD_ALIASES = {
-    "screening_code": ("final_code", "code", "screening_code"),
-    "screening_decision": ("final_decision", "decision", "screening_decision"),
-    "supporting_quote": ("quote", "supporting_quote", "evidence_quote"),
-    "explanation": ("rationale", "explanation", "summary"),
+    "screening_code": ("final_code", "code", "screening_code", "exclusion_code", "verdict"),
+    "screening_decision": ("final_decision", "decision", "screening_decision", "exclusion_decision"),
+    "supporting_quote": ("quote", "supporting_quote", "evidence_quote", "exclusion_reason"),
+    "explanation": ("rationale", "explanation", "summary", "reasoning", "reason"),
     "needs_second_opinion": ("needs_second_opinion", "flag_for_review", "uncertain"),
     "confidence": ("confidence", "confidence_level"),
+}
+
+# Lowercase / non-standard code strings the model may return instead of the
+# canonical EXCLUDE_* / INCLUDE_TA codes. Normalized to canonical form.
+_CODE_ALIASES = {
+    "include": "INCLUDE_TA",
+    "include_ta": "INCLUDE_TA",
+    "retain": "INCLUDE_TA",
+    "exclude": "EXCLUDE_INTERVENTION_TOPIC",  # generic exclude → least-specific code
+    "unclear": "INCLUDE_TA",  # unclear defaults to retain per the prompt's uncertainty rule
 }
 
 def normalize_response(result: dict) -> dict:
@@ -440,6 +450,14 @@ def normalize_response(result: dict) -> dict:
     # Derive the binary decision from the code.
     if code and result.get("screening_decision") not in ("INCLUDE", "EXCLUDE"):
         result["screening_decision"] = "INCLUDE" if code == "INCLUDE_TA" else "EXCLUDE"
+
+    # Normalize non-canonical code strings (e.g. "include", "exclude", "retain").
+    code = result.get("screening_code")
+    if code and isinstance(code, str):
+        normalized = _CODE_ALIASES.get(code.lower().strip())
+        if normalized:
+            result["screening_code"] = normalized
+            result["screening_decision"] = "INCLUDE" if normalized == "INCLUDE_TA" else "EXCLUDE"
 
     # Pull the decisive quote from the hierarchical_trace if no top-level quote was given.
     if not result.get("supporting_quote") or result.get("supporting_quote") == "NA":
