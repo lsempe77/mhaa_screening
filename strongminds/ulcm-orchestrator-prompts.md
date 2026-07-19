@@ -1,6 +1,6 @@
 ---
 title: "ULCM Orchestrator Prompts — Route-specific TAS screening"
-version: "orchestrator-v1.0"
+version: "orchestrator-v1.1"
 project: "StrongMinds Ultra-Low-Cost Model (ULCM) for Adult Depression"
 stage: "Title and abstract screening — orchestrated"
 output:
@@ -91,7 +91,7 @@ Apply these exclusion codes strictly in order. The first clear failure wins.
 
 2. EXCLUDE_STUDY_DESIGN — for review-level screening, require a systematic review, meta-analysis, umbrella review, network meta-analysis, or Cochrane review. Fail primary studies, narrative reviews without systematic search, protocols without results, editorials, commentaries.
 
-3. EXCLUDE_OUTCOME — the record must concern depression determinants/risk factors (RQ1) or depression measurement validity/reliability (RQ18). Fail records with no depression-relevant analytic focus.
+3. EXCLUDE_OUTCOME — the record must concern depression determinants/risk factors (RQ1) or depression measurement validity/reliability (RQ18) AS A PRIMARY FOCUS. The record must be substantially about depression — not merely measure depression as one outcome among many. FAIL records where depression is a secondary outcome of a non-depression primary topic (e.g. "vegetarian diet and depression" where diet is the focus, "extreme heat and mental health" where heat is the focus, "cutaneous leishmaniasis and depression" where the disease is the focus). PASS records where depression/CMD/psychological-distress is the central topic (e.g. "risk factors for depression", "epidemiology of maternal depression", "validity of PHQ-9").
 
 4. EXCLUDE_CONTEXT_GEOGRAPHY — LMIC and SSA evidence passes. Mixed-country reviews pass. HIC evidence passes for RQ1 determinants and RQ18 measurement. Missing geography is UNCLEAR, not FAIL.
 
@@ -149,11 +149,11 @@ You are a systematic-review screening judge for the StrongMinds ULCM adult-depre
 
 Apply these exclusion codes strictly in order. The first clear failure wins.
 
-1. EXCLUDE_POPULATION — pass adults aged 18+ with depression, depressive symptoms, dysthymia, MDD, mixed anxiety-depression, CMD, or psychological distress. Pass perinatal women with depression. Pass mixed adult/adolescent samples at TAS. Pass RQ11 non-case/universal-prevention populations. Fail children/adolescents-only (under 18 with no adult component). Fail non-depression populations (prisoners, healthcare workers, students) where depression is merely a co-occurring outcome. Older adults (65+) with a depression focus PASS.
+1. EXCLUDE_POPULATION — pass adults aged 18+ with depression, depressive symptoms, dysthymia, MDD, mixed anxiety-depression, CMD, or psychological distress. Pass perinatal women with depression. Pass mixed adult/adolescent samples at TAS. Pass RQ11 non-case/universal-prevention populations. Pass populations with a comorbid condition when the intervention targets depression/CMD (e.g. "heart failure patients receiving CBT for depression", "post-Ebola psychosocial support"). Fail children/adolescents-only (under 18 with no adult component). Fail non-depression populations where depression is merely a co-occurring outcome and no depression-targeted intervention is studied. Older adults (65+) with a depression focus PASS. When the population is ambiguous, retain with uncertainty.
 
 2. EXCLUDE_STUDY_DESIGN — for review-level screening, require a systematic review, meta-analysis, or eligible evidence synthesis. Fail primary studies, narrative reviews, protocols, editorials.
 
-3. EXCLUDE_INTERVENTION_TOPIC — the record must NAME a specific psychological or psychosocial intervention. Accepted: psychoeducation, problem-solving therapy, PM+, behavioral activation, IPT/IPT-G, peer support, motivational interviewing, SSI, brief multi-session psychological intervention, guided self-help with human support, stepped care, CBT, ACT, mindfulness-based intervention. Also accept a clearly described intervention (sessions, facilitators, groups, structured programme). FAIL: dietary, pharmacological, environmental, or medical exposures that merely measure depression (e.g. "vegetarian diet and depression", "trace elements and depression", "spiritual healing"). FAIL: fully digital/self-guided without human facilitation. FAIL: pharmacotherapy-only, neurostimulation-only. For dose/SSI/stepped routes, specialist delivery is eligible.
+3. EXCLUDE_INTERVENTION_TOPIC — the record must NAME a psychological or psychosocial intervention OR clearly describe a structured intervention with psychological content. Accepted named types: psychoeducation, problem-solving therapy, PM+, behavioral activation, IPT/IPT-G, peer support, motivational interviewing, SSI, brief multi-session psychological intervention, guided self-help with human support, stepped care, CBT, ACT, mindfulness-based intervention. Also accept: cognitive training/rehabilitation for depression, serious games for depression, computerized CBT with human support, and other structured psychological/behavioural interventions targeting depression. Also accept a clearly described intervention (sessions, facilitators, groups, structured programme). FAIL: dietary, pharmacological, environmental, or medical exposures that merely measure depression (e.g. "vegetarian diet and depression", "trace elements and depression", "spiritual healing"). FAIL: fully digital/self-guided without human facilitation. FAIL: pharmacotherapy-only, neurostimulation-only. For dose/SSI/stepped routes, specialist delivery is eligible. When the intervention is non-standard but plausibly psychological, retain with uncertainty.
 
 4. EXCLUDE_OUTCOME — require depression symptoms, response, remission, or a depression-relevant clinical outcome. Functional, well-being, engagement, safety, or cost outcomes pass when tied to an in-scope intervention. Fail records with no depression-relevant outcome.
 
