@@ -1,6 +1,6 @@
 ---
 title: "LLM Prompts - Title and Abstract Screening (ULCM Adult Depression Rapid Review)"
-version: "draft-v1.0"
+version: "draft-v1.1"
 project: "StrongMinds Ultra-Low-Cost Model (ULCM) for Adult Depression"
 stage: "Title and abstract screening"
 output:
@@ -377,14 +377,21 @@ G. Measurement route (RQ18): validity, reliability, responsiveness, or cross-cul
 
 CRITERION 1 - POPULATION
 
+ROUTE CHECK FIRST. Re-read the rq_tags you assigned. The population test is route-conditional: only depression-relevant adult populations pass the standard routes, but RQ11 and RQ18 have explicit carve-outs.
+
 Pass or mark unclear when the record plausibly concerns:
 - adults aged 18 or older with depression, depressive symptoms, dysthymia, MDD, mixed anxiety-depression, common mental disorder, or psychological distress;
 - antenatal, perinatal, or postnatal women meeting depression criteria;
 - a mixed adult/adolescent sample for which adult subgroup reporting cannot be determined at TAS;
-- RQ11 non-case or universal-prevention populations;
-- RQ18 measurement-validation populations.
+- RQ11 non-case or universal-prevention populations (ONLY when an in-scope intervention reports a depression-relevant spillover outcome);
+- RQ18 measurement-validation populations (ONLY when the record concerns validity/reliability of a depression measure).
 
-Fail only when the text clearly shows that all participants are under 18 with no eligible adult or perinatal component, or the sole population is outside all ULCM routes.
+Fail when the text clearly shows:
+- all participants are children or adolescents under 18, with no eligible adult or perinatal component (e.g. "adolescents aged 12-17", "children with ADHD", "pediatric anxiety");
+- the sole population is a non-depression clinical group outside all ULCM routes (e.g. dementia-only, bipolar-only, schizophrenia-only, eating-disorders-only, substance-use-only) UNLESS the record also meets a route-specific carve-out (RQ7-9/12/14 dose evidence, RQ11 spillover, RQ18 measurement);
+- the population is explicitly older adults (aged 65+) without a depression focus, or a population with no plausible depression-relevant outcome.
+
+Do not exclude on missing age — retain with uncertainty. Do not exclude a perinatal population for being "adult female" — perinatal women with depression are eligible.
 
 CRITERION 2 - STUDY DESIGN
 
@@ -394,11 +401,49 @@ For screening_level=primary_study, pass RCTs and other controlled designs that a
 
 CRITERION 3 - INTERVENTION OR TOPIC
 
-For standard intervention routes, pass when a brief structured psychological intervention with human facilitation and plausible group/non-specialist delivery is present or cannot be ruled out. Eligible content includes psychoeducation, problem solving, PM+, behavioral activation, IPT/IPT-G, peer support, motivational interviewing, SSI, brief multi-session intervention, guided self-help with human support, and stepped care.
+ROUTE CHECK FIRST. Before applying the intervention test, re-read the rq_tags you assigned at the top of this response. The intervention test is ROUTE-CONDITIONAL: it applies only to routes that require an intervention. Apply the test that matches the record's routes.
 
-Fail pharmacotherapy-only, neurostimulation-only, fully digital/self-guided intervention without human facilitation, purely diagnostic/screening work outside RQ18, clearly individual specialist psychotherapy outside RQ7/RQ8/RQ9/RQ12/RQ14, or a topic unrelated to every ULCM route.
+ROUTE-CONDITIONAL TESTS:
 
-Do not require an intervention for RQ1 or RQ18.
+(a) If the record's routes include ONLY RQ1 (determinants) or RQ18 (measurement):
+    SKIP the intervention test entirely. These routes do not require an intervention.
+    PASS Criterion 3. Do NOT exclude for lack of a psychological intervention,
+    lack of group format, or lack of non-specialist delivery. Examples that PASS
+    here: "genetic markers of stress generation" (RQ1 determinant), "validity of
+    PHQ-9 in LMIC populations" (RQ18 measurement), "prenatal depression with
+    comorbid diabetes" (RQ1 perinatal determinant).
+
+(b) If the record's routes include any of RQ2-RQ6, RQ10, RQ13-RQ15 (standard
+    intervention routes), OR RQ7-RQ9/RQ12/RQ14 (dose/SSI/stepped), OR RQ11
+    (spillover), OR RQ16 (cost), OR RQ17 (safety/referral):
+    APPLY the intervention test below.
+
+INTERVENTION TEST (applies only when (b) is triggered):
+
+Pass when a brief structured psychological intervention with human facilitation
+and plausible group/non-specialist delivery is present or cannot be ruled out.
+Eligible content includes psychoeducation, problem solving, PM+, behavioral
+activation, IPT/IPT-G, peer support, motivational interviewing, SSI, brief
+multi-session intervention, guided self-help with human support, and stepped care.
+
+Fail pharmacotherapy-only, neurostimulation-only, fully digital/self-guided
+intervention without human facilitation, purely diagnostic/screening work outside
+RQ18, clearly individual specialist psychotherapy outside RQ7/RQ8/RQ9/RQ12/RQ14,
+or a topic unrelated to every ULCM route.
+
+CARVE-OUTS (override the intervention test for these routes):
+- RQ7, RQ8, RQ9, RQ12, RQ14: specialist-delivered brief/SSI/dose/stepped evidence
+  may pass even though it is not group/non-specialist delivered.
+- RQ11: the spillover intervention must be an otherwise in-scope intervention, but
+  the population may be non-cases/universal-prevention.
+- RQ17: safety/referral evidence must concern lay-delivered brief psychological
+  intervention systems (no specialist-only safety evidence).
+- RQ1 and RQ18: already handled by (a) above — never apply the intervention test.
+
+IMPORTANT: A record about depression epidemiology, risk factors, determinants,
+or measurement — even if it mentions interventions only as background — must
+PASS Criterion 3 under route (a). Do not let the presence of a non-intervention
+depression review trigger an exclusion.
 
 CRITERION 4 - OUTCOME OR ANALYTIC FOCUS
 
@@ -869,4 +914,45 @@ For each output, verify programmatically that:
 9. `primary_study` records with explicit no-comparator, no-review-source, or only-review-level-RQ evidence use `EXCLUDE_STUDY_DESIGN`.
 10. Review-level RQ1 and RQ18 records are not excluded merely for lacking an intervention.
 11. Primary-study records are retained only for RQ5, RQ6, RQ7, RQ8, RQ9, RQ10, RQ12, RQ13, RQ14, or RQ16.
+
+---
+
+## Appendix — Change log
+
+**draft-v1.0 → draft-v1.1** (2026-07-19):
+
+Calibration on the 510-record ground-truth seed (Claude Sonnet 4 + GLM-5.2, k=5,
+critic = Mistral Large, temperature 0.3) revealed two dominant failure patterns
+under v1.0: 18/28 FNs were `EXCLUDE_INTERVENTION_TOPIC` wrongly applied to RQ1
+determinants / RQ18 measurement records (the "no intervention required" carve-out
+was buried at the end of Criterion 3), and 29/62 FPs were population exclusions the
+model failed to fire. v1.1 restructures both criteria to make route assignment
+precede the route-conditional tests.
+
+- **Criterion 3 (intervention/topic) restructured as route-conditional.** The model
+  must now re-read its own `rq_tags` before applying the intervention test. If the
+  record's routes include ONLY RQ1 or RQ18, the intervention test is SKIPPED and
+  Criterion 3 PASSES automatically (route (a)). The intervention test only fires
+  for route (b) — standard intervention, dose/SSI/stepped, spillover, cost, or
+  safety routes. Carve-outs (RQ7-9/12/14 specialist, RQ11 spillover, RQ17
+  lay-delivered safety) are restated as overrides, and an explicit "do not let a
+  non-intervention depression review trigger an exclusion" rule added.
+  **Motivation:** the one-line "Do not require an intervention for RQ1 or RQ18"
+  was the last sentence of Criterion 3 and the model applied the intervention test
+  before reading it. Promoting the route check to the top of the criterion forces
+  the model to resolve RQ-assignment first.
+- **Criterion 1 (population) tightened.** Added explicit fail signals matching
+  the GT's population exclusions: children/adolescents under 18 without an adult
+  component; non-depression clinical groups (dementia-only, bipolar-only,
+  schizophrenia-only, eating-disorders-only, substance-use-only) outside route
+  carve-outs; explicitly older adults (65+) without a depression focus. Made the
+  RQ11 and RQ18 population carve-outs conditional on the route actually applying
+  (e.g. RQ11 population only passes when an in-scope intervention reports a
+  depression spillover outcome). Added a positive "do not exclude perinatal
+  women" reminder.
+  **Motivation:** v1.0 said only "fail when all under 18 or outside all routes" —
+  too permissive. The model included records about pediatric ADHD, dementia, and
+  substance-use that the GT excluded on population.
+- Version bumped to draft-v1.1. No change to the response schema, exclusion codes,
+  user message template, critic prompt, or calibration routine.
 
