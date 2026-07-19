@@ -72,6 +72,10 @@ def norm(s: str) -> str:
     s = unicodedata.normalize("NFKD", s)
     s = re.sub(r"[‘’ʼʹ′`]", "'", s)
     s = re.sub(r"[‐‑‒–—―]", "-", s)
+    # PDF extraction: de-hyphenate words split across lines ("intel-\nligence" → "intelligence").
+    s = re.sub(r"-\s+", "", s)
+    # PDF extraction: strip combining marks (accents/tildes left by NFKD decomposition).
+    s = "".join(c for c in s if not unicodedata.combining(c))
     return re.sub(r"\s+", " ", s.lower()).strip()
 
 def parse_quote_fragments(q: str) -> list[str]:
@@ -99,12 +103,49 @@ def parse_quote_fragments(q: str) -> list[str]:
         frags = [q.strip().strip('"')]
     return [f for f in frags if f]
 
+# Fuzzy-match threshold: a fragment passes if its similarity to a substring of the haystack
+# is at least this high. Handles minor paraphrasing / footnote digits in full-text PDFs.
+QUOTE_FUZZY_RATIO = 0.90
+
+def _fuzzy_in_haystack(frag: str, haystack: str, ratio: float = QUOTE_FUZZY_RATIO) -> bool:
+    """True if `frag` is an exact substring of `haystack`, OR if any same-length window of
+    `haystack` has a difflib ratio >= `ratio` (catches minor PDF-extraction edits)."""
+    if frag in haystack:
+        return True
+    import difflib
+    n = len(frag)
+    if n == 0 or n > len(haystack):
+        return False
+    # Slide a window over the haystack. For efficiency, only check windows starting at
+    # positions where the first char of frag appears (common case: near-miss typo).
+    first = frag[0]
+    best = 0.0
+    for i in range(len(haystack) - n + 1):
+        if haystack[i] != first:
+            continue
+        r = difflib.SequenceMatcher(None, frag, haystack[i:i+n]).quick_ratio()
+        if r >= ratio:
+            return True
+        if r > best:
+            best = r
+    return False
+
 def verify_quote(quote_field: str, title: str, abstract: str, year: str = "") -> bool:
-    """Verify each quote fragment is an exact case-insensitive substring."""
+    """Verify each quote fragment appears verbatim (case-insensitive, normalized) in the
+    title/abstract/year text. Falls back to a fuzzy substring match (ratio >= 0.90) to
+    tolerate PDF-extraction artifacts: de-hyphenated line breaks, footnote digits attached
+    to words, combining accents. The fuzzy match only loosens rejection; it never invents
+    a match where no similar text exists."""
     haystack = norm(f"{title} {abstract} {year}")
     for frag in parse_quote_fragments(quote_field):
-        if norm(frag) not in haystack:
-            return False
+        nfrag = norm(frag)
+        if not nfrag:
+            continue
+        if nfrag in haystack:
+            continue
+        if _fuzzy_in_haystack(nfrag, haystack):
+            continue
+        return False
     return True
 
 # ------------------------- Prompt loader -------------------------
@@ -346,8 +387,11 @@ def normalize_response(result: dict) -> dict:
     canonical key from whichever alias is present, leaving the original keys intact
     (so the full hierarchical_trace / scope_route / rq_tags etc. are preserved).
 
-    Also derives `screening_decision` from `screening_code` when missing, since the
-    prompt schema requires it but models occasionally omit it.
+    Also handles two common schema conflation bugs:
+      1. Model puts a CODE (e.g. "EXCLUDE_STUDY_DESIGN") into `screening_decision`
+         instead of the binary "EXCLUDE". Detect this and route the value to
+         `screening_code`, deriving the binary from it.
+      2. Model omits `screening_decision` entirely. Derive it from `screening_code`.
     """
     if not isinstance(result, dict):
         return result
@@ -358,10 +402,62 @@ def normalize_response(result: dict) -> dict:
             if alias in result and result[alias] not in (None, ""):
                 result[canonical] = result[alias]
                 break
-    # Derive screening_decision from screening_code if the model omitted it.
+
+    # Bug 1: model put a code into screening_decision. A valid binary decision is
+    # only "INCLUDE" or "EXCLUDE"; anything else is a misrouted code.
+    decision = result.get("screening_decision")
+    if decision and decision not in ("INCLUDE", "EXCLUDE"):
+        # It's likely a code (e.g. "EXCLUDE_STUDY_DESIGN"). Promote it to screening_code
+        # if screening_code is missing, then re-derive the binary.
+        if not result.get("screening_code"):
+            result["screening_code"] = decision
+        # If we already have a screening_code, keep it; just fix the decision below.
+
+    # Derive screening_code from the hierarchical_trace if still missing. The decisive
+    # code is the first FAIL criterion's code_if_fail (or INCLUDE_TA if all PASS).
     code = result.get("screening_code")
-    if code and not result.get("screening_decision"):
+    if not code:
+        trace = result.get("hierarchical_trace")
+        if isinstance(trace, dict):
+            for key in sorted(trace.keys()):
+                crit = trace.get(key)
+                if not isinstance(crit, dict):
+                    continue
+                verdict = crit.get("verdict", "")
+                if verdict == "FAIL":
+                    fail_code = crit.get("code_if_fail") or crit.get("failed_code")
+                    if fail_code and fail_code != "NA":
+                        code = fail_code
+                        result["screening_code"] = code
+                        break
+            if not code:
+                # No FAIL found in trace → INCLUDE_TA (all PASS or NOT_EVALUATED).
+                result["screening_code"] = "INCLUDE_TA"
+                code = "INCLUDE_TA"
+
+    # Derive the binary decision from the code.
+    if code and result.get("screening_decision") not in ("INCLUDE", "EXCLUDE"):
         result["screening_decision"] = "INCLUDE" if code == "INCLUDE_TA" else "EXCLUDE"
+
+    # Pull the decisive quote from the hierarchical_trace if no top-level quote was given.
+    if not result.get("supporting_quote") or result.get("supporting_quote") == "NA":
+        trace = result.get("hierarchical_trace")
+        if isinstance(trace, dict):
+            decisive_quote = None
+            for key in sorted(trace.keys()):
+                crit = trace.get(key)
+                if not isinstance(crit, dict):
+                    continue
+                verdict = crit.get("verdict", "")
+                quote = crit.get("supporting_quote") or crit.get("quote")
+                if verdict == "FAIL" and quote and quote != "NA":
+                    decisive_quote = quote
+                    break
+                if verdict == "PASS" and quote and quote != "NA" and not decisive_quote:
+                    decisive_quote = quote
+            if decisive_quote:
+                result["supporting_quote"] = decisive_quote
+    return result
     # Pull the decisive quote from the hierarchical_trace if no top-level quote was given.
     if not result.get("supporting_quote") or result.get("supporting_quote") == "NA":
         trace = result.get("hierarchical_trace")
