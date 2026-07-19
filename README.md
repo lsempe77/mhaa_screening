@@ -1,45 +1,82 @@
-# MHAA Screening Pipeline
+# MHAA / ULCM Screening Pipeline
 
-LLM-driven title/abstract (TA) screening pipeline for the **Girl Effect Mental Health
-Anywhere Anytime (MHAA)** rapid evidence mapping on **digital and AI-enabled mental-health
-interventions for young people**.
+LLM-driven screening pipeline for two rapid evidence mappings:
 
-The pipeline screens citation records (title + abstract + year) with a panel of LLMs via
-[OpenRouter](https://openrouter.ai/), runs a k-sampled consensus vote, adjudicates
-uncertain records with a critic model, and calibrates the panel against human ground-truth
-labels (sensitivity, Cohen's κ, ECE, Brier, reliability).
+1. **MHAA** — *Girl Effect Mental Health Anywhere Anytime* rapid evidence mapping on
+   **digital and AI-enabled mental-health interventions for young people**. Supports both
+   title/abstract (TA) screening and full-text (FT) screening of PDFs.
+2. **ULCM** — *StrongMinds Ultra-Low-Cost Model* rapid review on **brief, structured
+   psychological interventions for adult depression in LMICs**. TA screening with
+   **research-question (RQ) routing**: 18 RQs across 7 routes (determinants,
+   intervention effectiveness, dose/SSI/stepped-care, spillover, cost, safety, measurement)
+   drive route-conditional exclusion logic.
 
-> **Status:** Prompt v1.4.3. On the 462-record EPPI seed (Claude Sonnet 4 + GLM-5.2,
+The pipeline screens citation records (title + abstract + year, or full PDF text) with a
+panel of LLMs via [OpenRouter](https://openrouter.ai/), runs a k-sampled consensus vote,
+adjudicates uncertain records with a critic model, and calibrates the panel against human
+ground-truth labels (sensitivity, Cohen's κ, ECE, Brier, reliability).
+
+> **MHAA status:** Prompt v1.4.3. On the 462-record EPPI seed (Claude Sonnet 4 + GLM-5.2,
 > k=5, critic = Mistral Large): sensitivity 0.943, κ 0.719, ECE 0.081 (κ and ECE PASS,
 > sensitivity just below the 0.95 threshold). See `reports/metrics.json` for the latest run.
+>
+> **GE_FTS status:** 388 PDFs screened on full text (GLM-5.2 only, k=1, temperature 0,
+> no critic). 362 INCLUDE / 26 EXCLUDE. Results in `GE_FTS/output/`; triage CSVs in
+> `GE_FTS/reports/`. Awaiting human review.
+>
+> **ULCM status:** Prompt draft-v1.1. Route-conditional intervention test (RQ1/RQ18
+> skip the intervention criterion) and tightened population fail signals. Calibration on
+> the 510-record seed in progress.
 
 ---
 
 ## What's in this folder
 
+### Core pipeline
+
 | Path | Purpose |
 |---|---|
-| `prompts-screening-mhaa-unified-v1.4.md` | **Old copy of the prompt spec** (v1.4 header, content is v1.4.3 via the change log). Kept for the git history / runners that reference this filename. |
-| `prompts/prompts-screening-mhaa-unified-v1.4.3.md` | **Current prompt spec** — primary screener (§1) + critic/adjudicator (§2) + calibration section. Identical content to the root copy; this is the canonical path for new runs. |
-| `ingest.py` | Convert an Excel/CSV screening dataset into `records_<n>.jsonl` + `gt_<n>.json` for the runner. |
-| `k5_runner.py` | **Main runner.** k-sampled screening via OpenRouter, per-model + cross-model aggregation, §2 critic adjudication on flagged records, verbatim-quote validation with re-prompt, and calibration (ECE / Brier / κ / sensitivity / per-model + inter-model breakdown). |
+| `k5_runner.py` | **Main runner.** k-sampled screening via OpenRouter, per-model + cross-model aggregation, §2 critic adjudication on flagged records, verbatim-quote validation (with PDF-aware fuzzy fallback) and re-prompt, and calibration (ECE / Brier / κ / sensitivity / per-model + inter-model breakdown). Supports both `--project mhaa` and `--project strongminds`. |
+| `ingest.py` | Convert an Excel/CSV screening dataset into `records_<n>.jsonl` + `gt_<n>.json` for the runner. MHAA + StrongMinds paired-row CSV layouts. |
+| `ingest_fts.py` | **Full-text variant.** Extract PDF text via PyMuPDF → `records_<n>.jsonl` with the full article text in the `abstract` field. Produces audit logs for missing/low-text/truncated PDFs. |
 | `merge_results.py` | Merge stored Claude runs with a new GLM-only run file and re-aggregate (no new API calls). |
 | `run_critic.py` | Re-run only the §2 critic on flagged records in an existing results JSONL (parallel). |
-| `_inspect_fp.py` | Throwaway inspection script for a single record (git-ignored pattern `_*.py`). |
+| `summarize_fts.py` | Flatten a results JSONL into a review-friendly CSV (one row per record). |
+| `generate_triage.py` | Produce `excludes_triage.csv` + `flags_triage.csv` with flag-reason classification for human review. |
+| `make_gt_from_review.py` | Convert a human-annotated CSV (with a `human_decision` column) into `gt_<n>.json` for calibration. |
+| `rerun_flagged.py` | Re-screen records that failed (parse_error / api_error) with a higher `max_tokens` override. |
+| `revalidate_quotes.py` | Re-run quote validation on stored results after `verify_quote()` improvements (no new API calls). |
+| `fix_quote_failures.py` | Re-screen `quote_validation_failed` records with cleaned (mojibake-stripped) PDF text. |
 | `requirements.txt` | Python dependencies. |
 | `.env` | `OPENROUTER_API_KEY` + OpenRouter HTTP headers (**git-ignored**). |
-| `data/ground_truth.xlsx` | Source screening dataset (EPPI export). |
-| `data/records_462.jsonl` | Ingested records for the 462-record seed. |
-| `data/gt_462.json` | Ground-truth labels (`record_id → EPPI TAS decision string`) for the 462 seed. |
-| `data/records_{10,10fn,13fn}.jsonl` | Smaller debug subsets (10-record smoke test; 10/13 false-negative slices). |
-| `data/output/*.jsonl` | Aggregated per-record results from past runs (git-ignored). |
-| `reports/` | Calibration outputs: `metrics.json`, `confusion_matrix.png`, `reliability_diagram.png`, `errors.jsonl` (git-ignored). |
+
+### Prompts
+
+| Path | Project | Purpose |
+|---|---|---|
+| `prompts/prompts-screening-mhaa-unified-v1.4.3.md` | MHAA | **TA screener (§1) + critic/adjudicator (§2) + calibration.** Hierarchical exclusion codes 1→7 with the AI-component positive test (Code 4), MH-primary test, governance/safety carve-out. Canonical path for new TA runs. |
+| `prompts-screening-mhaa-unified-v1.4.md` | MHAA | Old copy (v1.4 header, v1.4.3 body). Kept for runners that reference this filename. |
+| `prompts/prompts-screening-mhaa-fulltext-v1.md` | MHAA | **Full-text variant of v1.4.3.** Input scope changed from title+abstract to title+full PDF text. Same exclusion codes, same AI-component test, same carve-outs. Quotes may come from the body. Used for the GE_FTS run. |
+| `strongminds/ulcm-tas-screening-prompts-hierarchical.md` | ULCM | **TA screener + critic with RQ routing.** 18 RQs across 7 routes (see below). Route-conditional exclusion: RQ1 (determinants) and RQ18 (measurement) skip the intervention criterion; RQ7-9/12/14 allow specialist delivery and HIC evidence; RQ11 allows non-case populations. Supports `screening_level: review \| primary_study`. |
+
+### Data & outputs
+
+| Path | Purpose |
+|---|---|
+| `data/ground_truth.xlsx` | MHAA source screening dataset (EPPI export). |
+| `data/records_462.jsonl` | Ingested MHAA TA records (462-record seed). |
+| `data/gt_462.json` | Ground-truth labels for the 462 seed. |
+| `data/output/*.jsonl` | Aggregated per-record results from past MHAA runs (git-ignored). |
+| `reports/` | MHAA calibration outputs: `metrics.json`, `confusion_matrix.png`, `reliability_diagram.png`, `errors.jsonl` (git-ignored). |
+| `strongminds/data/` | ULCM ingested records + ground-truth (git-ignored). |
+| `strongminds/reports/` | ULCM calibration outputs (git-ignored). |
+| `GE_FTS/` | **GE full-text screening set.** `pdfs/` (388 PDFs), `references_*.csv` (Zotero export), `data/` (ingested records + audit logs), `output/` (results JSONL), `reports/` (summary + triage CSVs + review email). All git-ignored. |
 | `.kilo/` | Kilo CLI config (Agent Manager state only). |
 
-> Note on the two prompt files: `Compare-Object` on their contents returns **IDENTICAL**.
-> The root file's header still says "v1.4" but its body and change log are v1.4.3 (see the
-> change-log appendix). The `prompts/` copy is simply renamed to v1.4.3. Either path works
-> with `--prompt`; prefer the `prompts/` one for new runs.
+> Note on the two MHAA TA prompt files: `Compare-Object` on their contents returns
+> **IDENTICAL**. The root file's header still says "v1.4" but its body and change log are
+> v1.4.3. The `prompts/` copy is simply renamed to v1.4.3. Either path works with
+> `--prompt`; prefer the `prompts/` one for new runs.
 
 ---
 
@@ -202,9 +239,11 @@ Each individual run carries the fields the screener returns: `screening_code`,
 
 ---
 
-## Prompt versioning (v1.4 → v1.4.3)
+## Prompt versioning
 
-The prompt spec is a single document with two roles:
+### MHAA (v1.4 → v1.4.3, plus full-text variant)
+
+The MHAA prompt spec is a single document with two roles:
 
 - **§1 `mhaa.screening.ta`** — primary title/abstract screener. Hierarchical exclusion
   codes applied in order (1 language → 2 year → 3 population → 4 topic → 5 evidence type
@@ -215,20 +254,174 @@ The prompt spec is a single document with two roles:
 - **§2 `mhaa.screening.critic`** — second-opinion adjudicator, invoked only on flagged
   records. Re-screens from scratch, then `confirm`/`override`.
 
-See the **Appendix C — Change log** at the bottom of the prompt file for the version
+**Full-text variant** (`prompts-screening-mhaa-fulltext-v1.md`): identical criteria to
+v1.4.3, but the input scope changed from title+abstract to title+full PDF text. Verbatim
+quotes may come from the body. Used for the GE_FTS run (388 PDFs, GLM-5.2, k=1).
+
+See the **Appendix C — Change log** at the bottom of each prompt file for the version
 history and the per-version calibration on the 462-record seed.
+
+### ULCM / StrongMinds (draft-v1.0 → draft-v1.1, RQ-routed)
+
+The ULCM prompt is RQ-routed: the model assigns plausible research-question tags
+**before** applying the exclusion hierarchy, and several exclusion criteria are
+route-conditional.
+
+**Research-question routes (18 RQs across 7 routes):**
+
+| Route | RQ tags | Key scope signal |
+|---|---|---|
+| Determinants | RQ1 | Risk factors for adult depression; **no intervention required** |
+| Intervention effectiveness & design | RQ2-RQ6, RQ10, RQ13-RQ15 | Brief structured psychological intervention; group + non-specialist delivery |
+| Dose / SSI / temporal / stepped care | RQ7-RQ9, RQ12, RQ14 | Session number, timing, durability; **specialist delivery + HIC evidence eligible** |
+| Spillover | RQ11 | Effects on non-cases / households; **non-case populations eligible** |
+| Cost | RQ16 | Cost-effectiveness, resource use |
+| Safety & referral | RQ17 | Adverse events, escalation pathways for lay-delivered interventions |
+| Measurement | RQ18 | Validity/reliability of depression tools in LMICs; **no intervention required** |
+
+**Route-conditional exclusion logic (v1.1):**
+- **RQ1 and RQ18 skip the intervention criterion (Code 3)** — these routes don't require
+  a psychological intervention, so the intervention test is automatically passed.
+- **RQ7-RQ9/RQ12/RQ14 allow specialist delivery and HIC/UMIC evidence** — the standard
+  non-specialist + LMIC requirement is relaxed for dose/SSI/stepped-care questions.
+- **RQ11 allows non-case or universal-prevention populations** — the standard
+  adult-depression population requirement is relaxed for spillover evidence.
+- **RQ17 requires lay-delivered or low-resource delivery** — safety/referral evidence
+  must concern brief psychological intervention systems, not specialist clinics.
+
+The model assigns `rq_tags` (e.g. `["RQ2", "RQ13"]`) and a `stream` (Stream 1 / Stream 2 /
+Both) in its response, then walks the hierarchical codes P → S → I → O → Geo → T. The
+first clear failure wins; uncertain records are retained.
+
+v1.1 was driven by calibration on the 510-record seed: 18/28 FNs were
+`EXCLUDE_INTERVENTION_TOPIC` wrongly applied to RQ1/RQ18 records (the "no intervention
+required" carve-out was buried at the end of Criterion 3). v1.1 promotes the route check
+to the top of Criterion 3, forcing the model to resolve RQ-assignment before applying the
+intervention test.
+
+---
+
+## GE_FTS full-text screening workflow
+
+Screen a set of PDFs on their full text (not just title+abstract). Used for the GE
+Zotero reference set (388 PDFs).
+
+### 1. Ingest PDFs
+
+```powershell
+python ingest_fts.py `
+    --csv GE_FTS/references_20260718_204803.csv `
+    --pdfs-dir GE_FTS/pdfs `
+    --out-dir GE_FTS/data
+```
+
+Extracts text from each PDF via PyMuPDF, writes `records_<n>.jsonl` (full text in the
+`abstract` field), and produces audit logs: `missing_pdf.jsonl` (no PDF in Zotero),
+`truncated.jsonl` (text capped at 400k chars ≈ 100k tokens), `low_text.jsonl` (likely
+scanned images).
+
+### 2. Run full-text screening
+
+```powershell
+python k5_runner.py `
+    --prompt prompts/prompts-screening-mhaa-fulltext-v1.md `
+    --records GE_FTS/data/records_388.jsonl `
+    --out GE_FTS/output/results_fts_glm_388.jsonl `
+    --k 1 --temperature 0 `
+    --models z-ai/glm-5.2 `
+    --workers 5
+```
+
+Single-model, single-pass (k=1, temperature 0). No `--critic-model` → no §2 adjudication.
+No `--gt` → no calibration (the GE set has no human ground-truth yet).
+
+**Note on `max_tokens`:** GLM-5.2 may need `max_tokens > 1500` for long full-text records.
+If records fail with `api_error` (null content) or `parse_error` (truncated JSON), re-run
+with `rerun_flagged.py --max-tokens 4000`.
+
+### 3. Produce review artifacts
+
+```powershell
+# Flatten results → review CSV
+python summarize_fts.py `
+    --results GE_FTS/output/results_fts_glm_388.jsonl `
+    --records GE_FTS/data/records_388.jsonl `
+    --out GE_FTS/reports/summary.csv
+
+# Triage CSVs: excludes (high-stakes) + flagged INCLUDEs (with flag-reason classification)
+python generate_triage.py
+```
+
+### 4. Human review + calibration
+
+Reviewers add a `human_decision` column (INCLUDE / EXCLUDE / blank) directly to
+`summary.csv`, save as `summary_annotated.csv`, then:
+
+```powershell
+# Convert annotated CSV → ground-truth JSON
+python make_gt_from_review.py `
+    --csv GE_FTS/reports/summary_annotated.csv `
+    --out GE_FTS/data/gt_388.json
+
+# Calibrate
+python k5_runner.py --calibrate GE_FTS/output/results_fts_glm_388.jsonl --gt GE_FTS/data/gt_388.json
+```
+
+---
+
+## ULCM / StrongMinds workflow
+
+```powershell
+# 1. Ingest the StrongMinds paired-row CSV (decision on the row below each record)
+python ingest.py --input strongminds/data/groundtruth.csv --out-dir strongminds/data `
+    --format strongminds_csv
+
+# 2. Run k-sampled screening with RQ routing
+python k5_runner.py `
+    --project strongminds `
+    --prompt strongminds/ulcm-tas-screening-prompts-hierarchical.md `
+    --records strongminds/data/records_510.jsonl `
+    --gt strongminds/data/gt_510.json `
+    --out strongminds/data/output/results_k5_510.jsonl `
+    --k 5 --temperature 0.3 `
+    --models anthropic/claude-sonnet-4 z-ai/glm-5.2 `
+    --uncertainty-band 0.4 0.6 `
+    --critic-model mistralai/mistral-large `
+    --workers 5
+
+# 3. Calibrate
+python k5_runner.py --calibrate strongminds/data/output/results_k5_510.jsonl `
+    --gt strongminds/data/gt_510.json
+```
+
+The `--project strongminds` flag selects the ULCM user/critic message templates (which
+carry `screening_level`, `language_metadata`, `keywords`, `source_review_id`,
+`source_review_in_scope` fields) and raises `max_tokens` to 3000 (the ULCM response schema
+includes a 6-step `hierarchical_trace` with rationale + quote per step).
 
 ---
 
 ## Quick commands
 
 ```powershell
-# Smoke test on the 10-record subset
+# MHAA smoke test on the 10-record subset
 python k5_runner.py --prompt prompts/prompts-screening-mhaa-unified-v1.4.3.md `
     --records data/records_10.jsonl --gt data/gt_10.json `
     --out data/output/results_10.jsonl `
     --k 5 --temperature 0.5 --models z-ai/glm-5.2 --workers 5
 
-# Re-calibrate any existing results file without re-running models
+# MHAA re-calibrate any existing results file without re-running models
 python k5_runner.py --calibrate data/output/results_v143_critic_462.jsonl --gt data/gt_462.json
+
+# GE_FTS re-screen flagged records with higher max_tokens
+python rerun_flagged.py `
+    --results GE_FTS/output/results_fts_glm_388.jsonl `
+    --records GE_FTS/data/records_388.jsonl `
+    --prompt prompts/prompts-screening-mhaa-fulltext-v1.md `
+    --model z-ai/glm-5.2 --max-tokens 4000
+
+# GE_FTS re-validate quotes after verify_quote() improvements (no API calls)
+python revalidate_quotes.py `
+    --results GE_FTS/output/results_fts_glm_388.jsonl `
+    --records GE_FTS/data/records_388.jsonl
 ```
