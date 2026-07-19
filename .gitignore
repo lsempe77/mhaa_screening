@@ -24,3 +24,10 @@ strongminds/reports/
 
 # Temp scripts
 _*.py
+
+# GE_FTS data outputs (regenerable, large)
+GE_FTS/pdfs/
+GE_FTS/data/
+GE_FTS/output/
+GE_FTS/reports/
+GE_FTS/*.csv

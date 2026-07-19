@@ -114,20 +114,22 @@ def _fuzzy_in_haystack(frag: str, haystack: str, ratio: float = QUOTE_FUZZY_RATI
         return True
     import difflib
     n = len(frag)
-    if n == 0 or n > len(haystack):
+    if n == 0 or n > len(haystack) or n > 200:
+        # Skip very long fragments (unlikely verbatim quotes; avoid O(haystack×frag) scans).
         return False
     # Slide a window over the haystack. For efficiency, only check windows starting at
     # positions where the first char of frag appears (common case: near-miss typo).
     first = frag[0]
-    best = 0.0
+    max_candidates = 500  # cap to bound runtime on 400k-char full-text haystacks
+    checked = 0
     for i in range(len(haystack) - n + 1):
         if haystack[i] != first:
             continue
-        r = difflib.SequenceMatcher(None, frag, haystack[i:i+n]).quick_ratio()
-        if r >= ratio:
+        if checked >= max_candidates:
+            break
+        checked += 1
+        if difflib.SequenceMatcher(None, frag, haystack[i:i+n]).quick_ratio() >= ratio:
             return True
-        if r > best:
-            best = r
     return False
 
 def verify_quote(quote_field: str, title: str, abstract: str, year: str = "") -> bool:
@@ -443,26 +445,6 @@ def normalize_response(result: dict) -> dict:
     if not result.get("supporting_quote") or result.get("supporting_quote") == "NA":
         trace = result.get("hierarchical_trace")
         if isinstance(trace, dict):
-            decisive_quote = None
-            for key in sorted(trace.keys()):
-                crit = trace.get(key)
-                if not isinstance(crit, dict):
-                    continue
-                verdict = crit.get("verdict", "")
-                quote = crit.get("supporting_quote") or crit.get("quote")
-                if verdict == "FAIL" and quote and quote != "NA":
-                    decisive_quote = quote
-                    break
-                if verdict == "PASS" and quote and quote != "NA" and not decisive_quote:
-                    decisive_quote = quote
-            if decisive_quote:
-                result["supporting_quote"] = decisive_quote
-    return result
-    # Pull the decisive quote from the hierarchical_trace if no top-level quote was given.
-    if not result.get("supporting_quote") or result.get("supporting_quote") == "NA":
-        trace = result.get("hierarchical_trace")
-        if isinstance(trace, dict):
-            # Find the first FAIL criterion's quote (the decisive one), else the first PASS quote.
             decisive_quote = None
             for key in sorted(trace.keys()):
                 crit = trace.get(key)
