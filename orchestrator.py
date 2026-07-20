@@ -145,12 +145,16 @@ NO_INTERVENTION_ROUTES = {"determinants", "measurement"}
 def pick_screener(routes: list[str]) -> str:
     """Decide which screener to use based on the router's route assignment.
 
-    If ALL routes are no-intervention routes (determinants, measurement), use the
-    no_intervention screener. Otherwise use the intervention screener (intervention
-    routes take precedence — a record tagged both determinants+intervention needs
-    the intervention test).
+    If ALL substantive routes are no-intervention routes (determinants, measurement),
+    use the no_intervention screener. Otherwise use the intervention screener
+    (intervention routes take precedence — a record tagged both determinants+intervention
+    needs the intervention test).
+
+    `not_applicable` is ignored in the subset check: a record routed to
+    ["determinants", "not_applicable"] should go to the no_intervention screener,
+    not the intervention screener.
     """
-    route_set = set(routes)
+    route_set = set(routes) - {"not_applicable"}
     if route_set and route_set.issubset(NO_INTERVENTION_ROUTES):
         return "no_intervention"
     return "intervention"
