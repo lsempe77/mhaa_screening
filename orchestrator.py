@@ -379,8 +379,8 @@ def main():
     p.add_argument("--out", required=True, help="Output JSONL")
     p.add_argument("--k", type=int, default=5)
     p.add_argument("--temperature", type=float, default=0.3)
-    p.add_argument("--router-model", default="openai/gpt-4o-mini",
-                   help="Model for the router (cheap/fast).")
+    p.add_argument("--router-model", default="z-ai/glm-5.2",
+                   help="Model for the router. Stronger models classify routes more accurately; the router is a single call per record so the cost difference is small.")
     p.add_argument("--models", nargs="+", default=["anthropic/claude-sonnet-4", "z-ai/glm-5.2"],
                    help="Screener model slugs.")
     p.add_argument("--critic-model", default=None)
