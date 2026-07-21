@@ -453,3 +453,393 @@ python k5_runner.py --calibrate `
 
 The orchestrator defaults to `--router-model z-ai/glm-5.2` (no need to specify). The run is
 resumable — if interrupted, re-run the same command and it picks up from where it left off.
+
+---
+
+# PART II — Post-v1.6 investigation (2026-07-20)
+
+After v1.6 plateaued at κ 0.512 / sens 0.649, the question became: *why can't we reach the
+thresholds, and is the ceiling in the model or in the ground truth?* Three studies followed —
+(12) a GT-noise ceiling test, (13) few-shot exemplar retrieval + a decoding/critic ablation,
+and (14) a full-RIS deployment pilot.
+
+---
+
+## 12. GT-noise ceiling test (is the target even measurable?)
+
+**Method.** Re-adjudicated all 67 v1.6 disagreement records (26 FN + 41 FP) with **two
+independent adjudicators from families OUTSIDE the panel** — `google/gemini-2.5-pro` and
+`openai/gpt-4o` — each applying the exact protocol, blind to both the GT label and the pipeline
+decision, using the protocol's own "uncertain → INCLUDE" rule. Verdict logic: both back GT →
+genuine pipeline error; both back pipeline → GT error; split → irreducibly ambiguous.
+(`strongminds/adjudicate_gt.py` → `gt_adjudication.jsonl`.)
+
+| Verdict | Count | Share | Meaning |
+|---|---|---|---|
+| GT robust (both back GT) | 4 | **6%** | genuine pipeline error |
+| GT error (both back pipeline) | 12 | **18%** | GT label is likely wrong |
+| Fuzzy boundary (adjudicators split) | 51 | **76%** | genuinely undecidable from T/A |
+
+**Only 6% of the pipeline's "errors" are clean pipeline errors.** On the contested records the
+two strong independent adjudicators agree with *each other* just **24%** of the time — near
+chance. You cannot make a classifier agree with a label set more than the labels agree with
+themselves.
+
+**Three hard (non-judgment) proofs of GT label noise:**
+1. **The GT applies its own pre-2000 date rule inconsistently** — of 4 pre-2000 records it
+   *excludes* two and *includes* two 1998 psychotherapy reviews. Publication year is not fuzzy.
+2. **`screening_level` is `"review"` for all 510 records**, so the protocol's primary-study
+   design branch never fires; the pipeline excludes primary studies/letters on "not a systematic
+   review" that the GT sometimes includes (perinatal task-sharing *letter*, EQ-5D primary study).
+3. **Prevalence/determinants + comorbid-population boundaries** are decided oppositely by GT vs
+   protocol (epilepsy+depression, post-stroke aphasia, tribal-India prevalence).
+
+**Effect of correcting the 12 clear GT errors (no model change), full 510:**
+
+| Metric | v1.6 vs GT as-is | v1.6 vs cleaned GT |
+|---|---|---|
+| Sensitivity | 0.649 | **0.736** |
+| Specificity | 0.906 | **0.918** |
+| Cohen's κ | 0.512 | **0.595** |
+
+**Conclusion:** κ ≥ 0.70 **with** sens ≥ 0.95 is **not reachable against this reference set** —
+not primarily because the model is weak, but because the GT is internally inconsistent on hard
+rules and at chance on the ~13% of records on the true INCLUDE/EXCLUDE boundary. κ is bounded by
+the GT's own reliability. The log's earlier "fuzziness ceiling" intuition was correct; this
+quantifies it and shows a meaningful slice (18%) is *fixable GT error*, not fuzziness.
+
+---
+
+## 13. Few-shot exemplar retrieval + decoding/critic ablation
+
+**Design.** Held-out **306 train / 204 test** stratified split (30 INCLUDE / 174 EXCLUDE in
+test). Exemplars retrieved by **BM25** over title+abstract from the train pool only (label-
+balanced, k=4), injected as few-shot anchors ahead of a compact protocol rubric. Metrics on the
+held-out test only, reported against both original and **cleaned** GT (12 Step-12 fixes).
+Baseline = v1.6's decisions on the *same 204 records*, so any delta is the exemplar/decoding
+effect, not a different record set. (`strongminds/fewshot_screen.py`.)
+
+**Results on held-out 204 (cleaned GT unless noted):**
+
+| Config | sens | spec | κ (cleaned) | κ (orig) |
+|---|---|---|---|---|
+| v1.6 baseline (same records) | 0.462 | 0.949 | 0.448 | 0.353 |
+| no-exemplar control (temp 0, k=1) | 0.769 | 0.831 | 0.431 | 0.326 |
+| **exemplars (temp 0, k=1)** | 0.808 | 0.876 | **0.535** | 0.420 |
+| exemplars (temp 0.3, k=5) | 0.615 | 0.893 | 0.443 | 0.324 |
+| exemplars + critic-on-ties (temp 0, k=1) | 0.615 | 0.961 | **0.606** | 0.459 |
+| **oracle tie-break (ceiling)** | 0.808 | 0.955 | **0.727** | 0.584 |
+
+**Findings (each attributed by a matched control):**
+1. **Exemplars genuinely help.** At matched decoding (temp-0 control vs +exemplars): **κ +0.09
+   to +0.10**, FP −8, FN −1 — both sens *and* spec rise (real discrimination gain, cutting the
+   prevalence/comorbid over-inclusions), not a threshold slide.
+2. **Temperature 0.3 + k=5 sampling costs ~0.10 κ.** With exemplars, temp-0/k=1 → temp-0.3/k=5
+   drops κ 0.535 → 0.443. The sampling noise washes the exemplar signal out, which is why the
+   k=5 few-shot run lands back at the v1.6 baseline. (Decoding setting is silently costing
+   accuracy on this task.)
+3. **The critic twist raises κ but over-excludes.** Mistral-Large resolved **17 of 18 ties to
+   EXCLUDE** — it behaves like a blunt "tie→EXCLUDE" rule: best automated κ (0.606) but
+   sensitivity falls to 0.615. A single conservative critic rejects ties rather than adjudicating.
+4. **The disagreement bucket holds the real headroom.** The oracle (perfect adjudication of the
+   ~9% tie records) reaches **κ 0.727 with sensitivity held at 0.808** — so κ ≥ 0.70 *is*
+   crossable, but only by adjudicating ties *well* (better arbiter / full-text / human), not by
+   auto-excluding them.
+5. **Sensitivity ≥ 0.95 stays unreachable** regardless — the residual FNs are confident, non-tie,
+   genuinely-fuzzy excludes outside the addressable bucket.
+
+**Verdict on "split the prompts more":** consistency is not the bottleneck (inter-model
+agreement is already 0.87; independent adjudicators still flip on 76% of contested records).
+Further decomposition optimizes the part that already works. The real limits are (a) information
+absent from the title/abstract and (b) a noisy GT — neither touched by prompt architecture. The
+only "smart split" is moving *objective* criteria (date, language) to deterministic gates.
+
+---
+
+## 14. Full-RIS deployment pilot
+
+**Corpus.** Parsed the 9-file RIS export (`strongminds/strongminds_ris/`) →
+**29,697 raw → 29,251 unique** records. Dedup was minor (EPPI id already unique; DOI −170,
+title −276) — the corpus was pre-deduplicated. Audit: **7.5% missing abstract** (2,206),
+0.5% pre-2000 (152), and **502 of the 510 seed records are in the corpus** (an in-corpus
+labeled validation set). (`strongminds/ingest_ris.py` → `data/ris_records.jsonl`.)
+
+**Prevalence reality.** Seed prevalence is 14.5% INCLUDE; the full corpus is far lower. At the
+tool's ~0.90 specificity this produces thousands of false positives in absolute terms — the
+seed metrics do **not** transfer directly. Deployment can therefore only be a **triage / second-
+reviewer**, never an autonomous excluder.
+
+**Pilot** (deployable config: exemplars + temp-0, k=1, 2 models; LOO exemplars from the seed).
+`strongminds/score_ris.py --pilot`.
+
+**A) Validation on the 502 labeled in-corpus records (71 INCLUDE / 431 EXCLUDE):**
+
+| score cutoff | flagged | recall | precision | workload |
+|---|---|---|---|---|
+| any INCLUDE vote (> 0) | 99 | **0.662** | 0.475 | 19.7% |
+| both-models INCLUDE (= 1.0) | 42 | 0.423 | 0.714 | 8.4% |
+
+**B) Random 500 unlabeled:** 78.8% score 0.0 (both EXCLUDE), 13.2% split, 8.0% both-INCLUDE →
+**flag rate 21.2% → ~6,200 flags over the 29,251 corpus**; ~23,050 in the confident-exclude pile.
+
+**The disqualifying finding:** even flagging every record with a single INCLUDE vote, recall is
+only **0.662** — the confident-exclude bucket **still hides ~34% of the true includes** (24 of
+71). Auto-excluding it would discard a third of the eligible evidence. And because those missed
+includes are indistinguishable inside the score-0.0 bucket, reaching 95% recall requires
+screening essentially the whole corpus: **WSS@95%-recall ≈ 0** with the k=1 three-level score.
+
+**Consequences:**
+- **Fully-automated exclusion is off the table** for a systematic review at this T/A quality.
+- **The k=1 score is too coarse to rank.** The open question is whether **k=5 graded scoring**
+  (10 votes → continuous 0.0–1.0) lifts borderline includes out of the zero bucket enough to make
+  priority screening viable. That k=5 recall pilot on the 502 labeled records (~5k calls) is the
+  decision-maker for whether a full corpus run is justified — **not yet run.**
+- This is the Step-12 information ceiling reappearing: when both models confidently exclude from
+  T/A, the deciding fact is usually not in the abstract. The durable fix is **full-text on the
+  uncertain bucket**, consistent with the oracle result in §13.
+
+---
+
+## 15. Revised assessment (Part II)
+
+- The v1.6 thresholds (κ ≥ 0.70, sens ≥ 0.95) are **not achievable against the current GT**, and
+  the GT itself is provably noisy — so the thresholds are, in part, *unmeasurable* rather than
+  merely unmet. Any future reporting should use a **cleaned/dual-screened reference**.
+- Best *methods* improvements found: **exemplar retrieval (+0.10 κ)** and **temp-0 decoding
+  (+0.10 κ over temp-0.3/k5)**; together with a cleaned GT they reach κ ~0.54 / sens ~0.81 on
+  held-out data. A *good* tie-arbiter could approach the κ 0.727 oracle.
+- The realistic deliverable is a **calibrated ranked worklist / second reviewer**, not an
+  include/exclude classifier. The RIS pilot shows even that needs k=5 scoring to rank at all, and
+  cannot safely auto-exclude.
+- The single highest-leverage next step across all of Part II is the same: **full-text screening
+  on the disagreement/uncertain records** — the only lever that moves sensitivity *and* κ.
+
+### Files (Part II)
+
+| File | Purpose |
+|---|---|
+| `strongminds/adjudicate_gt.py` | Step-12 blind dual-adjudicator GT-noise test |
+| `strongminds/gt_adjudication.jsonl` | Per-record verdicts (gt_robust / gt_error / fuzzy) |
+| `strongminds/analyze_adjudication.py` | Corrected-metric + GT-error candidate report |
+| `strongminds/fewshot_screen.py` | Step-13 exemplar screener (+`--no-exemplars`, `--critic`, `--k5`) |
+| `strongminds/study_errors.py` | Error dissection of the best few-shot config |
+| `strongminds/fewshot_results_k1*.json` | Held-out results (k1, k1_noex, k1_critic, k5) |
+| `strongminds/ingest_ris.py` | RIS parse + dedup + audit → `data/ris_records.jsonl` |
+| `strongminds/score_ris.py` | RIS scoring (`--pilot` / `--full`) with LOO exemplars |
+| `strongminds/ris_pilot_scores.json` | Pilot scores (502 labeled + 500 random) |
+
+### Reproduce (Part II)
+
+```powershell
+# Step 12 — GT-noise ceiling test
+python strongminds/adjudicate_gt.py
+python strongminds/analyze_adjudication.py
+
+# Step 13 — few-shot exemplars + ablations (held-out 204)
+python strongminds/fewshot_screen.py                 # exemplars, temp0, k1
+python strongminds/fewshot_screen.py --no-exemplars  # control (isolates temperature)
+python strongminds/fewshot_screen.py --k5            # temp0.3, k5
+python strongminds/fewshot_screen.py --critic        # + mistral tie-breaker
+python strongminds/study_errors.py
+
+# Step 14 — RIS ingest + deployment pilot
+python strongminds/ingest_ris.py
+python strongminds/score_ris.py --pilot --n-random 500
+# (decision-maker, not yet run:)  k=5 recall pilot on the 502 labeled records
+```
+
+---
+
+# PART III — Human-validated GT cleaning + v1.7 prompt surgery (2026-07-21)
+
+After Part II established that ~18% of v1.6's "errors" are fixable GT noise (§12), the
+12 GT-error candidates (7 FN-type + 5 FP-type, both §12 LLM adjudicators siding with
+the pipeline) were sent to an **independent human reviewer (ZS)** blind to the §12
+analysis. The goal was to confirm the GT errors before relabelling, then to identify
+the remaining error structure and the prompt levers that move it without a spec/sens
+trade-off.
+
+---
+
+## 16. Human review of the 12 GT-error candidates
+
+ZS reviewed all 12 in a single workbook (`gt_error_candidates_5+7_fp+fn 1_ZS.xlsx`,
+sheet `in`, "Notes from ZS" column).
+
+**FP candidates (5 — proposed EXCLUDE→INCLUDE): all 5 confirmed.** ZS agreed and
+changed the EPPI coding to match the pipeline decision on all five (caregiver
+interventions in primary care; tribal-India depression prevalence; internalized-racism
+meta-analytic SEM; post-stroke aphasia stepped psychological care; epilepsy+depression
+prevalence in Ethiopia).
+
+**FN candidates (7 — proposed INCLUDE→EXCLUDE): 5 confirmed, 2 retained.**
+- 5 confirmed (EPPI code changed): two 1998 pre-2000 records, the narrative review
+  on dementia+depression, the psychosis/CBT record with no abstract, and the
+  perinatal-depression letter. ZS **corrected the exclude code** on the letter
+  (130377491) from population to study design — "perinatal depression is includable"
+  — confirming the pipeline got the *decision* right but the *reason* wrong.
+- **2 retained as INCLUDE (disagreements):**
+  - 130341241 (bullying in adolescents): ZS applied the protocol's "uncertainty →
+    INCLUDE" rule — "we don't know the age range of adolescents here. Late
+    adolescence is identified at 18-24 which is includable... a false positive is
+    better than a false negative." This is a principled protocol-interpretation call,
+    not a wrong human label; the LLM adjudicators had read "in adolescents" as
+    clearly adolescent-only.
+  - 130377408 (EQ-5D population norms): ZS flagged it as possibly RQ18 measurement
+    and requested a second opinion — a genuine protocol-scope ambiguity (see §18).
+
+**Net:** 10 of 12 §12 candidates human-confirmed as GT errors. The 2 disagreements are
+principled and themselves surface unwritten scope rules (see §18).
+
+---
+
+## 17. Effect of the 10 human-confirmed GT corrections
+
+Applied to the v1.6 decisions (no model change), full 510:
+
+| Metric | v1.6 vs original GT | v1.6 vs ZS-cleaned GT (10) | vs full §12 (12) |
+|---|---|---|---|
+| TP | 48 | 53 | 53 |
+| FP | 41 | 36 | 36 |
+| FN | 26 | 21 | 19 |
+| TN | 395 | 400 | 402 |
+| Sensitivity | 0.649 | **0.716** | 0.736 |
+| Specificity | 0.906 | **0.917** | 0.918 |
+| Cohen's κ | 0.512 | **0.584** | 0.595 |
+
+GT cleaning recovers κ +0.072, nearly the full §12 ceiling (0.595). The 2 retained
+records cost only 0.011 κ. **κ 0.584 is still 0.12 below the 0.70 threshold** —
+confirming the §12 conclusion that the residual gap is irreducible fuzziness, not
+fixable label noise.
+
+### Remaining 21 FNs decomposed (vs ZS-cleaned GT)
+
+| Bucket | Count | Nature | Fixable? |
+|---|---|---|---|
+| A. Router mis-routing (no-intervention study → intervention screener, fails INTERVENTION_TOPIC) | ~7 | prevalence/genetics/measurement tagged `intervention` | **prompt fix (v1.7 lever 1)** |
+| B. Primary-outcome tension (depression-secondary-outcome study GT includes) | ~6 | CBT in heart failure, stroke caregivers, nurses | **prompt fix (v1.7 lever 2)** |
+| C. Unwritten sub-population scope | ~3 | prisoners, students, disease cohorts | protocol call (§18) |
+| D. Genuinely ambiguous from T/A | ~5 | deciding fact not in abstract | full-text / human only |
+
+---
+
+## 18. v1.7 prompt surgery — two levers, no sens/spec trade-off
+
+The lesson from v1.5 (global "uncertainty → INCLUDE": sens 0.851 but spec 0.647, κ
+0.276) is that a blanket lean moves FNs *and* the wrong FPs together. v1.7 instead
+targets two buckets with **surgical** edits that move FNs without moving FPs.
+
+### Lever 1 — Router: stop over-assigning `intervention`
+
+The 7 bucket-A FNs are prevalence/risk-factor/genetic/measurement studies the router
+tagged `intervention`, sending them to the intervention screener where they fail
+`EXCLUDE_INTERVENTION_TOPIC`. `pick_screener` routes to the no-intervention screener
+only when ALL substantive routes are `determinants`/`measurement` (`orchestrator.py:158`,
+`issubset` check), so any spurious `intervention` tag is fatal.
+
+**Edit** (`ulcm-orchestrator-prompts.md` §1 router): the `intervention` route
+definition now states it is assigned ONLY when the record's primary subject is the
+evaluation/design/description of a specific named psychological/psychosocial
+intervention, and explicitly forbids assigning `intervention` merely because the word
+appears in a recommendation/conclusion/future-directions. Prevalence, risk-factor,
+epidemiology, biomarker, neuroimaging, genetic-correlation and measurement studies
+are directed to `determinants`/`measurement`.
+
+Also fixed a pre-existing typo (`group formatA` → `group format`).
+
+### Lever 2 — Intervention screener Criterion 4: reframe around intervention TARGET
+
+The v1.4 "depression must be the PRIMARY outcome" test (Criterion 4) created the
+bucket-B FNs: depression-targeting interventions applied to comorbid populations
+with depression as a co-primary/secondary outcome were excluded because depression
+wasn't "primary." But the FPs that test was added to kill (trace elements, CBT for
+cardiometabolic disease, ACT for chronic pain) share a different feature — the
+**intervention does not target depression**.
+
+**Edit** (`ulcm-orchestrator-prompts.md` §3 Criterion 4): the test is reframed from
+"is depression the primary outcome" to "does the intervention TARGET depression."
+PASS when a depression-targeting psychological/psychosocial intervention is applied
+to any eligible population, even with depression as a co-primary/secondary outcome
+(CBT in heart failure, psychosocial support for stroke caregivers, CBT for nurses).
+FAIL only when the intervention targets a non-depression condition (cardiometabolic
+disease, chronic pain, alcohol misuse, parenting skills) and depression is merely
+measured. This moves ~4–5 FNs to TP while keeping the FPs excluded.
+
+### Expected v1.7 effect (vs ZS-cleaned GT, before running)
+
+| Lever | sens Δ | spec Δ | κ Δ |
+|---|---|---|---|
+| 1 (router fix) | +0.09 | 0 | +0.05 |
+| 2 (Criterion 4 reframe) | +0.06 | +0.02 | +0.05 |
+| **Stacked** | **+0.15 → ~0.86** | **+0.02 → ~0.93** | **+0.10 → ~0.66** |
+
+These are estimates to be confirmed by re-running the orchestrator at v1.7 on the 510
+records (full run + critic) and calibrating against the ZS-cleaned GT.
+
+---
+
+## 19. Scope decisions referred to the review team (ZS)
+
+Two further improvements are blocked not by the model but by **unwritten scope rules**
+the GT applies but the protocol does not state. These need a review-team decision
+before they can be encoded (proposed v1.8). Memo: `strongminds/scope_decisions_for_ZS.md`.
+
+1. **Are biological correlates (biomarkers, neuroimaging, genetic correlations)
+   "determinants" for RQ1?** The GT excludes ~4–6 such records (MDD neuroimaging,
+   inter-brain synchrony, genetic-stress markers, MR drug-target studies) while
+   including social/psychological/economic risk factors. Recommended: only
+   modifiable/social/psychological/economic risk factors + prevalence count; biological
+   mechanism studies excluded unless they validate a screening marker or intervention
+   target.
+
+2. **Which adult sub-populations are in-scope?** The GT excludes prisoners, students,
+   resettled-in-HIC refugees, some disease cohorts, and parent-infant dyads on
+   "population" — none stated in the written criterion. ZS's 130341241 note ("late
+   adolescence 18-24 is includable") and the confirmed INCLUDE on epilepsy+depression
+   (130353034) and post-stroke aphasia (130338268) show the boundary is real but
+   inconsistent. Recommended rule: "a sub-population is in-scope when depression is
+   the target of the study; out-of-scope when depression is merely measured alongside
+   a different primary subject (the disease, the infant, the incarceration, the
+   student experience)."
+
+3. (minor) **Does RQ18 "depression measurement" include generic health-status
+   instruments with an anxiety/depression dimension (e.g. EQ-5D)?** From ZS's note on
+   130377408. Recommended: depression-specific instruments only.
+
+---
+
+## 20. Files (Part III)
+
+| File | Purpose |
+|---|---|
+| `strongminds/gt_error_candidates_7.csv` | 7 FN-type GT-error candidates (abstracts included) |
+| `strongminds/gt_error_candidates_5_fp.csv` | 5 FP-type GT-error candidates (abstracts included) |
+| `Downloads/gt_error_candidates_5+7_fp+fn 1_ZS.xlsx` | ZS human review of all 12 (sheet `in`, "Notes from ZS") |
+| `strongminds/scope_decisions_for_ZS.md` | Protocol-scope decision memo (3 questions) |
+| `strongminds/ulcm-orchestrator-prompts.md` | v1.7 prompts (router tightened, Criterion 4 reframed) |
+
+### Reproduce (Part III)
+
+```powershell
+# Re-run v1.7 on the full 510 + critic, then calibrate against cleaned GT
+python orchestrator.py `
+    --prompt strongminds/ulcm-orchestrator-prompts.md `
+    --records strongminds/data/records_510.jsonl `
+    --gt strongminds/data/gt_510.json `
+    --out strongminds/data/output/results_orch_v17_510.jsonl `
+    --k 5 --temperature 0.3 `
+    --models anthropic/claude-sonnet-4 z-ai/glm-5.2 `
+    --uncertainty-band 0.4 0.6 `
+    --critic-model mistralai/mistral-large `
+    --workers 8
+
+python k5_runner.py --calibrate `
+    strongminds/data/output/results_orch_v17_510.jsonl `
+    --gt strongminds/data/gt_510.json    # TODO: swap for ZS-cleaned GT once EPPI re-exported
+```
+
+**Note:** the v1.7 run is **not yet executed** — it requires the ZS-cleaned GT
+(EPPI re-export with the 10 confirmed corrections) to be ingested first. The expected
+metrics above are projections from the error decomposition; the actual run is the next
+step once the cleaned GT is available and ZS has answered the §19 scope questions
+(for a v1.8 that encodes the scope rules).
