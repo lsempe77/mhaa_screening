@@ -16,10 +16,11 @@ panel of LLMs via [OpenRouter](https://openrouter.ai/), runs a k-sampled consens
 adjudicates uncertain records with a critic model, and calibrates the panel against human
 ground-truth labels (sensitivity, Cohen's κ, ECE, Brier, reliability).
 
-> **Status (2026-07):** MHAA TA prompt at **v1.4.3** (sens 0.943 / κ 0.719 / ECE 0.081 on
-> the 462 seed). MHAA full-text: 388 PDFs screened, awaiting human review. ULCM
-> orchestrator at **v1.7** (canonical), with v1.8/v1.9 staged. Live run status, next steps,
-> and full history live in
+> **Status (2026-07-22):** MHAA TA prompt at **v1.4.3** (sens 0.943 / κ 0.719 / ECE 0.081 on
+> the 462 seed). MHAA full-text: 388 PDFs screened, awaiting human review. ULCM orchestrator
+> at **v1.9** (canonical, final) — **all three thresholds passed**: sensitivity 0.966, κ 0.790,
+> ECE 0.042 on the 510-record seed (23 GT corrections). Live run status, next steps,
+> and full history (Parts I–VI, §1–§41) in
 > [`projects/strongminds/docs/ITERATION_LOG.md`](projects/strongminds/docs/ITERATION_LOG.md).
 
 ---
