@@ -16,11 +16,18 @@ panel of LLMs via [OpenRouter](https://openrouter.ai/), runs a k-sampled consens
 adjudicates uncertain records with a critic model, and calibrates the panel against human
 ground-truth labels (sensitivity, Cohen's κ, ECE, Brier, reliability).
 
-> **Status (2026-07-22):** MHAA TA prompt at **v1.4.3** (sens 0.943 / κ 0.719 / ECE 0.081 on
-> the 462 seed). MHAA full-text: 388 PDFs screened, awaiting human review. ULCM orchestrator
-> at **v1.9** (canonical, final) — **all three thresholds passed**: sensitivity 0.966, κ 0.790,
-> ECE 0.042 on the 510-record seed (23 GT corrections). Live run status, next steps,
-> and full history (Parts I–VI, §1–§41) in
+> **Status (2026-07-22):**
+>
+> **MHAA** — TA prompt at **v1.4.3**: sens 0.943 / κ 0.719 / ECE 0.081 on the 462-record
+> seed (κ ✅, ECE ✅, sens 0.007 short). Full-text: 388 PDFs screened, awaiting human
+> review. Metrics: [`projects/girl_effect/METRICS.md`](projects/girl_effect/METRICS.md).
+>
+> **ULCM** — Orchestrator at **v1.9** (canonical, final): **all three thresholds passed** —
+> sensitivity 0.966, κ 0.790, ECE 0.042 on the 510-record seed (23 GT corrections).
+> Full RIS corpus run (29,251 records) **in progress** — k=1/temp 0, Claude+GLM primary,
+> Gemini 2.5 Pro tie-breaker on disagreements, human review CSV for 3-way splits.
+> Metrics: [`projects/strongminds/METRICS.md`](projects/strongminds/METRICS.md).
+> Full iteration history (Parts I–VI, §1–§41):
 > [`projects/strongminds/docs/ITERATION_LOG.md`](projects/strongminds/docs/ITERATION_LOG.md).
 
 ---
@@ -83,8 +90,9 @@ mhaa_screening/
 | `projects/girl_effect/prompts/prompts-screening-mhaa-unified-v1.4.md` | MHAA | Old copy (v1.4 header, v1.4.3 body). Kept for runners that reference this filename. |
 | `projects/girl_effect/prompts/prompts-screening-mhaa-fulltext-v1.md` | MHAA | **Full-text variant of v1.4.3.** Input scope changed from title+abstract to title+full PDF text. Same exclusion codes, same AI-component test, same carve-outs. Quotes may come from the body. Used for the GE_FTS run. |
 | `projects/strongminds/prompts/ulcm-tas-screening-prompts-hierarchical.md` | ULCM | **Monolithic TA screener + critic with RQ routing (v1.1, best monolithic).** Superseded by the orchestrator prompt below from v1.6 onward; kept for reproducibility. 18 RQs across 7 routes (see below). Route-conditional exclusion: RQ1 (determinants) and RQ18 (measurement) skip the intervention criterion; RQ7-9/12/14 allow specialist delivery and HIC evidence; RQ11 allows non-case populations. Supports `screening_level: review \| primary_study`. |
-| `projects/strongminds/prompts/ulcm-orchestrator-prompts.md` | ULCM | **Orchestrator prompts (v1.7, canonical).** Router → no_intervention screener (RQ1/RQ18) → intervention screener (all other routes) → critic. v1.7 = router tightened (prevalence/biomarker/measurement studies not tagged `intervention`) + Criterion 4 reframed around "does the intervention target depression" rather than "is depression the primary outcome." |
-| `projects/strongminds/prompts/ulcm-orchestrator-prompts-v1.8.md` | ULCM | **v1.8 staged (not canonical yet).** v1.7 + ZS's scope rules encoded: biological-mechanism exclusion (neuroimaging/biomarker/genetic → FAIL), sub-population scope rule (prisoners OUT, students age-gated, refugees IN, depression-target rule), RQ18 depression-specific instruments only, critic authoritative-scope-rules block. Run only after v1.7 calibration confirms the lever effect. |
+| `projects/strongminds/prompts/ulcm-orchestrator-prompts.md` | ULCM | **Orchestrator prompts (v1.7).** Router → no_intervention screener (RQ1/RQ18) → intervention screener (all other routes) → critic. Superseded by v1.9 (below) as canonical for new runs. |
+| `projects/strongminds/prompts/ulcm-orchestrator-prompts-v1.8.md` | ULCM | v1.8 staged prompts (ZS scope rules: bio-mechanism exclusion, sub-population scope, RQ18 instruments). Intermediate — superseded by v1.9. |
+| `projects/strongminds/prompts/ulcm-orchestrator-prompts-v1.9.md` | ULCM | **v1.9 prompts (canonical, final).** v1.8.1 + 7 surgical fixes: unstated-age rule, mixed-age rule, working-memory/task-sharing/process-study PASS additions, CMD promotion. All three thresholds passed (sens 0.966, κ 0.790, ECE 0.042). |
 
 ### Data & outputs
 
@@ -435,12 +443,12 @@ includes a 6-step `hierarchical_trace` with rationale + quote per step).
 > See `projects/strongminds/docs/ITERATION_LOG.md` Part I §5–7 and Part III §16–§20 for the full history.
 
 ```powershell
-# Current canonical ULCM run (v1.7 prompts, full 510 + critic, resumable)
+# Canonical ULCM run (v1.9 prompts, full 510 + critic, resumable)
 python pipeline/orchestrator.py `
-    --prompt projects/strongminds/prompts/ulcm-orchestrator-prompts.md `
+    --prompt projects/strongminds/prompts/ulcm-orchestrator-prompts-v1.9.md `
     --records projects/strongminds/data/records_510.jsonl `
     --gt projects/strongminds/data/gt_510.json `
-    --out projects/strongminds/data/output/results_orch_v17_510.jsonl `
+    --out projects/strongminds/data/output/results_orch_v19_510.jsonl `
     --k 5 --temperature 0.3 `
     --models anthropic/claude-sonnet-4 z-ai/glm-5.2 `
     --uncertainty-band 0.4 0.6 `
@@ -449,16 +457,47 @@ python pipeline/orchestrator.py `
 
 # Calibrate (writes reports/metrics.json, reports/errors.jsonl)
 python pipeline/k5_runner.py --calibrate `
-    projects/strongminds/data/output/results_orch_v17_510.jsonl `
+    projects/strongminds/data/output/results_orch_v19_510.jsonl `
     --gt projects/strongminds/data/gt_510.json
+```
+
+### Full RIS corpus run (29,251 records)
+
+The full corpus uses a leaner config (k=1, temp 0, no critic) per §13 findings, with a
+Gemini 2.5 Pro tie-breaker on model disagreements. The 3-stage pipeline runs
+automatically via a wrapper script:
+
+```powershell
+# Runs all 3 stages automatically (persistent, auto-restart on crash):
+#   Stage 1: Orchestrator screens all 29,251 records (Claude + GLM, k=1, temp 0)
+#   Stage 2: Gemini 2.5 Pro tie-breaks ~3,900 disagreements (majority of 3)
+#   Stage 3: Produces human_review_3way.csv of unresolved 3-way splits
+powershell -ExecutionPolicy Bypass -File projects/strongminds/scripts/run_ris_v19.ps1
+
+# Check progress:
+Get-Content projects/strongminds/data/output/ris_run.log -Tail 10
 ```
 
 ---
 
 ## ULCM: status & handoff
 
-Live run status, immediate next steps, the deployment decision, and the full iteration
-history (Parts I–III, §1–§20) are maintained in
+**v1.9 final — all three thresholds passed** (sens 0.966 ✅, κ 0.790 ✅, ECE 0.042 ✅).
+Metrics: [`projects/strongminds/METRICS.md`](projects/strongminds/METRICS.md).
+
+**Full RIS corpus run in progress** — 29,251 records via 3-stage pipeline:
+1. Orchestrator (Claude + GLM, k=1, temp 0, no critic) — persistent, auto-restart
+2. Gemini 2.5 Pro tie-breaker on ~3,900 disagreements (majority of 3)
+3. Human review CSV for unresolved 3-way splits
+
+Check progress: `Get-Content projects/strongminds/data/output/ris_run.log -Tail 10`
+
+**Next steps after RIS run completes:**
+- Review the `human_review_3way.csv` (expected ~500–800 records)
+- Produce a ranked worklist / priority screening output
+- The tool is a **second reviewer / triage tool**, not an autonomous excluder (§14 finding)
+
+Full iteration history (Parts I–VI, §1–§41):
 [`projects/strongminds/docs/ITERATION_LOG.md`](projects/strongminds/docs/ITERATION_LOG.md).
 
 ---
