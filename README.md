@@ -16,23 +16,11 @@ panel of LLMs via [OpenRouter](https://openrouter.ai/), runs a k-sampled consens
 adjudicates uncertain records with a critic model, and calibrates the panel against human
 ground-truth labels (sensitivity, Cohen's κ, ECE, Brier, reliability).
 
-> **MHAA status:** Prompt v1.4.3. On the 462-record EPPI seed (Claude Sonnet 4 + GLM-5.2,
-> k=5, critic = Mistral Large): sensitivity 0.943, κ 0.719, ECE 0.081 (κ and ECE PASS,
-> sensitivity just below the 0.95 threshold). See `reports/metrics.json` for the latest run.
->
-> **GE_FTS status:** 388 PDFs screened on full text (GLM-5.2 only, k=1, temperature 0,
-> no critic). 362 INCLUDE / 26 EXCLUDE. Results in `projects/girl_effect/full_text/output/`; triage CSVs in
-> `projects/girl_effect/full_text/reports/`. Awaiting human review.
->
-> **ULCM status:** Orchestrator **v1.6** plateaued at κ 0.512 / sens 0.649 / spec 0.906 / ECE 0.088 (full 510).
-> A GT-noise study (§12, blind dual-adjudicator) found **18% of v1.6's "errors" are fixable GT label errors**;
-> 10 of those were **human-confirmed** by an independent reviewer (ZS) and patched into `gt_510.json`
-> (original preserved as `gt_510_original.json`), lifting the baseline to κ 0.584 / sens 0.716 / spec 0.917.
-> **v1.7** (router tightening + Criterion-4 "intervention-targets-depression" reframe) is **running now**
-> against the cleaned GT → `projects/strongminds/data/output/results_orch_v17_510.jsonl`. **v1.8** (ZS's scope-rule
-> decisions encoded — biological-correlates exclusion, sub-population scope rule, RQ18 depression-specific
-> instruments) is **staged** at `projects/strongminds/prompts/ulcm-orchestrator-prompts-v1.8.md`, pending the v1.7 calibration
-> to decide whether to run it. **See "ULCM next steps" below for the handoff.**
+> **Status (2026-07):** MHAA TA prompt at **v1.4.3** (sens 0.943 / κ 0.719 / ECE 0.081 on
+> the 462 seed). MHAA full-text: 388 PDFs screened, awaiting human review. ULCM
+> orchestrator at **v1.7** (canonical), with v1.8/v1.9 staged. Live run status, next steps,
+> and full history live in
+> [`projects/strongminds/docs/ITERATION_LOG.md`](projects/strongminds/docs/ITERATION_LOG.md).
 
 ---
 
@@ -466,78 +454,11 @@ python pipeline/k5_runner.py --calibrate `
 
 ---
 
-## ULCM next steps (handoff for colleagues)
+## ULCM: status & handoff
 
-**Where things stand (2026-07-21):**
-
-| Artifact | Status | Location |
-|---|---|---|
-| v1.6 results (original GT) | Done — κ 0.512 / sens 0.649 / spec 0.906 | `projects/strongminds/data/output/results_orch_v16_510.jsonl` |
-| Cleaned GT (10 ZS-confirmed corrections) | **Patched locally** — `gt_510.json`; original at `gt_510_original.json` | `projects/strongminds/data/` |
-| v1.7 prompts (levers 1+2) | Staged in canonical prompt file | `projects/strongminds/prompts/ulcm-orchestrator-prompts.md` |
-| v1.7 run | **Running** (pid 22004, ~73% done) | `projects/strongminds/data/output/results_orch_v17_510.jsonl` |
-| v1.8 prompts (ZS scope rules) | Staged separately (do not touch v1.7 run) | `projects/strongminds/prompts/ulcm-orchestrator-prompts-v1.8.md` |
-| ZS scope answers | Captured (bio-correlates OUT; depression-target rule; RQ18 depression-specific only) | `Downloads/scope_decisions_for_ZS_done_ZS.docx` |
-
-### Immediate next steps, in order
-
-1. **Wait for the v1.7 run to finish** (background process `bgp_f84aa8b77001AR4vXqORHA2uDs`,
-   pid 22004). It's resumable — if interrupted, re-run the same `orchestrator.py` command
-   above and it picks up from where it left off.
-
-2. **Calibrate v1.7 against the cleaned GT** (the command above writes `reports/metrics.json`).
-   Expected: sens ~0.86 / spec ~0.93 / κ ~0.66. Compare against v1.6-cleaned (κ 0.584 /
-   sens 0.716) to measure the lever 1+2 effect.
-
-3. **Inspect `reports/errors.jsonl` after v1.7** — particularly whether the router
-   mis-routing bucket shrank (lever 1) and whether the CBT-in-comorbid-population FNs
-   recovered (lever 2). Known residual from early logs: records phrased as "markers" or
-   "approaches" (e.g. `130326298` genetic markers, `130324026` civic engagement) are
-   still mis-routed to `intervention` — the router tightening caught prevalence-styled
-   records but not these. The critic is also reverting some lever-2 wins on occupational
-   sub-populations (nurses) — v1.8's critic-side scope-rules block addresses this.
-
-4. **Decide whether to run v1.8.** v1.8 encodes ZS's three scope decisions as explicit
-   FAIL signals + an authoritative scope-rules block for the critic. Run it the same way
-   as v1.7 but point `--prompt` at `projects/strongminds/prompts/ulcm-orchestrator-prompts-v1.8.md` and
-   `--out` at a v1.8 results file. Projected: κ ~0.68–0.70, approaching but not crossing
-   the 0.70 threshold. **Run v1.8 only if v1.7 confirms the lever effect** — if v1.7
-   didn't move the needle, the router/critic issues need a deeper look first.
-
-### After v1.7/v1.8: the deployment decision
-
-Independent of κ, the §14 RIS pilot established that **auto-exclusion is off the table**
-(0.662 recall at "any INCLUDE vote"; 24 of 71 true includes in the confident-exclude
-bucket; WSS@95 ≈ 0). The realistic ULCM deliverable is a **ranked worklist /
-second reviewer**, not an autonomous excluder. The one open question before any corpus
-run: whether a **temp-0 multi-model ensemble** (graded 0.0–1.0 without the temp-0.3
-noise penalty §13 showed costs ~0.10 κ) can lift borderline includes out of the
-zero-bucket enough to make priority screening viable. That pilot (~2,000–2,500 calls on
-the 502 labeled records) has **not been run** and is the decision-maker.
-
-### Key context for anyone picking this up
-
-- The κ 0.70 / sens 0.95 thresholds are **partly unmeasurable against the current GT** —
-  §12 proved the GT is internally inconsistent on hard rules (pre-2000 dates, adolescent
-  populations, study-design strictness) and at chance on the ~13% of records on the true
-  boundary. Two independent strong adjudicators agreed with each other on contested
-  records only 24% of the time. Any future reporting should use the cleaned/dual-screened
-  reference, not the original GT.
-- The orchestrator architecture (router → route-specific screener → critic) is the right
-  one — it doubled inter-model agreement (κ 0.213 → 0.546) vs the monolithic prompt.
-  Further prompt-splitting optimizes the part that already works; the real limits are
-  (a) information absent from the abstract and (b) GT noise.
-- Full iteration history: `projects/strongminds/docs/ITERATION_LOG.md` (Parts I–III, §1–§20).
-
-### Files added in Part III (this session)
-
-| File | Purpose |
-|---|---|
-| `projects/strongminds/artifacts/gt_error_candidates_7.csv` | 7 FN-type GT-error candidates sent to ZS (abstracts included) |
-| `projects/strongminds/artifacts/gt_error_candidates_5_fp.csv` | 5 FP-type GT-error candidates sent to ZS (abstracts included) |
-| `projects/strongminds/docs/scope_decisions_for_ZS.md` / `.docx` | Protocol-scope decision memo (3 questions) + ZS's filled-in answers in the `.docx` |
-| `projects/strongminds/scripts/build_scope_memo_docx.py` | Script that regenerates the `.docx` memo from the source data |
-| `projects/strongminds/prompts/ulcm-orchestrator-prompts-v1.8.md` | v1.8 staged prompts (ZS scope rules encoded) — run only after v1.7 calibration |
+Live run status, immediate next steps, the deployment decision, and the full iteration
+history (Parts I–III, §1–§20) are maintained in
+[`projects/strongminds/docs/ITERATION_LOG.md`](projects/strongminds/docs/ITERATION_LOG.md).
 
 ---
 
@@ -553,15 +474,4 @@ python pipeline/k5_runner.py --prompt projects/girl_effect/prompts/prompts-scree
 # MHAA re-calibrate any existing results file without re-running models
 python pipeline/k5_runner.py --calibrate projects/girl_effect/ta_screening/output/results_v143_critic_462.jsonl --gt projects/girl_effect/ta_screening/data/gt_462.json
 
-# GE_FTS re-screen flagged records with higher max_tokens
-python pipeline/rerun_flagged.py `
-    --results projects/girl_effect/full_text/output/results_fts_glm_388.jsonl `
-    --records projects/girl_effect/full_text/data/records_388.jsonl `
-    --prompt projects/girl_effect/prompts/prompts-screening-mhaa-fulltext-v1.md `
-    --model z-ai/glm-5.2 --max-tokens 4000
-
-# GE_FTS re-validate quotes after verify_quote() improvements (no API calls)
-python pipeline/revalidate_quotes.py `
-    --results projects/girl_effect/full_text/output/results_fts_glm_388.jsonl `
-    --records projects/girl_effect/full_text/data/records_388.jsonl
 ```
