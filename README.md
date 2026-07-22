@@ -463,13 +463,16 @@ python pipeline/k5_runner.py --calibrate `
 
 ### Full RIS corpus run (29,251 records)
 
-The full corpus uses a leaner config (k=1, temp 0, no critic) per §13 findings, with a
-Gemini 2.5 Pro tie-breaker on model disagreements. The 3-stage pipeline runs
+The full corpus uses a leaner config (k=1, temp 0, no critic, `--no-router`) per §13
+findings, with a Gemini 2.5 Pro tie-breaker on model disagreements. The `--no-router`
+flag skips the router call and runs the intervention screener directly on all records —
+the screener self-determines whether an intervention is required (Criterion 3 step 1),
+halving serial latency per record (~2x throughput). The 3-stage pipeline runs
 automatically via a wrapper script:
 
 ```powershell
 # Runs all 3 stages automatically (persistent, auto-restart on crash):
-#   Stage 1: Orchestrator screens all 29,251 records (Claude + GLM, k=1, temp 0)
+#   Stage 1: Orchestrator screens all 29,251 records (Claude + GLM, k=1, temp 0, --no-router)
 #   Stage 2: Gemini 2.5 Pro tie-breaks ~3,900 disagreements (majority of 3)
 #   Stage 3: Produces human_review_3way.csv of unresolved 3-way splits
 powershell -ExecutionPolicy Bypass -File projects/strongminds/scripts/run_ris_v19.ps1
@@ -486,7 +489,7 @@ Get-Content projects/strongminds/data/output/ris_run.log -Tail 10
 Metrics: [`projects/strongminds/METRICS.md`](projects/strongminds/METRICS.md).
 
 **Full RIS corpus run in progress** — 29,251 records via 3-stage pipeline:
-1. Orchestrator (Claude + GLM, k=1, temp 0, no critic) — persistent, auto-restart
+1. Orchestrator (Claude + GLM, k=1, temp 0, no critic, `--no-router`) — persistent, auto-restart, ~30 rec/min
 2. Gemini 2.5 Pro tie-breaker on ~3,900 disagreements (majority of 3)
 3. Human review CSV for unresolved 3-way splits
 

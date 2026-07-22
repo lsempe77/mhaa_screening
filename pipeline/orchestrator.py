@@ -216,11 +216,17 @@ def process_one_record(
     args,
 ) -> dict:
     """Full orchestration for one record: router -> k screened runs -> aggregate -> critic."""
-    # 1. Router (single call, cheap model)
-    router_result = run_router(prompts["router"], rec, args.router_model, args.temperature)
-    routes = router_result.get("routes", ["intervention"])
-    routes_str = ", ".join(routes)
-    screener_key = pick_screener(routes)
+    # 1. Router (single call, cheap model) — skipped if --no-router
+    if getattr(args, 'no_router', False):
+        routes = ["intervention"]
+        routes_str = "intervention"
+        screener_key = "intervention"
+        router_result = {"routes": routes, "primary_route": "intervention", "confidence": "N/A", "_router_skipped": True}
+    else:
+        router_result = run_router(prompts["router"], rec, args.router_model, args.temperature)
+        routes = router_result.get("routes", ["intervention"])
+        routes_str = ", ".join(routes)
+        screener_key = pick_screener(routes)
     screener_system = prompts[screener_key]
 
     # 2. k screened runs per model
@@ -387,6 +393,10 @@ def main():
     p.add_argument("--uncertainty-band", nargs=2, type=float, default=[0.4, 0.6])
     p.add_argument("--max-tokens", type=int, default=4000)
     p.add_argument("--workers", type=int, default=8)
+    p.add_argument("--no-router", action="store_true",
+                   help="Skip the router call and run the intervention screener on all records. "
+                        "The intervention screener self-determines whether an intervention is required "
+                        "(Criterion 3 step 1). Halves serial latency per record (~2x throughput).")
     p.add_argument("--calibrate", type=str, default=None,
                    help="Calibrate an existing results JSONL instead of running.")
     args = p.parse_args()

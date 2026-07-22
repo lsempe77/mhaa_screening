@@ -52,6 +52,7 @@ while ($true) {
         --records projects/strongminds/data/ris_records.jsonl `
         --out $out `
         --k 1 --temperature 0 `
+        --no-router `
         --models anthropic/claude-sonnet-4 z-ai/glm-5.2 `
         --uncertainty-band 0.4 0.6 `
         --workers 8 2>&1 | ForEach-Object {
