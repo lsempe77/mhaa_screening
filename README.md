@@ -21,38 +21,68 @@ ground-truth labels (sensitivity, Cohen's κ, ECE, Brier, reliability).
 > sensitivity just below the 0.95 threshold). See `reports/metrics.json` for the latest run.
 >
 > **GE_FTS status:** 388 PDFs screened on full text (GLM-5.2 only, k=1, temperature 0,
-> no critic). 362 INCLUDE / 26 EXCLUDE. Results in `GE_FTS/output/`; triage CSVs in
-> `GE_FTS/reports/`. Awaiting human review.
+> no critic). 362 INCLUDE / 26 EXCLUDE. Results in `projects/girl_effect/full_text/output/`; triage CSVs in
+> `projects/girl_effect/full_text/reports/`. Awaiting human review.
 >
 > **ULCM status:** Orchestrator **v1.6** plateaued at κ 0.512 / sens 0.649 / spec 0.906 / ECE 0.088 (full 510).
 > A GT-noise study (§12, blind dual-adjudicator) found **18% of v1.6's "errors" are fixable GT label errors**;
 > 10 of those were **human-confirmed** by an independent reviewer (ZS) and patched into `gt_510.json`
 > (original preserved as `gt_510_original.json`), lifting the baseline to κ 0.584 / sens 0.716 / spec 0.917.
 > **v1.7** (router tightening + Criterion-4 "intervention-targets-depression" reframe) is **running now**
-> against the cleaned GT → `strongminds/data/output/results_orch_v17_510.jsonl`. **v1.8** (ZS's scope-rule
+> against the cleaned GT → `projects/strongminds/data/output/results_orch_v17_510.jsonl`. **v1.8** (ZS's scope-rule
 > decisions encoded — biological-correlates exclusion, sub-population scope rule, RQ18 depression-specific
-> instruments) is **staged** at `strongminds/ulcm-orchestrator-prompts-v1.8.md`, pending the v1.7 calibration
+> instruments) is **staged** at `projects/strongminds/prompts/ulcm-orchestrator-prompts-v1.8.md`, pending the v1.7 calibration
 > to decide whether to run it. **See "ULCM next steps" below for the handoff.**
 
 ---
 
 ## What's in this folder
 
-### Core pipeline
+The repository is organised into a **shared engine** (`pipeline/`) and **per-project**
+folders (`projects/`), one per rapid evidence mapping. Each project is further split by
+screening stage — title/abstract (TA), full-text retrieval (FTR), and full-text
+screening (FTS).
+
+```text
+mhaa_screening/
+├── pipeline/                       # shared engine — run as `python pipeline/<script>.py`
+│   ├── k5_runner.py                #   main k-sampled screener + calibration
+│   ├── orchestrator.py             #   ULCM router → screener → critic runner
+│   ├── ingest.py / ingest_fts.py   #   dataset / PDF ingestion
+│   └── ...                         #   merge, critic, triage, quote-fix helpers
+├── projects/
+│   ├── girl_effect/                # MHAA — digital/AI mental health for young people
+│   │   ├── prompts/                #   TA + full-text screening prompts
+│   │   ├── ta_screening/           #   TA stage: data/ + output/
+│   │   └── full_text/              #   FTR + FTS: pdfs/, data/, output/, reports/
+│   └── strongminds/                # ULCM — brief psych. interventions, adult depression LMICs
+│       ├── prompts/                #   ulcm-*.md (orchestrator + monolithic)
+│       ├── scripts/                #   project-specific analysis scripts
+│       ├── data/                   #   records, ground truth, run outputs
+│       ├── artifacts/              #   analysis outputs (adjudication, few-shot, RIS scores)
+│       ├── docs/                   #   protocol, scope memos, ITERATION_LOG.md
+│       └── strongminds_ris/        #   raw RIS corpus
+├── reports/                        # calibration output (metrics/plots/errors, last run)
+├── README.md · requirements.txt · .env
+```
+
+### Core pipeline (`pipeline/`)
 
 | Path | Purpose |
 |---|---|
-| `k5_runner.py` | **Main runner.** k-sampled screening via OpenRouter, per-model + cross-model aggregation, §2 critic adjudication on flagged records, verbatim-quote validation (with PDF-aware fuzzy fallback) and re-prompt, and calibration (ECE / Brier / κ / sensitivity / per-model + inter-model breakdown). Supports both `--project mhaa` and `--project strongminds`. |
-| `ingest.py` | Convert an Excel/CSV screening dataset into `records_<n>.jsonl` + `gt_<n>.json` for the runner. MHAA + StrongMinds paired-row CSV layouts. |
-| `ingest_fts.py` | **Full-text variant.** Extract PDF text via PyMuPDF → `records_<n>.jsonl` with the full article text in the `abstract` field. Produces audit logs for missing/low-text/truncated PDFs. |
-| `merge_results.py` | Merge stored Claude runs with a new GLM-only run file and re-aggregate (no new API calls). |
-| `run_critic.py` | Re-run only the §2 critic on flagged records in an existing results JSONL (parallel). |
-| `summarize_fts.py` | Flatten a results JSONL into a review-friendly CSV (one row per record). |
-| `generate_triage.py` | Produce `excludes_triage.csv` + `flags_triage.csv` with flag-reason classification for human review. |
-| `make_gt_from_review.py` | Convert a human-annotated CSV (with a `human_decision` column) into `gt_<n>.json` for calibration. |
-| `rerun_flagged.py` | Re-screen records that failed (parse_error / api_error) with a higher `max_tokens` override. |
-| `revalidate_quotes.py` | Re-run quote validation on stored results after `verify_quote()` improvements (no new API calls). |
-| `fix_quote_failures.py` | Re-screen `quote_validation_failed` records with cleaned (mojibake-stripped) PDF text. |
+| `pipeline/k5_runner.py` | **Main runner.** k-sampled screening via OpenRouter, per-model + cross-model aggregation, §2 critic adjudication on flagged records, verbatim-quote validation (with PDF-aware fuzzy fallback) and re-prompt, and calibration (ECE / Brier / κ / sensitivity / per-model + inter-model breakdown). Supports both `--project mhaa` and `--project strongminds`. |
+| `pipeline/orchestrator.py` | **ULCM runner.** Router → route-specific screener → critic pipeline; output is `k5_runner --calibrate`-compatible. |
+| `pipeline/ingest.py` | Convert an Excel/CSV screening dataset into `records_<n>.jsonl` + `gt_<n>.json` for the runner. MHAA + StrongMinds paired-row CSV layouts. |
+| `pipeline/ingest_fts.py` | **Full-text variant.** Extract PDF text via PyMuPDF → `records_<n>.jsonl` with the full article text in the `abstract` field. Produces audit logs for missing/low-text/truncated PDFs. |
+| `pipeline/merge_results.py` | Merge stored Claude runs with a new GLM-only run file and re-aggregate (no new API calls). |
+| `pipeline/run_critic.py` | Re-run only the §2 critic on flagged records in an existing results JSONL (parallel). |
+| `pipeline/summarize_fts.py` | Flatten a results JSONL into a review-friendly CSV (one row per record). |
+| `pipeline/generate_triage.py` | Produce `excludes_triage.csv` + `flags_triage.csv` with flag-reason classification for human review. |
+| `pipeline/make_gt_from_review.py` | Convert a human-annotated CSV (with a `human_decision` column) into `gt_<n>.json` for calibration. |
+| `pipeline/rerun_flagged.py` | Re-screen records that failed (parse_error / api_error) with a higher `max_tokens` override. |
+| `pipeline/revalidate_quotes.py` | Re-run quote validation on stored results after `verify_quote()` improvements (no new API calls). |
+| `pipeline/fix_quote_failures.py` | Re-screen `quote_validation_failed` records with cleaned (mojibake-stripped) PDF text. |
+| `pipeline/add_eppi_ids.py` | Join Zotero keys to EPPI IDs and add an `eppi_id` column to the review CSVs. |
 | `requirements.txt` | Python dependencies. |
 | `.env` | `OPENROUTER_API_KEY` + OpenRouter HTTP headers (**git-ignored**). |
 
@@ -60,31 +90,33 @@ ground-truth labels (sensitivity, Cohen's κ, ECE, Brier, reliability).
 
 | Path | Project | Purpose |
 |---|---|---|
-| `prompts/prompts-screening-mhaa-unified-v1.4.3.md` | MHAA | **TA screener (§1) + critic/adjudicator (§2) + calibration.** Hierarchical exclusion codes 1→7 with the AI-component positive test (Code 4), MH-primary test, governance/safety carve-out. Canonical path for new TA runs. |
-| `prompts-screening-mhaa-unified-v1.4.md` | MHAA | Old copy (v1.4 header, v1.4.3 body). Kept for runners that reference this filename. |
-| `prompts/prompts-screening-mhaa-fulltext-v1.md` | MHAA | **Full-text variant of v1.4.3.** Input scope changed from title+abstract to title+full PDF text. Same exclusion codes, same AI-component test, same carve-outs. Quotes may come from the body. Used for the GE_FTS run. |
-| `strongminds/ulcm-tas-screening-prompts-hierarchical.md` | ULCM | **Monolithic TA screener + critic with RQ routing (v1.1, best monolithic).** Superseded by the orchestrator prompt below from v1.6 onward; kept for reproducibility. 18 RQs across 7 routes (see below). Route-conditional exclusion: RQ1 (determinants) and RQ18 (measurement) skip the intervention criterion; RQ7-9/12/14 allow specialist delivery and HIC evidence; RQ11 allows non-case populations. Supports `screening_level: review \| primary_study`. |
-| `strongminds/ulcm-orchestrator-prompts.md` | ULCM | **Orchestrator prompts (v1.7, canonical).** Router → no_intervention screener (RQ1/RQ18) → intervention screener (all other routes) → critic. v1.7 = router tightened (prevalence/biomarker/measurement studies not tagged `intervention`) + Criterion 4 reframed around "does the intervention target depression" rather than "is depression the primary outcome." |
-| `strongminds/ulcm-orchestrator-prompts-v1.8.md` | ULCM | **v1.8 staged (not canonical yet).** v1.7 + ZS's scope rules encoded: biological-mechanism exclusion (neuroimaging/biomarker/genetic → FAIL), sub-population scope rule (prisoners OUT, students age-gated, refugees IN, depression-target rule), RQ18 depression-specific instruments only, critic authoritative-scope-rules block. Run only after v1.7 calibration confirms the lever effect. |
+| `projects/girl_effect/prompts/prompts-screening-mhaa-unified-v1.4.3.md` | MHAA | **TA screener (§1) + critic/adjudicator (§2) + calibration.** Hierarchical exclusion codes 1→7 with the AI-component positive test (Code 4), MH-primary test, governance/safety carve-out. Canonical path for new TA runs. |
+| `projects/girl_effect/prompts/prompts-screening-mhaa-unified-v1.4.md` | MHAA | Old copy (v1.4 header, v1.4.3 body). Kept for runners that reference this filename. |
+| `projects/girl_effect/prompts/prompts-screening-mhaa-fulltext-v1.md` | MHAA | **Full-text variant of v1.4.3.** Input scope changed from title+abstract to title+full PDF text. Same exclusion codes, same AI-component test, same carve-outs. Quotes may come from the body. Used for the GE_FTS run. |
+| `projects/strongminds/prompts/ulcm-tas-screening-prompts-hierarchical.md` | ULCM | **Monolithic TA screener + critic with RQ routing (v1.1, best monolithic).** Superseded by the orchestrator prompt below from v1.6 onward; kept for reproducibility. 18 RQs across 7 routes (see below). Route-conditional exclusion: RQ1 (determinants) and RQ18 (measurement) skip the intervention criterion; RQ7-9/12/14 allow specialist delivery and HIC evidence; RQ11 allows non-case populations. Supports `screening_level: review \| primary_study`. |
+| `projects/strongminds/prompts/ulcm-orchestrator-prompts.md` | ULCM | **Orchestrator prompts (v1.7, canonical).** Router → no_intervention screener (RQ1/RQ18) → intervention screener (all other routes) → critic. v1.7 = router tightened (prevalence/biomarker/measurement studies not tagged `intervention`) + Criterion 4 reframed around "does the intervention target depression" rather than "is depression the primary outcome." |
+| `projects/strongminds/prompts/ulcm-orchestrator-prompts-v1.8.md` | ULCM | **v1.8 staged (not canonical yet).** v1.7 + ZS's scope rules encoded: biological-mechanism exclusion (neuroimaging/biomarker/genetic → FAIL), sub-population scope rule (prisoners OUT, students age-gated, refugees IN, depression-target rule), RQ18 depression-specific instruments only, critic authoritative-scope-rules block. Run only after v1.7 calibration confirms the lever effect. |
 
 ### Data & outputs
 
 | Path | Purpose |
 |---|---|
-| `data/ground_truth.xlsx` | MHAA source screening dataset (EPPI export). |
-| `data/records_462.jsonl` | Ingested MHAA TA records (462-record seed). |
-| `data/gt_462.json` | Ground-truth labels for the 462 seed. |
-| `data/output/*.jsonl` | Aggregated per-record results from past MHAA runs (git-ignored). |
-| `reports/` | MHAA calibration outputs: `metrics.json`, `confusion_matrix.png`, `reliability_diagram.png`, `errors.jsonl` (git-ignored). |
-| `strongminds/data/` | ULCM ingested records + ground-truth (git-ignored). |
-| `strongminds/reports/` | ULCM calibration outputs (git-ignored). |
-| `GE_FTS/` | **GE full-text screening set.** `pdfs/` (388 PDFs), `references_*.csv` (Zotero export), `data/` (ingested records + audit logs), `output/` (results JSONL), `reports/` (summary + triage CSVs + review email). All git-ignored. |
+| `projects/girl_effect/ta_screening/data/ground_truth.xlsx` | MHAA source screening dataset (EPPI export). |
+| `projects/girl_effect/ta_screening/data/records_462.jsonl` | Ingested MHAA TA records (462-record seed). |
+| `projects/girl_effect/ta_screening/data/gt_462.json` | Ground-truth labels for the 462 seed. |
+| `projects/girl_effect/ta_screening/output/*.jsonl` | Aggregated per-record results from past MHAA runs (git-ignored). |
+| `projects/strongminds/data/` | ULCM ingested records + ground-truth (`gt_510.json`, git-ignored; `groundtruth.csv` tracked). |
+| `projects/strongminds/artifacts/` | ULCM analysis outputs: GT adjudication, few-shot results, RIS scores. |
+| `projects/strongminds/docs/` | ULCM protocol, scope memos, and `ITERATION_LOG.md` (full history). |
+| `reports/` | Calibration outputs (shared): `metrics.json`, `confusion_matrix.png`, `reliability_diagram.png`, `errors.jsonl`. Overwritten by each `--calibrate` run (git-ignored). |
+| `projects/girl_effect/full_text/` | **GE full-text screening set.** `pdfs/` (388 PDFs), `references_*.csv` (Zotero export), `data/` (ingested records + audit logs), `output/` (results JSONL), `reports/` (summary + triage CSVs + review email). All git-ignored. |
 | `.kilo/` | Kilo CLI config (Agent Manager state only). |
 
 > Note on the two MHAA TA prompt files: `Compare-Object` on their contents returns
-> **IDENTICAL**. The root file's header still says "v1.4" but its body and change log are
-> v1.4.3. The `prompts/` copy is simply renamed to v1.4.3. Either path works with
-> `--prompt`; prefer the `prompts/` one for new runs.
+> **IDENTICAL**. The `...unified-v1.4.md` header still says "v1.4" but its body and change
+> log are v1.4.3; `...unified-v1.4.3.md` is simply the renamed copy. Both now live in
+> `projects/girl_effect/prompts/` and either works with `--prompt`; prefer the `v1.4.3`
+> one for new runs.
 
 ---
 
@@ -115,10 +147,10 @@ Defaults match the MHAA `ground_truth.xlsx` layout (header on row index 1; colum
 `EPPI ID`, `PY`, `T1`, `AB`, `EPPI TAS decision`).
 
 ```powershell
-python ingest.py --input data/ground_truth.xlsx --out-dir data
+python pipeline/ingest.py --input projects/girl_effect/ta_screening/data/ground_truth.xlsx --out-dir data
 ```
 
-Produces `data/records_<N>.jsonl` and `data/gt_<N>.json`. For a CSV or a different column
+Produces `projects/girl_effect/ta_screening/data/records_<N>.jsonl` and `projects/girl_effect/ta_screening/data/gt_<N>.json`. For a CSV or a different column
 layout, see the override flags in `ingest.py --help`.
 
 ### 2. Run k-sampled screening
@@ -127,11 +159,11 @@ k=5 sampled runs per record, per model, at temperature > 0. Two model families a
 parallel for cross-model consensus; flagged records are sent to the critic.
 
 ```powershell
-python k5_runner.py `
-    --prompt prompts/prompts-screening-mhaa-unified-v1.4.3.md `
-    --records data/records_462.jsonl `
-    --gt data/gt_462.json `
-    --out data/output/results_k5_462.jsonl `
+python pipeline/k5_runner.py `
+    --prompt projects/girl_effect/prompts/prompts-screening-mhaa-unified-v1.4.3.md `
+    --records projects/girl_effect/ta_screening/data/records_462.jsonl `
+    --gt projects/girl_effect/ta_screening/data/gt_462.json `
+    --out projects/girl_effect/ta_screening/output/results_k5_462.jsonl `
     --k 5 `
     --temperature 0.5 `
     --models anthropic/claude-sonnet-4 z-ai/glm-5.2 `
@@ -155,7 +187,7 @@ can re-run the same command after an interruption.
 ### 3. Calibrate against ground truth
 
 ```powershell
-python k5_runner.py --calibrate data/output/results_k5_462.jsonl --gt data/gt_462.json
+python pipeline/k5_runner.py --calibrate projects/girl_effect/ta_screening/output/results_k5_462.jsonl --gt projects/girl_effect/ta_screening/data/gt_462.json
 ```
 
 Prints the confusion matrix, sensitivity/specificity/precision/κ/ECE/Brier, per-model
@@ -175,37 +207,37 @@ model) without re-paying for the Claude calls:
 
 ```powershell
 # a) Run GLM-only (one model) into its own file
-python k5_runner.py `
-    --prompt prompts/prompts-screening-mhaa-unified-v1.4.3.md `
-    --records data/records_462.jsonl --gt data/gt_462.json `
-    --out data/output/results_glm_462.jsonl `
+python pipeline/k5_runner.py `
+    --prompt projects/girl_effect/prompts/prompts-screening-mhaa-unified-v1.4.3.md `
+    --records projects/girl_effect/ta_screening/data/records_462.jsonl --gt projects/girl_effect/ta_screening/data/gt_462.json `
+    --out projects/girl_effect/ta_screening/output/results_glm_462.jsonl `
     --k 5 --temperature 0.5 `
     --models z-ai/glm-5.2 `
     --uncertainty-band 0.4 0.6 `
     --workers 5
 
 # b) Merge Claude runs (from the old file) + GLM runs (from the new file), re-aggregate
-python merge_results.py `
-    --old data/output/results_k5_462.jsonl `
-    --new data/output/results_glm_462.jsonl `
-    --records data/records_462.jsonl `
-    --out data/output/results_merged_462.jsonl `
+python pipeline/merge_results.py `
+    --old projects/girl_effect/ta_screening/output/results_k5_462.jsonl `
+    --new projects/girl_effect/ta_screening/output/results_glm_462.jsonl `
+    --records projects/girl_effect/ta_screening/data/records_462.jsonl `
+    --out projects/girl_effect/ta_screening/output/results_merged_462.jsonl `
     --uncertainty-band 0.4 0.6 `
     --claude-model anthropic/claude-sonnet-4 `
     --glm-model z-ai/glm-5.2
 
 # c) Re-run the critic on the merged verdict's flagged records
-python run_critic.py `
-    --prompt prompts/prompts-screening-mhaa-unified-v1.4.3.md `
-    --records data/records_462.jsonl `
-    --in data/output/results_merged_462.jsonl `
-    --out data/output/results_critic_462.jsonl `
+python pipeline/run_critic.py `
+    --prompt projects/girl_effect/prompts/prompts-screening-mhaa-unified-v1.4.3.md `
+    --records projects/girl_effect/ta_screening/data/records_462.jsonl `
+    --in projects/girl_effect/ta_screening/output/results_merged_462.jsonl `
+    --out projects/girl_effect/ta_screening/output/results_critic_462.jsonl `
     --critic-model mistralai/mistral-large `
     --temperature 0.5 `
     --workers 15
 
 # d) Calibrate the merged + critic-adjudicated file
-python k5_runner.py --calibrate data/output/results_critic_462.jsonl --gt data/gt_462.json
+python pipeline/k5_runner.py --calibrate projects/girl_effect/ta_screening/output/results_critic_462.jsonl --gt projects/girl_effect/ta_screening/data/gt_462.json
 ```
 
 `merge_results.py` does **not** make new API calls — it reuses stored per-run objects and
@@ -262,7 +294,7 @@ The MHAA prompt spec is a single document with two roles:
 - **§2 `mhaa.screening.critic`** — second-opinion adjudicator, invoked only on flagged
   records. Re-screens from scratch, then `confirm`/`override`.
 
-**Full-text variant** (`prompts-screening-mhaa-fulltext-v1.md`): identical criteria to
+**Full-text variant** (`projects/girl_effect/prompts/prompts-screening-mhaa-fulltext-v1.md`): identical criteria to
 v1.4.3, but the input scope changed from title+abstract to title+full PDF text. Verbatim
 quotes may come from the body. Used for the GE_FTS run (388 PDFs, GLM-5.2, k=1).
 
@@ -317,10 +349,10 @@ Zotero reference set (388 PDFs).
 ### 1. Ingest PDFs
 
 ```powershell
-python ingest_fts.py `
-    --csv GE_FTS/references_20260718_204803.csv `
-    --pdfs-dir GE_FTS/pdfs `
-    --out-dir GE_FTS/data
+python pipeline/ingest_fts.py `
+    --csv projects/girl_effect/full_text/references_20260718_204803.csv `
+    --pdfs-dir projects/girl_effect/full_text/pdfs `
+    --out-dir projects/girl_effect/full_text/data
 ```
 
 Extracts text from each PDF via PyMuPDF, writes `records_<n>.jsonl` (full text in the
@@ -331,10 +363,10 @@ scanned images).
 ### 2. Run full-text screening
 
 ```powershell
-python k5_runner.py `
-    --prompt prompts/prompts-screening-mhaa-fulltext-v1.md `
-    --records GE_FTS/data/records_388.jsonl `
-    --out GE_FTS/output/results_fts_glm_388.jsonl `
+python pipeline/k5_runner.py `
+    --prompt projects/girl_effect/prompts/prompts-screening-mhaa-fulltext-v1.md `
+    --records projects/girl_effect/full_text/data/records_388.jsonl `
+    --out projects/girl_effect/full_text/output/results_fts_glm_388.jsonl `
     --k 1 --temperature 0 `
     --models z-ai/glm-5.2 `
     --workers 5
@@ -351,13 +383,13 @@ with `rerun_flagged.py --max-tokens 4000`.
 
 ```powershell
 # Flatten results → review CSV
-python summarize_fts.py `
-    --results GE_FTS/output/results_fts_glm_388.jsonl `
-    --records GE_FTS/data/records_388.jsonl `
-    --out GE_FTS/reports/summary.csv
+python pipeline/summarize_fts.py `
+    --results projects/girl_effect/full_text/output/results_fts_glm_388.jsonl `
+    --records projects/girl_effect/full_text/data/records_388.jsonl `
+    --out projects/girl_effect/full_text/reports/summary.csv
 
 # Triage CSVs: excludes (high-stakes) + flagged INCLUDEs (with flag-reason classification)
-python generate_triage.py
+python pipeline/generate_triage.py
 ```
 
 ### 4. Human review + calibration
@@ -367,12 +399,12 @@ Reviewers add a `human_decision` column (INCLUDE / EXCLUDE / blank) directly to
 
 ```powershell
 # Convert annotated CSV → ground-truth JSON
-python make_gt_from_review.py `
-    --csv GE_FTS/reports/summary_annotated.csv `
-    --out GE_FTS/data/gt_388.json
+python pipeline/make_gt_from_review.py `
+    --csv projects/girl_effect/full_text/reports/summary_annotated.csv `
+    --out projects/girl_effect/full_text/data/gt_388.json
 
 # Calibrate
-python k5_runner.py --calibrate GE_FTS/output/results_fts_glm_388.jsonl --gt GE_FTS/data/gt_388.json
+python pipeline/k5_runner.py --calibrate projects/girl_effect/full_text/output/results_fts_glm_388.jsonl --gt projects/girl_effect/full_text/data/gt_388.json
 ```
 
 ---
@@ -381,16 +413,16 @@ python k5_runner.py --calibrate GE_FTS/output/results_fts_glm_388.jsonl --gt GE_
 
 ```powershell
 # 1. Ingest the StrongMinds paired-row CSV (decision on the row below each record)
-python ingest.py --input strongminds/data/groundtruth.csv --out-dir strongminds/data `
+python pipeline/ingest.py --input projects/strongminds/data/groundtruth.csv --out-dir projects/strongminds/data `
     --format strongminds_csv
 
 # 2. Run k-sampled screening with RQ routing
-python k5_runner.py `
+python pipeline/k5_runner.py `
     --project strongminds `
-    --prompt strongminds/ulcm-tas-screening-prompts-hierarchical.md `
-    --records strongminds/data/records_510.jsonl `
-    --gt strongminds/data/gt_510.json `
-    --out strongminds/data/output/results_k5_510.jsonl `
+    --prompt projects/strongminds/prompts/ulcm-tas-screening-prompts-hierarchical.md `
+    --records projects/strongminds/data/records_510.jsonl `
+    --gt projects/strongminds/data/gt_510.json `
+    --out projects/strongminds/data/output/results_k5_510.jsonl `
     --k 5 --temperature 0.3 `
     --models anthropic/claude-sonnet-4 z-ai/glm-5.2 `
     --uncertainty-band 0.4 0.6 `
@@ -398,8 +430,8 @@ python k5_runner.py `
     --workers 5
 
 # 3. Calibrate
-python k5_runner.py --calibrate strongminds/data/output/results_k5_510.jsonl `
-    --gt strongminds/data/gt_510.json
+python pipeline/k5_runner.py --calibrate projects/strongminds/data/output/results_k5_510.jsonl `
+    --gt projects/strongminds/data/gt_510.json
 ```
 
 The `--project strongminds` flag selects the ULCM user/critic message templates (which
@@ -410,16 +442,16 @@ includes a 6-step `hierarchical_trace` with rationale + quote per step).
 > **Note:** the orchestrator (`orchestrator.py`) supersedes the monolithic
 > `k5_runner.py` workflow for ULCM from v1.6 onward. It splits screening into a router →
 > route-specific screener → critic pipeline, and its prompt file
-> (`strongminds/ulcm-orchestrator-prompts.md`) is the canonical one for new ULCM runs.
-> See `strongminds/ITERATION_LOG.md` Part I §5–7 and Part III §16–§20 for the full history.
+> (`projects/strongminds/prompts/ulcm-orchestrator-prompts.md`) is the canonical one for new ULCM runs.
+> See `projects/strongminds/docs/ITERATION_LOG.md` Part I §5–7 and Part III §16–§20 for the full history.
 
 ```powershell
 # Current canonical ULCM run (v1.7 prompts, full 510 + critic, resumable)
-python orchestrator.py `
-    --prompt strongminds/ulcm-orchestrator-prompts.md `
-    --records strongminds/data/records_510.jsonl `
-    --gt strongminds/data/gt_510.json `
-    --out strongminds/data/output/results_orch_v17_510.jsonl `
+python pipeline/orchestrator.py `
+    --prompt projects/strongminds/prompts/ulcm-orchestrator-prompts.md `
+    --records projects/strongminds/data/records_510.jsonl `
+    --gt projects/strongminds/data/gt_510.json `
+    --out projects/strongminds/data/output/results_orch_v17_510.jsonl `
     --k 5 --temperature 0.3 `
     --models anthropic/claude-sonnet-4 z-ai/glm-5.2 `
     --uncertainty-band 0.4 0.6 `
@@ -427,9 +459,9 @@ python orchestrator.py `
     --workers 8
 
 # Calibrate (writes reports/metrics.json, reports/errors.jsonl)
-python k5_runner.py --calibrate `
-    strongminds/data/output/results_orch_v17_510.jsonl `
-    --gt strongminds/data/gt_510.json
+python pipeline/k5_runner.py --calibrate `
+    projects/strongminds/data/output/results_orch_v17_510.jsonl `
+    --gt projects/strongminds/data/gt_510.json
 ```
 
 ---
@@ -440,11 +472,11 @@ python k5_runner.py --calibrate `
 
 | Artifact | Status | Location |
 |---|---|---|
-| v1.6 results (original GT) | Done — κ 0.512 / sens 0.649 / spec 0.906 | `strongminds/data/output/results_orch_v16_510.jsonl` |
-| Cleaned GT (10 ZS-confirmed corrections) | **Patched locally** — `gt_510.json`; original at `gt_510_original.json` | `strongminds/data/` |
-| v1.7 prompts (levers 1+2) | Staged in canonical prompt file | `strongminds/ulcm-orchestrator-prompts.md` |
-| v1.7 run | **Running** (pid 22004, ~73% done) | `strongminds/data/output/results_orch_v17_510.jsonl` |
-| v1.8 prompts (ZS scope rules) | Staged separately (do not touch v1.7 run) | `strongminds/ulcm-orchestrator-prompts-v1.8.md` |
+| v1.6 results (original GT) | Done — κ 0.512 / sens 0.649 / spec 0.906 | `projects/strongminds/data/output/results_orch_v16_510.jsonl` |
+| Cleaned GT (10 ZS-confirmed corrections) | **Patched locally** — `gt_510.json`; original at `gt_510_original.json` | `projects/strongminds/data/` |
+| v1.7 prompts (levers 1+2) | Staged in canonical prompt file | `projects/strongminds/prompts/ulcm-orchestrator-prompts.md` |
+| v1.7 run | **Running** (pid 22004, ~73% done) | `projects/strongminds/data/output/results_orch_v17_510.jsonl` |
+| v1.8 prompts (ZS scope rules) | Staged separately (do not touch v1.7 run) | `projects/strongminds/prompts/ulcm-orchestrator-prompts-v1.8.md` |
 | ZS scope answers | Captured (bio-correlates OUT; depression-target rule; RQ18 depression-specific only) | `Downloads/scope_decisions_for_ZS_done_ZS.docx` |
 
 ### Immediate next steps, in order
@@ -467,7 +499,7 @@ python k5_runner.py --calibrate `
 
 4. **Decide whether to run v1.8.** v1.8 encodes ZS's three scope decisions as explicit
    FAIL signals + an authoritative scope-rules block for the critic. Run it the same way
-   as v1.7 but point `--prompt` at `strongminds/ulcm-orchestrator-prompts-v1.8.md` and
+   as v1.7 but point `--prompt` at `projects/strongminds/prompts/ulcm-orchestrator-prompts-v1.8.md` and
    `--out` at a v1.8 results file. Projected: κ ~0.68–0.70, approaching but not crossing
    the 0.70 threshold. **Run v1.8 only if v1.7 confirms the lever effect** — if v1.7
    didn't move the needle, the router/critic issues need a deeper look first.
@@ -495,17 +527,17 @@ the 502 labeled records) has **not been run** and is the decision-maker.
   one — it doubled inter-model agreement (κ 0.213 → 0.546) vs the monolithic prompt.
   Further prompt-splitting optimizes the part that already works; the real limits are
   (a) information absent from the abstract and (b) GT noise.
-- Full iteration history: `strongminds/ITERATION_LOG.md` (Parts I–III, §1–§20).
+- Full iteration history: `projects/strongminds/docs/ITERATION_LOG.md` (Parts I–III, §1–§20).
 
 ### Files added in Part III (this session)
 
 | File | Purpose |
 |---|---|
-| `strongminds/gt_error_candidates_7.csv` | 7 FN-type GT-error candidates sent to ZS (abstracts included) |
-| `strongminds/gt_error_candidates_5_fp.csv` | 5 FP-type GT-error candidates sent to ZS (abstracts included) |
-| `strongminds/scope_decisions_for_ZS.md` / `.docx` | Protocol-scope decision memo (3 questions) + ZS's filled-in answers in the `.docx` |
-| `strongminds/build_scope_memo_docx.py` | Script that regenerates the `.docx` memo from the source data |
-| `strongminds/ulcm-orchestrator-prompts-v1.8.md` | v1.8 staged prompts (ZS scope rules encoded) — run only after v1.7 calibration |
+| `projects/strongminds/artifacts/gt_error_candidates_7.csv` | 7 FN-type GT-error candidates sent to ZS (abstracts included) |
+| `projects/strongminds/artifacts/gt_error_candidates_5_fp.csv` | 5 FP-type GT-error candidates sent to ZS (abstracts included) |
+| `projects/strongminds/docs/scope_decisions_for_ZS.md` / `.docx` | Protocol-scope decision memo (3 questions) + ZS's filled-in answers in the `.docx` |
+| `projects/strongminds/scripts/build_scope_memo_docx.py` | Script that regenerates the `.docx` memo from the source data |
+| `projects/strongminds/prompts/ulcm-orchestrator-prompts-v1.8.md` | v1.8 staged prompts (ZS scope rules encoded) — run only after v1.7 calibration |
 
 ---
 
@@ -513,23 +545,23 @@ the 502 labeled records) has **not been run** and is the decision-maker.
 
 ```powershell
 # MHAA smoke test on the 10-record subset
-python k5_runner.py --prompt prompts/prompts-screening-mhaa-unified-v1.4.3.md `
-    --records data/records_10.jsonl --gt data/gt_10.json `
-    --out data/output/results_10.jsonl `
+python pipeline/k5_runner.py --prompt projects/girl_effect/prompts/prompts-screening-mhaa-unified-v1.4.3.md `
+    --records projects/girl_effect/ta_screening/data/records_10.jsonl --gt projects/girl_effect/ta_screening/data/gt_10.json `
+    --out projects/girl_effect/ta_screening/output/results_10.jsonl `
     --k 5 --temperature 0.5 --models z-ai/glm-5.2 --workers 5
 
 # MHAA re-calibrate any existing results file without re-running models
-python k5_runner.py --calibrate data/output/results_v143_critic_462.jsonl --gt data/gt_462.json
+python pipeline/k5_runner.py --calibrate projects/girl_effect/ta_screening/output/results_v143_critic_462.jsonl --gt projects/girl_effect/ta_screening/data/gt_462.json
 
 # GE_FTS re-screen flagged records with higher max_tokens
-python rerun_flagged.py `
-    --results GE_FTS/output/results_fts_glm_388.jsonl `
-    --records GE_FTS/data/records_388.jsonl `
-    --prompt prompts/prompts-screening-mhaa-fulltext-v1.md `
+python pipeline/rerun_flagged.py `
+    --results projects/girl_effect/full_text/output/results_fts_glm_388.jsonl `
+    --records projects/girl_effect/full_text/data/records_388.jsonl `
+    --prompt projects/girl_effect/prompts/prompts-screening-mhaa-fulltext-v1.md `
     --model z-ai/glm-5.2 --max-tokens 4000
 
 # GE_FTS re-validate quotes after verify_quote() improvements (no API calls)
-python revalidate_quotes.py `
-    --results GE_FTS/output/results_fts_glm_388.jsonl `
-    --records GE_FTS/data/records_388.jsonl
+python pipeline/revalidate_quotes.py `
+    --results projects/girl_effect/full_text/output/results_fts_glm_388.jsonl `
+    --records projects/girl_effect/full_text/data/records_388.jsonl
 ```

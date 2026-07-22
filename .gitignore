@@ -4,30 +4,46 @@
 # Python
 __pycache__/
 *.pyc
+.mypy_cache/
 
-# Data outputs (regenerable, large)
-data/output/*
-!data/output/results_v143_critic_462.jsonl
-data/checkpoints/
-data/records_*.jsonl
-data/gt_*.json
+# Kilo CLI state
+.kilo/
 
-# StrongMinds data outputs (regenerable, large)
-strongminds/data/output/
-strongminds/data/checkpoints/
-strongminds/data/records_*.jsonl
-strongminds/data/gt_*.json
-
-# Reports (regenerable)
+# ---------------------------------------------------------------------------
+# Calibration reports (regenerable; k5_runner/orchestrator write here)
+# ---------------------------------------------------------------------------
 reports/
-strongminds/reports/
 
-# Temp scripts
-_*.py
+# ---------------------------------------------------------------------------
+# Girl Effect (MHAA) - TA screening: records, ground truth, outputs (large)
+# ---------------------------------------------------------------------------
+projects/girl_effect/ta_screening/data/records_*.jsonl
+projects/girl_effect/ta_screening/data/gt_*.json
+projects/girl_effect/ta_screening/data/checkpoints/
+projects/girl_effect/ta_screening/output/*
+# Keep this one committed result as a reference sample
+!projects/girl_effect/ta_screening/output/results_v143_critic_462.jsonl
 
-# GE_FTS data outputs (regenerable, large)
-GE_FTS/pdfs/
-GE_FTS/data/
-GE_FTS/output/
-GE_FTS/reports/
-GE_FTS/*.csv
+# ---------------------------------------------------------------------------
+# Girl Effect (MHAA) - full-text screening: PDFs, records, outputs (large)
+# ---------------------------------------------------------------------------
+projects/girl_effect/full_text/pdfs/
+projects/girl_effect/full_text/data/
+projects/girl_effect/full_text/output/
+projects/girl_effect/full_text/reports/
+projects/girl_effect/full_text/*.csv
+
+# ---------------------------------------------------------------------------
+# StrongMinds (ULCM) - records, ground truth, outputs (large)
+# groundtruth.csv stays tracked (source ground truth).
+# ---------------------------------------------------------------------------
+projects/strongminds/data/output/
+projects/strongminds/data/checkpoints/
+projects/strongminds/data/records_*.jsonl
+projects/strongminds/data/gt_*.json
+projects/strongminds/data/ris_records.jsonl
+# Raw RIS corpus (large source exports, ~80 MB)
+projects/strongminds/strongminds_ris/
+
+# Temp / scratch scripts
+pipeline/_*.py
