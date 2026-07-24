@@ -57,7 +57,13 @@ mhaa_screening/
 │       ├── data/                   #   records, ground truth, run outputs
 │       ├── artifacts/              #   analysis outputs (adjudication, few-shot, RIS scores)
 │       ├── docs/                   #   protocol, scope memos, ITERATION_LOG.md
+│       ├── docs/                   #   protocol, scope memos, ITERATION_LOG.md
 │       └── strongminds_ris/        #   raw RIS corpus
+|       ├── full_text_retrieval/    #   PDF retrieval pipeline (adapted from GE-ftr)
+│       │   ├── scripts/            #   step0-step3 + helpers
+│       │   ├── pdfs/               #   retrieved PDFs (git-ignored)
+│       │   ├── logs/               #   inventory CSVs (git-ignored)
+│       │   └── README.md           #   FTR pipeline docs
 ├── reports/                        # calibration output (metrics/plots/errors, last run)
 ├── README.md · requirements.txt · .env
 ```

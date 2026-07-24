@@ -1,0 +1,5 @@
+requests>=2.31
+pandas>=2.0
+cloudscraper>=1.2.71   # bypass Cloudflare JS challenge on OA publisher pages
+playwright>=1.40       # real-Chrome fetch for JS/Akamai publishers (step 2d/2e)
+PyMuPDF>=1.24          # read DOI/title from PDFs for manual matching (fitz)

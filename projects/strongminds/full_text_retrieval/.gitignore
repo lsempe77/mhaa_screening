@@ -1,0 +1,24 @@
+# Secrets
+.zotero_key
+.env
+
+# Authenticated browser profile (Oxford SSO session cookies)
+.ox_profile/
+
+# Retrieved PDFs (can be large; regenerate from the inventory CSV)
+pdfs/
+
+# Full local export (CSV + all PDFs; regenerate with export_library.py)
+library_export/
+
+# Logs and checkpoints
+logs/
+
+# Python
+__pycache__/
+*.pyc
+
+# Generated outputs
+_*
+worklist.html
+missing_pdfs_*.csv
