@@ -45,7 +45,13 @@ mhaa_screening/
 │   ├── k5_runner.py                #   main k-sampled screener + calibration
 │   ├── orchestrator.py             #   ULCM router → screener → critic runner
 │   ├── ingest.py / ingest_fts.py   #   dataset / PDF ingestion
+│   ├── orchestrator.py             #   ULCM router → screener → critic runner
 │   └── ...                         #   merge, critic, triage, quote-fix helpers
+├── pipeline/ftr/                   # full-text retrieval pipeline (step0-step3 + helpers)
+│   ├── config.py                   #   FTR config (FTR_PROJECT_DIR env var for project data)
+│   ├── step0_build_inventory.py    #   build inventory from RIS file
+│   ├── step1b-step3 + helpers      #   DOI recovery, PDF fetch, Zotero attach
+│   └── README.md                   #   FTR pipeline docs
 ├── projects/
 │   ├── girl_effect/                # MHAA — digital/AI mental health for young people
 │   │   ├── prompts/                #   TA + full-text screening prompts
@@ -57,13 +63,11 @@ mhaa_screening/
 │       ├── data/                   #   records, ground truth, run outputs
 │       ├── artifacts/              #   analysis outputs (adjudication, few-shot, RIS scores)
 │       ├── docs/                   #   protocol, scope memos, ITERATION_LOG.md
-│       ├── docs/                   #   protocol, scope memos, ITERATION_LOG.md
-│       └── strongminds_ris/        #   raw RIS corpus
-|       ├── full_text_retrieval/    #   PDF retrieval pipeline (adapted from GE-ftr)
-│       │   ├── scripts/            #   step0-step3 + helpers
-│       │   ├── pdfs/               #   retrieved PDFs (git-ignored)
-│       │   ├── logs/               #   inventory CSVs (git-ignored)
-│       │   └── README.md           #   FTR pipeline docs
+│       ├── strongminds_ris/        #   raw RIS corpus
+│       └── full_text_retrieval/    #   FTR project data (pdfs/, logs/, .env)
+│           ├── pdfs/               #     retrieved PDFs (git-ignored)
+│           ├── logs/               #     inventory CSVs (git-ignored)
+│           └── README.md           #     FTR project data docs
 ├── reports/                        # calibration output (metrics/plots/errors, last run)
 ├── README.md · requirements.txt · .env
 ```
