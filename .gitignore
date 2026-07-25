@@ -33,6 +33,10 @@ projects/girl_effect/full_text/output/
 projects/girl_effect/full_text/reports/
 projects/girl_effect/full_text/*.csv
 
+# Data-extraction stage outputs (per-project; engine code lives in pipeline/extraction/)
+projects/*/full_text/extraction/output/
+projects/*/full_text/extraction/reports/
+
 # ---------------------------------------------------------------------------
 # StrongMinds (ULCM) - records, ground truth, outputs (large)
 # groundtruth.csv stays tracked (source ground truth).

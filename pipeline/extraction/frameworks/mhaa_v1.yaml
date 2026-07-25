@@ -1,0 +1,887 @@
+# =====================================================================
+# MHAA Data-Extraction Framework — v1
+# Single source of truth for the extraction engine.
+# Encodes projects/girl_effect/DEX/MHAA_extraction_framework-v1.docx.
+#
+# Structure:
+#   framework metadata
+#   groups[]  — one per extraction table (baseline + 7 review streams)
+#     each group: id, label, review_question, feeds (eval sections), gate (optional)
+#     fields[] — one per extraction field
+#       id     : the doc field code (e.g. "1a.1", "base.5")
+#       label  : short human label (Excel column header)
+#       type   : text | integer | boolean | categorical | categorical_multi
+#                | composite | composite_multi
+#       key    : (optional) semantic key used in gate expressions
+#       allowed: (categorical*) list of allowed values
+#       subfields: (composite*) list of {id, label, type} the model must fill
+#       what   : the "what to extract" instruction handed to the model
+#       feeds  : the evaluation-protocol section(s) this field informs (crosswalk)
+#
+# Extraction discipline (enforced by the prompt, see prompts.py):
+#   - Every non-"not reported" field must carry >=1 verbatim supporting quote.
+#   - `reported: false` is a first-class value, distinct from a guess.
+#   - Numbers, instrument names and CIs are copied exactly; never inferred.
+# =====================================================================
+framework_id: mhaa_extraction
+version: v1
+label: MHAA Rapid Evidence Mapping — Data Extraction
+source_doc: projects/girl_effect/DEX/MHAA_extraction_framework-v1.docx
+primary_question: >-
+  What can we learn from existing digital and AI-enabled mental health
+  interventions for young people to inform the design, implementation, and
+  evaluation of a GenAI mental health intervention in South Africa?
+
+groups:
+  # ================================================================
+  # BASELINE (universal) — extracted for every included record.
+  # RR Appendix F (12-field codebook) + Eval-protocol additions.
+  # ================================================================
+  - id: baseline
+    label: "Baseline (universal) fields"
+    review_question: "Universal codebook — extracted for every included record."
+    feeds: "Governance/reporting; gates the conditional streams (esp. 1c)."
+    fields:
+      - id: base.1
+        label: "Bibliographic"
+        type: composite
+        subfields:
+          - {id: authors, label: "Authors", type: text}
+          - {id: year, label: "Year", type: text}
+          - {id: title, label: "Title", type: text}
+          - {id: venue, label: "Venue/journal", type: text}
+          - {id: doi, label: "DOI", type: text}
+          - {id: publication_type, label: "Publication type", type: text}
+        what: "Authors, year, title, venue, DOI, publication type."
+        feeds: "RR Appendix F"
+      - id: base.2
+        label: "Country / countries"
+        type: text
+        what: >-
+          Country or countries of the study, as ISO 3166-1 alpha-3 codes,
+          comma-separated if multi-country. If only a region is named, record
+          the region verbatim and leave codes blank.
+        feeds: "RR Appendix F"
+      - id: base.3
+        label: "Setting"
+        type: categorical
+        allowed: [school, PHC, community, online, mixed, other, "not reported"]
+        what: >-
+          Primary delivery setting. Use 'other' with free-text detail in notes
+          when none fit; 'not reported' if the source does not state it.
+        feeds: "RR Appendix F"
+      - id: base.4
+        label: "Sample size"
+        type: composite
+        subfields:
+          - {id: n, label: "N", type: integer}
+          - {id: basis, label: "Analysis or enrolled", type: text}
+          - {id: n_studies, label: "N primary studies (reviews)", type: integer}
+          - {id: pooled_participants, label: "Pooled participants (reviews)", type: integer}
+        what: >-
+          Analysis sample if reported, otherwise enrolled (flag which in 'basis').
+          For reviews: number of primary studies and pooled participants.
+        feeds: "RR Appendix F"
+      - id: base.5
+        label: "Population age band"
+        type: composite
+        subfields:
+          - {id: as_reported, label: "Age band as reported", type: text}
+          - {id: maps_10_19, label: "Maps to 10-19", type: boolean}
+          - {id: maps_10_24, label: "Maps to 10-24", type: boolean}
+          - {id: maps_18_24, label: "Maps to 18-24", type: boolean}
+        what: >-
+          Report the age band as in the source, then map to 10-19, 10-24 and
+          18-24 where extractable. The 18-24 mapping lets records be filtered to
+          the evaluation study population.
+        feeds: "RR Appendix F + Eval §6.1"
+      - id: base.6
+        label: "Study design"
+        type: categorical
+        allowed: [RCT, "non-RCT trial", cohort, cross-sectional, qualitative,
+                  mixed-methods, SR, "SR+MA", scoping, umbrella, framework,
+                  regulatory, other]
+        what: "Study design; use the closest single category."
+        feeds: "RR Appendix F"
+      - id: base.7
+        label: "Intervention / object type"
+        type: text
+        what: >-
+          e.g., single-LLM chatbot, rule-based chatbot, hybrid, digital SSI,
+          app, SMS, other. Free text; be specific.
+        feeds: "RR Appendix F"
+      - id: base.8
+        label: "Review question(s) addressed"
+        type: categorical_multi
+        allowed: ["1a", "1b", "1c", "1d", "1e", "SA-context", "product-landscape"]
+        what: >-
+          Which review streams this record speaks to. Assign all that apply;
+          this drives which thematic groups are worth extracting.
+        feeds: "RR Appendix F"
+      - id: base.9
+        label: "Outcomes or properties reported"
+        type: text
+        what: "Outcomes or properties reported, verbatim from source where possible."
+        feeds: "RR Appendix F"
+      - id: base.10
+        label: "L&MICs flag"
+        type: boolean
+        key: lmic_flag
+        what: >-
+          TRUE if the study setting is a low- or middle-income country by World
+          Bank classification at study midpoint. Used to gate Stream 1c.
+        feeds: "RR Appendix F"
+      - id: base.11a
+        label: "SSA flag"
+        type: boolean
+        key: ssa_flag
+        what: "TRUE if the study setting is in Sub-Saharan Africa."
+        feeds: "RR Appendix F"
+      - id: base.11b
+        label: "South Africa flag"
+        type: boolean
+        key: south_africa_flag
+        what: "TRUE if the study setting is South Africa."
+        feeds: "RR Appendix F"
+      - id: base.12
+        label: "Evidence-type tag"
+        type: text
+        what: >-
+          One-line label for the kind of evidence, e.g. 'validation study',
+          'ecological audit', 'framework paper', 'meta-analysis of RCTs'.
+        feeds: "RR Appendix F"
+      - id: base.13
+        label: "Funding / conflict of interest"
+        type: composite
+        subfields:
+          - {id: intervention_funder, label: "Intervention funder(s)", type: text}
+          - {id: research_funder, label: "Research funder(s)", type: text}
+          - {id: coi_declaration, label: "COI declaration", type: text}
+        what: "Intervention funder(s); research funder(s); COI declaration."
+        feeds: "Added — Eval §10 (TREE / disclosure)"
+      - id: base.14
+        label: "Open-access status"
+        type: boolean
+        what: "TRUE if the record is open-access (for the reproducibility record)."
+        feeds: "Added — Eval TREE"
+      - id: base.15
+        label: "Minimal quality flag"
+        type: categorical
+        allowed: [high, moderate, low, "not appraisable"]
+        what: >-
+          Soundness-only minimal quality appraisal per RR §5.1. Base on
+          reporting completeness and basic risk-of-bias signals; 'not
+          appraisable' when the record type does not support appraisal.
+        feeds: "RR §5.1"
+
+  # ================================================================
+  # STREAM 1a — Effectiveness and engagement
+  # ================================================================
+  - id: "1a"
+    label: "Stream 1a — Effectiveness and engagement"
+    review_question: >-
+      What evidence exists on effectiveness, engagement, uptake, retention,
+      acceptability, and user experience?
+    feeds: "Eval §2.1, §5.3, §5.4 (Eff1–Eff3), §6.3, §6.6.2, §7"
+    fields:
+      - id: 1a.1
+        label: "Effect size on primary MH outcome"
+        type: composite
+        subfields:
+          - {id: estimate_type, label: "Estimate type (d/SMD/OR/RD)", type: text}
+          - {id: point_estimate, label: "Point estimate", type: text}
+          - {id: ci_95, label: "95% CI", type: text}
+          - {id: followup_window, label: "Follow-up window", type: text}
+          - {id: instrument, label: "Outcome instrument", type: text}
+          - {id: direction, label: "Direction of effect", type: text}
+        what: >-
+          For the primary mental-health outcome: type of estimate (Cohen's d,
+          SMD, OR, risk difference), point estimate, 95% CI, follow-up window,
+          outcome instrument, and direction of effect.
+        feeds: "Eval §6.3 (MDE 0.30 SD on PHQ-8); §6.6.1 comparator"
+      - id: 1a.2
+        label: "Effect size by outcome domain"
+        type: composite_multi
+        subfields:
+          - {id: domain, label: "Domain", type: text}
+          - {id: estimate_type, label: "Estimate type", type: text}
+          - {id: point_estimate, label: "Point estimate", type: text}
+          - {id: ci_95, label: "95% CI", type: text}
+          - {id: instrument, label: "Instrument", type: text}
+        what: >-
+          One row per outcome domain: depression, anxiety, distress, wellbeing,
+          goal-progress, help-seeking, mental-health literacy. Add extra rows for
+          any other mental-health outcomes reported.
+        feeds: "Eval §7 (PHQ-8, GAD-7, WHO-5, K-10, GBO, ORS secondaries)"
+      - id: 1a.3
+        label: "Effect trajectory and durability"
+        type: composite_multi
+        subfields:
+          - {id: time_since_completion, label: "Time since completion (0/1w/4w/8w/12w/≥6m)", type: text}
+          - {id: estimate, label: "Effect estimate + 95% CI", type: text}
+          - {id: within_or_between, label: "Within-group or between-group", type: text}
+          - {id: trajectory, label: "Maintained/increased/attenuated/disappeared/reversed/uncertain", type: text}
+        what: >-
+          Effect estimate and 95% CI at each reported assessment point, with
+          exact time since intervention completion. Whether the effect was
+          maintained, increased, attenuated, disappeared, reversed or remained
+          uncertain relative to the preceding assessment and the immediate
+          post-intervention effect; latest time point at which benefit was
+          observed. Distinguish within-group change from between-group effects.
+        feeds: "Eval §7, §9.1.3 (4-week primary / 12-week durability)"
+      - id: 1a.4
+        label: "Uptake rate"
+        type: composite
+        subfields:
+          - {id: rate, label: "Uptake rate", type: text}
+          - {id: numerator, label: "Numerator", type: text}
+          - {id: denominator, label: "Denominator (specified)", type: text}
+        what: >-
+          Proportion of invited/eligible users who start the intervention;
+          the denominator must be specified.
+        feeds: "Eval §6.4 recruitment, §6.6.4 monitoring"
+      - id: 1a.5
+        label: "Session-completion rate"
+        type: composite
+        subfields:
+          - {id: definition, label: "Definition of completion", type: text}
+          - {id: numerator, label: "Numerator", type: text}
+          - {id: denominator, label: "Denominator", type: text}
+          - {id: arm_level_rate, label: "Arm-level rate", type: text}
+        what: >-
+          Definition of 'completion', numerator and denominator, and the
+          arm-level completion rate.
+        feeds: "Eval §5.3 U1, §6.5"
+      - id: 1a.6
+        label: "Attrition — mid-session"
+        type: text
+        what: >-
+          Where in the flow users drop; per-stage attrition where reported; and
+          qualitative explanations for stopping, skipping, or incompletely
+          engaging with the intervention.
+        feeds: "Eval §6.5, §5.3 U2"
+      - id: 1a.7
+        label: "Acceptability instrument and score"
+        type: composite
+        subfields:
+          - {id: instrument, label: "Instrument (SUS/AAQ/CSQ-8/custom)", type: text}
+          - {id: score, label: "Score", type: text}
+          - {id: range, label: "Score range", type: text}
+          - {id: threshold, label: "Threshold", type: text}
+        what: >-
+          Acceptability instrument (e.g., SUS, AAQ, CSQ-8, custom), the score,
+          the score range and any threshold used.
+        feeds: "Eval §5.1 A1, §7"
+      - id: 1a.8
+        label: "Overall user experience and acceptability"
+        type: text
+        what: >-
+          Themes on overall helpfulness, relevance, ease of use, conversational
+          quality, perceived empathy, burden, privacy, trust, satisfaction, and
+          willingness to use or recommend the intervention.
+        feeds: "Eval §5.1 A3, §5.3 U4"
+      - id: 1a.9
+        label: "Engagement definition and indicators"
+        type: text
+        what: >-
+          How engagement was conceptualised or measured: time on task, number of
+          sessions or turns, depth of response, intervention completion,
+          action-step formulation, emotional involvement, return visits.
+        feeds: "Eval §5.3 E1–E4"
+      - id: 1a.10
+        label: "Action-step uptake evidence"
+        type: text
+        what: >-
+          Proportion formulating and reporting attempts to implement an action
+          step; timing; types of action selected; and qualitative accounts of
+          whether and how action steps were attempted, helpful or feasible.
+        feeds: "Eval E3"
+      - id: 1a.11
+        label: "Re-entry / return-visit patterns"
+        type: text
+        what: >-
+          Proportion returning; time to return; reasons for returning or not;
+          circumstances prompting re-entry; how participants and authors
+          interpreted repeat use.
+        feeds: "Eval E4 (help-seeking signal, not adherence)"
+      - id: 1a.12
+        label: "Variation in experiences and outcomes"
+        type: text
+        what: >-
+          Differences by age, gender, language, location or other relevant
+          characteristics; quantitative subgroup findings and qualitative
+          differences in experiences or explanatory themes.
+        feeds: "Eval §5.5 heterogeneity (H1–H3); equity/adaptation"
+
+  # ================================================================
+  # STREAM 1b — Intervention design
+  # ================================================================
+  - id: "1b"
+    label: "Stream 1b — Intervention design"
+    review_question: >-
+      What intervention modalities, therapeutic approaches, and design features
+      have been used, and are they associated with different outcomes?
+    feeds: "Eval §3, §4 (BEST), §6.6.1–§6.6.3"
+    fields:
+      - id: 1b.1
+        label: "Modality and delivery format"
+        type: text
+        what: >-
+          Chatbot (rule-based / conversational / LLM / hybrid), mobile app, SMS,
+          web module, IVR, VR, other; text, audio or multimodal delivery;
+          (a)synchronous interaction.
+        feeds: "Eval §6.6, §6.6.3"
+      - id: 1b.2
+        label: "Therapeutic approach"
+        type: composite
+        subfields:
+          - {id: approaches, label: "Approaches", type: text}
+          - {id: ssi_framing, label: "Explicit SSI framing (yes/no)", type: boolean}
+        what: >-
+          CBT, behavioural activation, cognitive restructuring, mindfulness,
+          safety planning, growth-mindset, self-compassion, IPT, other; and
+          whether there is explicit single-session-intervention (SSI) framing.
+        feeds: "Eval §3.1, §4 (BEST agent mapping)"
+      - id: 1b.3
+        label: "BEST-element analogue present"
+        type: composite
+        subfields:
+          - {id: brain_science_B, label: "Brain science (B)", type: boolean}
+          - {id: empowerment_E, label: "Empowerment (E)", type: boolean}
+          - {id: saying_is_believing_S, label: "Saying-is-believing (S)", type: boolean}
+          - {id: testimonials_T, label: "Testimonials (T)", type: boolean}
+          - {id: evidence_span, label: "Evidence span / other parameters", type: text}
+        what: >-
+          For each BEST element — Brain science (B), Empowerment (E),
+          Saying-is-believing (S), Testimonials (T) — yes/no with an evidence
+          span. Note any other design parameters used.
+        feeds: "Eval Consideration box (advice-giving vs reframing)"
+      - id: 1b.4
+        label: "Session dose, duration and structure"
+        type: text
+        what: >-
+          Single-session or repeated; intended number, duration and frequency of
+          sessions; number and order of stages or agents; required vs optional
+          components; fixed, user-selected or adaptive sequence; whether users
+          can pause, resume or repeat.
+        feeds: "Eval §3.3 (15–30 min session design)"
+      - id: 1b.5
+        label: "Orchestration architecture"
+        type: text
+        what: >-
+          Workflow-orchestrated, model-orchestrated or hybrid; deterministic vs
+          generative components; model autonomy; content constraints and
+          high-level guardrails.
+        feeds: "Eval §3.2 (deterministic workflow choice)"
+      - id: 1b.6
+        label: "Personalisation features"
+        type: text
+        what: "Language-register adaptation, example matching, pacing, memory."
+        feeds: "Eval §6.6.2 A/B variants"
+      - id: 1b.7
+        label: "Content corpus source"
+        type: text
+        what: >-
+          Origin of the content corpus (e.g., Project YES US-origin), whether it
+          was adapted, and the method of adaptation.
+        feeds: "Eval Decision box (Project YES corpora portability)"
+      - id: 1b.8
+        label: "Interaction and conversational design"
+        type: text
+        what: >-
+          Free-text, menu-based or mixed input; open-ended vs constrained
+          dialogue; question and response format; response length; tone, persona
+          and relational style; reflection, summarisation and feedback;
+          opportunities to skip, revise, stop or choose a pathway.
+        feeds: "Comprehension, agency, usability, perceived support"
+      - id: 1b.9
+        label: "Human-support model"
+        type: text
+        what: >-
+          Fully automated, clinician-supported, coach-supported, peer-supported
+          or blended; role, timing and intensity of human involvement; human
+          review, moderation or override.
+        feeds: "Eval delivery model"
+      - id: 1b.10
+        label: "Engagement-supporting design features"
+        type: text
+        what: >-
+          Reminders, notifications, prompts, gamification, progress indicators,
+          rewards, goal setting, choice of content, re-engagement messages and
+          other features intended to initiate or sustain participation. (Actual
+          engagement outcomes belong in Stream 1a.)
+        feeds: "Eval §6.6.1 comparator; §6.6.2 A/B"
+      - id: 1b.11
+        label: "Evidence linking design features to outcomes/UX"
+        type: composite_multi
+        subfields:
+          - {id: feature, label: "Design feature examined", type: text}
+          - {id: comparator, label: "Alternative/comparator", type: text}
+          - {id: outcome, label: "Outcome or experience linked", type: text}
+          - {id: direction, label: "Direction of relationship", type: text}
+          - {id: evidence_type, label: "Evidence type (experimental/observational/qual/author)", type: text}
+          - {id: linked_1a_record, label: "Related 1a record ref", type: text}
+        what: >-
+          The specific design feature examined; the comparator where applicable;
+          the outcome/experience linked; direction of the relationship; type of
+          evidence (experimental comparison, observational association,
+          qualitative account or author interpretation); contextual conditions.
+          Reference the relevant 1a record rather than duplicating the result.
+        feeds: "Eval §2.3 (A/B variants promoted to production)"
+      - id: 1b.12
+        label: "Co-design and formative development"
+        type: text
+        what: >-
+          Human-centred, participatory or co-design methods; groups involved;
+          stages and degree of involvement; prototype/usability/cognitive
+          pre-testing; changes made in response to findings.
+        feeds: "Eval Decision box (pre-launch cognitive pre-testing gate)"
+      - id: 1b.13
+        label: "Comparator used"
+        type: composite
+        subfields:
+          - {id: comparator_type, label: "Waitlist/static/usual care/active digital", type: text}
+          - {id: description, label: "Description", type: text}
+        what: "Comparator (waitlist / static content / usual care / active digital) with description."
+        feeds: "Eval §6.6.1 active-comparator specification"
+
+  # ================================================================
+  # STREAM 1c — Implementation in L&MICs and SSA (GATED)
+  # ================================================================
+  - id: "1c"
+    label: "Stream 1c — Implementation in L&MICs / SSA"
+    review_question: >-
+      What implementation lessons emerge from L&MICs and SSA contexts, including
+      accessibility, cultural adaptation, scalability, safeguarding, crisis
+      management and referral pathways?
+    feeds: "Eval §3.4, §6.4, §10, §11.4, §12"
+    gate: "lmic_flag or ssa_flag or south_africa_flag"
+    gate_note: >-
+      Extract only when the L&MICs and/or SSA baseline flags are true. For
+      multi-country records, extract findings attributable to the eligible
+      countries/settings; if not possible, record as mixed-country evidence and
+      specify which countries are included.
+    fields:
+      - id: 1c.1
+        label: "Language(s) supported"
+        type: text
+        what: >-
+          Primary and secondary languages supported; code-switching; reading/
+          literacy level required; translation/localization process; language- or
+          literacy-related barriers; user comprehension; groups underserved by
+          language options; adaptations made during implementation.
+        feeds: "Eval §6.6.5 (language stratification)"
+      - id: 1c.2
+        label: "Device / connectivity and access"
+        type: text
+        what: >-
+          Devices used/required; smartphone or feature-phone compatibility;
+          bandwidth and data requirements; offline/low-data functionality;
+          shared-device use; user data costs; electricity/charging constraints;
+          connectivity, device-access or digital-literacy barriers.
+        feeds: "Eval §3.4 (device class equity)"
+      - id: 1c.3
+        label: "Recruitment channel and operation"
+        type: text
+        what: >-
+          Recruitment channels (platform, school, clinic, social media, partner
+          network); how each was implemented; recruitment duration; staff/partner
+          inputs required; reach into the intended population; barriers and
+          facilitators; groups under-reached; modifications to improve recruitment.
+        feeds: "Eval §6.4 (two-channel plan; 30% partner-network cap)"
+      - id: 1c.4
+        label: "Consent process for digital MH"
+        type: text
+        what: >-
+          One-stage or staged process; adult consent, parental consent and
+          adolescent assent requirements; comprehension checks; digital signature
+          or other documentation; age/identity verification; confidentiality
+          concerns; comprehension/acceptability problems; refusal reasons;
+          operational burden; adaptations introduced during implementation.
+        feeds: "Eval §10.2 (consent-comprehension check design)"
+      - id: 1c.5
+        label: "Cultural / linguistic adaptation method"
+        type: text
+        what: >-
+          Adaptation framework (e.g., Bernal, ecological validity, deep vs
+          surface adaptation); components adapted; stakeholders involved;
+          formative research, co-design or piloting; implementation challenges;
+          participant/provider views on cultural relevance; changes made in
+          response to feedback; reported effects on acceptability, trust,
+          comprehension, engagement or retention.
+        feeds: "Eval §3.4 equity; Project YES corpora decision"
+      - id: 1c.6
+        label: "Referral pathway description"
+        type: text
+        what: >-
+          Referral trigger; risk threshold; message presented to the user;
+          consent to referral; automated or human review; warm or cold handoff;
+          referral destination; partner acknowledgement; human follow-up;
+          feedback to the platform; operating hours; roles and responsibilities;
+          barriers encountered in operating the pathway.
+        feeds: "Eval §11.4 (seven-step referral-chain audit)"
+      - id: 1c.7
+        label: "Referral-chain performance"
+        type: text
+        what: >-
+          Proportion reaching each step of the chain; time to human contact;
+          unsuccessful or delayed referrals; reasons for pathway failure; user
+          and provider experience; corrective actions taken.
+        feeds: "Eval §11.4 (pre-specified referral threshold)"
+      - id: 1c.8
+        label: "Recruitment yield / consent rate"
+        type: text
+        what: >-
+          Numbers approached, screened, eligible, consented, enrolled and
+          randomized; denominator for each rate; yield by channel or subgroup;
+          reasons for ineligibility, refusal or non-enrolment; time to reach the
+          target sample.
+        feeds: "Eval §6.5, §6.6.4 (Stage 5 feasibility parameters)"
+      - id: 1c.9
+        label: "Retention and attrition at follow-up (L&MIC/SSA)"
+        type: text
+        what: >-
+          Retention at each assessment point; differential attrition by arm;
+          number/proportion retained at 1, 4 and 12 weeks where available; timing
+          of attrition; reasons for disengagement or loss to follow-up;
+          differential retention by subgroup or channel; reminder/incentive/
+          human-support/re-engagement strategies and their reported effects;
+          qualitative explanations for stopping or incomplete engagement.
+        feeds: "Eval §6.3, §6.5 (35% attrition at 4 weeks assumption)"
+      - id: 1c.10
+        label: "Ethics and governance features"
+        type: text
+        what: >-
+          Ethics/IRB approval pathway; safeguarding protocol; procedures for
+          disclosures of abuse, exploitation, self-harm or imminent risk; crisis
+          detection and escalation; mandatory-reporting requirements; adverse-
+          event monitoring; privacy/confidentiality protections; data storage and
+          residency; data access and sharing; youth-advisory/governance role;
+          operational challenges, delays or failures; changes made in response.
+        feeds: "Eval §10, §10.5 (youth advisory involvement)"
+      - id: 1c.11
+        label: "Scalability lessons"
+        type: text
+        what: >-
+          Estimated and actual cost per user; staffing model; partner
+          arrangements; sustainability (e.g., evidence of continued delivery
+          beyond the study period).
+        feeds: "Eval §2.3 (scale-up decisions)"
+      - id: 1c.12
+        label: "Implementation contexts"
+        type: text
+        what: >-
+          Any other reported contexts of implementation such as health,
+          education, social and community-systems contexts; implementation stage.
+        feeds: "Supports interpretation of implementation contexts"
+
+  # ================================================================
+  # STREAM 1d — Safety
+  # ================================================================
+  - id: "1d"
+    label: "Stream 1d — Safety"
+    review_question: >-
+      What harms, adverse events, risks and unintended consequences have been
+      reported, and how have interventions sought to mitigate them?
+    feeds: "Eval §11 (11.1–11.5), Annex A stopping rules"
+    fields:
+      - id: 1d.1
+        label: "Types of harm reported"
+        type: text
+        what: >-
+          Unsafe content (self-harm / suicide / eating), over-reliance, privacy,
+          algorithmic bias, iatrogenic distress; source of the AE (self-report,
+          researchers, system logs).
+        feeds: "Eval §11.3 (AE definition set)"
+      - id: 1d.2
+        label: "Rate of AE / SAE"
+        type: composite
+        subfields:
+          - {id: numerator, label: "Numerator", type: text}
+          - {id: denominator, label: "Denominator", type: text}
+          - {id: definition, label: "AE/SAE definition", type: text}
+          - {id: time_window, label: "Time window", type: text}
+          - {id: n_users_affected, label: "N users affected", type: text}
+          - {id: n_events, label: "N events", type: text}
+          - {id: arm, label: "Study arm / comparator", type: text}
+          - {id: ci, label: "CI where reported", type: text}
+          - {id: zero_meaning, label: "Zero = none occurred vs none identified", type: text}
+        what: >-
+          Numerator, denominator, definition, time window; number of affected
+          users and number of events; whether users could experience multiple
+          events; study arm/comparator; subgroup rates; withdrawals attributable
+          to harm; CIs where reported; and whether zero events means none
+          occurred or none were actively identified.
+        feeds: "Eval Annex A (AE thresholds and stopping rules)"
+      - id: 1d.3
+        label: "Failure modes documented"
+        type: text
+        what: >-
+          Persona drift, sycophancy, hallucination/fabrication, jailbreak,
+          off-script content, crisis-routing failure.
+        feeds: "Eval §11.2 (continuous drift-detection set)"
+      - id: 1d.4
+        label: "Detection methods"
+        type: text
+        what: >-
+          Human review, LLM classifier, rule-based, user report; and any
+          performance metrics reported.
+        feeds: "Eval §11.1 (pre-launch safety-classifier evaluation)"
+      - id: 1d.5
+        label: "Preventative and responsive mitigation strategies"
+        type: text
+        what: >-
+          Rule-based constraints, RAG guardrails, content filters,
+          human-in-the-loop, red-teaming, model-update process.
+        feeds: "Eval §3.2 (guardrail stack); §11.5 governance"
+      - id: 1d.6
+        label: "Crisis / safety-alert protocol"
+        type: text
+        what: >-
+          Trigger, escalation, referral, follow-through; whether it was tested in
+          a live deployment.
+        feeds: "Eval §11.4 (referral-chain audit design)"
+      - id: 1d.7
+        label: "Causality attribution method used"
+        type: text
+        what: >-
+          How authors distinguished session-attributable distress from
+          concurrent distress.
+        feeds: "Eval §11.3 (causality-attribution rules)"
+      - id: 1d.8
+        label: "Post-launch monitoring and governance"
+        type: text
+        what: >-
+          Drift detection, incident register, transparency note, third-party
+          audits; record whether these were operational, planned only, or
+          activated following an incident.
+        feeds: "Eval §11.5 (post-launch governance)"
+      - id: 1d.9
+        label: "Tessa / drift-type failures"
+        type: text
+        what: >-
+          Instances where an evidence-based design failed after deployment.
+        feeds: "Eval §3.5, §11.5 (model-update amendment rule)"
+      - id: 1d.10
+        label: "Equity-related harms"
+        type: text
+        what: >-
+          Widening of inequities; algorithmic bias against under-represented
+          users (age, gender, language, literacy, disability, ethnicity/race,
+          socioeconomic position, geography, device type, digital literacy or
+          other vulnerability characteristics).
+        feeds: "Eval §7 heterogeneity (H1–H3)"
+
+  # ================================================================
+  # STREAM 1e — Measurement
+  # ================================================================
+  - id: "1e"
+    label: "Stream 1e — Measurement"
+    review_question: >-
+      What outcomes are commonly measured, and which measurement approaches
+      appear most appropriate and feasible in L&MICs and SSA settings?
+    feeds: "Eval §7 (instrument bundle); Annex B"
+    fields:
+      - id: 1e.1
+        label: "Instruments used"
+        type: composite_multi
+        subfields:
+          - {id: name, label: "Name", type: text}
+          - {id: version, label: "Version", type: text}
+          - {id: item_count, label: "Item count", type: text}
+          - {id: response_scale, label: "Response scale", type: text}
+        what: "Each measurement instrument: name, version, item count, response scale."
+        feeds: "Eval §7 (young-adult bundle)"
+      - id: 1e.2
+        label: "Age-band appropriateness"
+        type: text
+        what: "Validated at 18+ / for adolescents / for adults."
+        feeds: "Eval §2.4 (CYP-IAPT → adult bundle)"
+      - id: 1e.3
+        label: "Psychometric evidence in SSA / LMIC"
+        type: text
+        what: >-
+          Reliability, factor structure, measurement invariance, MID; the
+          population and language in which it was established.
+        feeds: "Eval §6.3, §7 (R7 psychometric review)"
+      - id: 1e.4
+        label: "Minimally important difference"
+        type: composite
+        subfields:
+          - {id: value, label: "MID value", type: text}
+          - {id: method, label: "Method used", type: text}
+          - {id: population, label: "Population", type: text}
+        what: "Minimally important difference: value, method used, population."
+        feeds: "Eval §6.3 (MDE for PHQ-8, 0.30 SD)"
+      - id: 1e.5
+        label: "Feasibility of digital administration"
+        type: text
+        what: "Completion rates, floor/ceiling effects, missingness."
+        feeds: "Eval §9.1.3 (survey design)"
+      - id: 1e.6
+        label: "Mechanism / proximal measures"
+        type: text
+        what: "Hope, agency, self-criticism, coping skills, stigma, felt support."
+        feeds: "Eval §7 (mechanism-activation scales; Eff3)"
+      - id: 1e.7
+        label: "Engagement measures"
+        type: text
+        what: "Turn count, response depth, dwell time, next-step formulation."
+        feeds: "Eval §5.3 (E-series indicators)"
+      - id: 1e.8
+        label: "Safety / referral measures"
+        type: text
+        what: "Chain-step completion, time to human contact, referral acceptance."
+        feeds: "Eval §11.4 (operational indicator)"
+      - id: 1e.9
+        label: "Translation / adaptation procedures"
+        type: text
+        what: >-
+          Forward-back translation, cognitive interviewing, cross-cultural
+          validation.
+        feeds: "Eval Annex B (translation review)"
+      - id: 1e.10
+        label: "Trust and quality measures"
+        type: text
+        what: >-
+          User-rated trust, perceived competence, therapeutic-alliance scales.
+        feeds: "Eval §5.6 S3 (user-rated trust in MHAA)"
+
+  # ================================================================
+  # ADDITIONAL STREAM — South African context
+  # ================================================================
+  - id: sa
+    label: "Additional stream — South African context"
+    review_question: >-
+      What contextual factors should inform the design, implementation and
+      evaluation of a GenAI mental health intervention for young people in
+      South Africa?
+    feeds: "Eval §3.4, §6.2, §6.6.5, §7 (H1–H3)"
+    fields:
+      - id: SA.1
+        label: "Help-seeking patterns"
+        type: text
+        what: "By age-band, gender, urban/rural, digital-first vs in-person."
+        feeds: "Eval §6.4 (recruitment channel decision)"
+      - id: SA.2
+        label: "Stigma and disclosure norms"
+        type: text
+        what: "Family, peers, community; device-sharing implications."
+        feeds: "Eval §10 (anonymity and consent messaging)"
+      - id: SA.3
+        label: "Language coverage"
+        type: text
+        what: >-
+          English, isiZulu, isiXhosa, Afrikaans, Sesotho; code-switching.
+        feeds: "Eval §3.4 (delivery-language locking)"
+      - id: SA.4
+        label: "Gender-specific drivers of distress"
+        type: text
+        what: "GBV, early union, menstrual stigma, restricted schooling."
+        feeds: "Eval §7 H1 (gender-stratification analysis)"
+      - id: SA.5
+        label: "Service-availability constraints"
+        type: text
+        what: "Referral capacity, waitlists, cost, geographic access."
+        feeds: "Eval §11.4 (referral-partner readiness gate)"
+      - id: SA.6
+        label: "Prior digital MH deployments in SA"
+        type: text
+        what: "e.g., Chommie, STARS; lessons on adaptation and engagement."
+        feeds: "Eval §2.1 (direct comparator for MHAA design)"
+      - id: SA.7
+        label: "Regulatory / policy context"
+        type: text
+        what: "SAHPRA, POPIA, national mental health policy."
+        feeds: "Eval §10, §9.2 (provider data-handling)"
+      - id: SA.8
+        label: "Reading age / literacy"
+        type: text
+        what: "Population estimates; recommended target."
+        feeds: "Eval §3.4 (Flesch–Kincaid grade-6 target)"
+
+  # ================================================================
+  # ADDITIONAL STREAM — Product and digital landscape
+  # ================================================================
+  - id: pl
+    label: "Additional stream — Product and digital landscape"
+    review_question: >-
+      What can we learn from existing digital products, online behaviours and
+      AI use patterns to support the design and adoption of a GenAI mental
+      health intervention?
+    feeds: "Eval §3.3, §6.4, §11 (safety architecture benchmarks)"
+    fields:
+      - id: PL.1
+        label: "Competitor / comparator products"
+        type: text
+        what: >-
+          Woebot, Wysa, Tess, Therabot, Chommie, ED ESSI, etc.; features, user
+          base, evidence.
+        feeds: "Eval §2.1 (positions MHAA in the landscape)"
+      - id: PL.2
+        label: "Entry channels used"
+        type: text
+        what: "Search, social, WhatsApp, in-app referral, school/NGO."
+        feeds: "Eval §3.3 (entry-channel lock)"
+      - id: PL.3
+        label: "Trust / uptake determinants"
+        type: text
+        what: "Onboarding, transparency, disclosure of AI, endorsements."
+        feeds: "Eval §5.6 S3 (trust); §10 consent messaging"
+      - id: PL.4
+        label: "Search / social behaviour patterns"
+        type: text
+        what: "Youth help-seeking online; peak times; language of query."
+        feeds: "Eval §6.4 (recruitment content and timing)"
+      - id: PL.5
+        label: "Safety approaches in commercial products"
+        type: text
+        what: "Rate-limiting, escalation, disclaimers, age-gating."
+        feeds: "Eval §3.2, §11 (guardrail-stack benchmark)"
+      - id: PL.6
+        label: "Regulator / guidance documents"
+        type: text
+        what: "FDA, MHRA, EMA, WHO, SAHPRA on AI-enabled MH tools."
+        feeds: "Eval §11.5 (post-launch governance)"
+      - id: PL.7
+        label: "Data-handling / provider practice"
+        type: text
+        what: "Zero-retention endpoints, DPA structures, data-residency."
+        feeds: "Eval §9.2 (provider data-handling gates)"
+
+# =====================================================================
+# Reverse crosswalk (framework doc Section 3, Table 8):
+#   evaluation section -> contributing review fields.
+# Used by export.py to build the "eval crosswalk" sheet so the evaluation
+# team can ask "which review evidence answers this decision?".
+# =====================================================================
+eval_crosswalk:
+  "§2.1 Rationale, gaps": [1a.1, 1a.2, 1a.3, 1a.4, 1a.5, 1a.6, 1a.7, 1d.3, 1d.4, 1d.5, 1d.6, 1d.7, 1d.8, 1d.9, 1c.6, 1c.7, 1e.3, 1c.10]
+  "§3 Intervention description": [1b.1, 1b.2, 1b.3, 1b.5, 1b.7, 1b.12, 1d.5]
+  "§3.4 Equity considerations": [1c.1, 1c.2, 1c.5, 1d.10, SA.3, SA.4, SA.8]
+  "§4 Theory of change": [1e.6, 1b.3, 1d.1, 1d.10]
+  "§5.1 Acceptability": [1a.8, 1a.9]
+  "§5.2 Usability": [1a.5, 1a.6, PL.5]
+  "§5.3 Engagement": [1a.6, 1a.10, 1a.11, 1a.12, 1b.10, 1e.7]
+  "§5.4 Effectiveness (Eff1–Eff3)": [1a.1, 1a.2, 1a.3, 1e.4]
+  "§5.5 Equity / heterogeneity": [SA.1, SA.4, 1a.12, 1c.1, 1d.10, 1e.3]
+  "§5.6 Safety, trust, quality": [1d.1, 1d.2, 1d.3, 1d.4, 1d.5, 1d.6, 1d.7, 1d.8, 1d.9, 1d.10, 1e.10, PL.3, PL.5]
+  "§6.1 Eligibility": [base.5, 1c.4]
+  "§6.3 Sample size and power": [1a.1, 1a.2, 1a.7, 1c.9, 1e.4]
+  "§6.4 Recruitment": [1c.3, 1c.8, PL.2, PL.4]
+  "§6.6.1 Comparator": [1b.10, 1b.13]
+  "§6.6.2 A/B testing": [1b.1, 1b.6, 1b.8, 1b.10, 1b.11, PL.1]
+  "§6.6.3 Narrative-source A/B": [1b.7, SA.6, 1b.9]
+  "§6.6.5 Randomization": [SA.3, SA.4, 1c.1]
+  "§7 Outcomes and indicators": [1e.1, 1e.2, 1e.3, 1e.4, 1e.5, 1e.6, 1e.7, 1e.8, 1e.9, 1e.10]
+  "§9.1.2 Chatbot conversation logs": [1a.10, 1d.3, 1d.4, 1e.7]
+  "§9.1.3 Surveys": [1a.3, 1e.5]
+  "§9.2 Data management": [PL.7, 1d.5]
+  "§10 Ethics": [1c.4, 1c.10, SA.7]
+  "§11.1 Pre-launch safety evaluation": [1d.4, 1d.5, 1d.6]
+  "§11.2 Continuous drift detection": [1d.3, 1d.4, 1d.8]
+  "§11.3 AE definitions and causality": [1d.1, 1d.2, 1d.7]
+  "§11.4 Referral-chain audit": [1c.6, 1c.7, 1e.8, SA.5]
+  "§11.5 Post-launch governance": [1d.8, 1d.9, PL.6]
+  "Annex A Stopping rules": [1d.2, 1d.3, 1c.7]
+  "Annex B Instrument licensing": [1e.9]
