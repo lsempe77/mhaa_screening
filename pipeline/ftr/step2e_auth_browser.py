@@ -146,7 +146,79 @@ def derive_pdf_urls(final_url: str, doi: str, html: str) -> list[str]:
     return urls
 
 
+def find_pdf_links_on_page(page) -> list[str]:
+    """Scan the rendered page for any links that look like PDF downloads."""
+    try:
+        hrefs = page.eval_on_selector_all(
+            "a", "els=>els.map(e=>({t:(e.innerText||'').trim().toLowerCase(), h:e.href||''}))"
+        )
+    except Exception:
+        return []
+    urls = []
+    for a in hrefs:
+        h = a.get("h", "") or ""
+        t = a.get("t", "") or ""
+        # Direct PDF links
+        if h.lower().split("?")[0].endswith(".pdf"):
+            urls.append(h)
+        # LibKey / publisher download patterns
+        elif "full-text-file" in h or "content-location" in h or "pdfdirect" in h or "/pdf/" in h:
+            urls.append(h)
+        # Download buttons by text
+        elif t in ("download pdf", "download full text", "read article", "full text", "pdf"):
+            urls.append(h)
+        # Any href with pdf in it
+        elif "pdf" in h.lower() and "http" in h.lower():
+            urls.append(h)
+    return urls
+
+
+def find_pdf_iframes(page) -> list[str]:
+    """Find iframe/embed/object elements that might contain a PDF."""
+    urls = []
+    for sel in ("iframe", "embed", "object"):
+        try:
+            elems = page.eval_on_selector_all(sel, "els=>els.map(e=>e.src||e.data||'')")
+            for src in elems:
+                if src and ("pdf" in src.lower() or src.lower().endswith(".pdf")):
+                    urls.append(src)
+        except Exception:
+            pass
+    return urls
+
+
+def click_download_button(page, out_path) -> bool:
+    """Look for and click a 'Download PDF' button, catching the download event."""
+    for sel_text in [
+        "text=Download PDF",
+        "text=Download Full Text",
+        "text=Full Text",
+        "text=Read Article",
+        "[aria-label*='download' i]",
+        "[aria-label*='PDF' i]",
+        "a:has-text('PDF')",
+        "a:has-text('Download')",
+        "button:has-text('Download')",
+        "button:has-text('PDF')",
+    ]:
+        try:
+            if page.locator(sel_text).count() > 0:
+                with page.expect_download(timeout=25000) as dl:
+                    page.click(sel_text, timeout=5000)
+                d = dl.value
+                d.save_as(str(out_path))
+                with open(out_path, "rb") as f:
+                    if f.read(5) == b"%PDF-":
+                        return True
+        except Exception:
+            pass
+    return False
+
+
 def resolve_and_grab(page, doi: str, out_path, via_solo: bool = True) -> str | None:
+    # Clean DOI
+    doi = doi.replace("https://dx.doi.org/", "").replace("https://doi.org/", "").replace("http://doi.org/", "")
+
     # 1) SOLO record -> LibKey full-text link
     try:
         page.goto(f"{SOLO_OPENURL}?url_ver=Z39.88-2004&rft_id=info:doi/{doi}",
@@ -165,7 +237,7 @@ def resolve_and_grab(page, doi: str, out_path, via_solo: bool = True) -> str | N
         pass
     page.wait_for_timeout(3000)
     clear_sso(page)
-    page.wait_for_timeout(2000)
+    page.wait_for_timeout(3000)
 
     final = page.url
     try:
@@ -173,8 +245,9 @@ def resolve_and_grab(page, doi: str, out_path, via_solo: bool = True) -> str | N
     except Exception:
         html = ""
     host = final.split("/")[2].replace("www.", "") if "//" in final else "browser"
+    log(f"  -> landed on: {final[:100]}")
 
-    # 3) if LibKey already served the PDF inline, save it; else derive publisher PDF
+    # 3) if LibKey already served the PDF inline, save it
     if final.lower().split("?")[0].endswith(".pdf"):
         try:
             resp = page.goto(final, wait_until="commit", timeout=30000)
@@ -184,6 +257,28 @@ def resolve_and_grab(page, doi: str, out_path, via_solo: bool = True) -> str | N
                 return f"oxford:{host}"
         except Exception:
             pass
+
+    # 4) Try clicking a download button (catches the download event)
+    if click_download_button(page, out_path):
+        return f"oxford:{host}"
+
+    # 5) Scan the page for any PDF links
+    page_links = find_pdf_links_on_page(page)
+    if page_links:
+        log(f"  -> found {len(page_links)} PDF links: {page_links[:3]}")
+    for url in page_links:
+        if grab_pdf(page, url, out_path):
+            return f"oxford:{host}"
+
+    # 6) Check iframes/embeds contain a PDF
+    iframe_urls = find_pdf_iframes(page)
+    if iframe_urls:
+        log(f"  -> found {len(iframe_urls)} iframe PDF sources")
+    for url in iframe_urls:
+        if grab_pdf(page, url, out_path):
+            return f"oxford:{host}"
+
+    # 7) Fall back to derived publisher PDF URLs
     for url in derive_pdf_urls(final, doi, html):
         if grab_pdf(page, url, out_path):
             return f"oxford:{host}"

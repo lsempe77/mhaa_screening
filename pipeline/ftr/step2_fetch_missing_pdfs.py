@@ -22,7 +22,9 @@ Run:
 import re
 import sys
 import time
+import threading
 from datetime import datetime
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import cloudscraper
 import pandas as pd
@@ -273,6 +275,12 @@ def main() -> None:
     scihub_only = "--scihub-only" in sys.argv
     use_scihub = scihub_only or "--no-scihub" not in sys.argv
 
+    # Worker count (default 4)
+    workers = 4
+    for i, a in enumerate(sys.argv):
+        if a == "--workers" and i + 1 < len(sys.argv):
+            workers = int(sys.argv[i + 1])
+
     df = pd.read_csv(csv_path, dtype=str).fillna("")
     for col in ("pdf_path", "pdf_source"):
         if col not in df.columns:
@@ -281,41 +289,48 @@ def main() -> None:
     df["_has_pdf"] = df["has_pdf"].str.lower().isin(["true", "1", "yes"])
     todo = df[(~df["_has_pdf"]) & (df["pdf_path"] == "")].copy()
     mode = "Sci-Hub only" if scihub_only else ("Sci-Hub: on" if use_scihub else "Sci-Hub: off")
-    log(f"References missing a PDF to process: {len(todo)}  ({mode})")
+    log(f"References missing a PDF to process: {len(todo)}  ({mode}, {workers} workers)")
 
-    scraper = make_scraper()
     found = 0
     processed = 0
-    for idx, row in todo.iterrows():
-        processed += 1
+    lock = threading.Lock()
+
+    def process_row(args):
+        idx, row = args
         zkey = row["zotero_key"]
         doi = (row["doi"] or "").strip()
         title = row["title"]
-
         if not doi:
-            log(f"[{processed}/{len(todo)}] {zkey}: no DOI, skipping")
-            continue
-
+            return (idx, zkey, "", "")
         out_path = config.PDF_DIR / target_filename(zkey, doi, title)
         if out_path.exists() and out_path.stat().st_size > 1000:
-            df.at[idx, "pdf_path"] = str(out_path.relative_to(config.ROOT))
-            df.at[idx, "pdf_source"] = df.at[idx, "pdf_source"] or "already_local"
-            found += 1
-            continue
-
+            return (idx, zkey, str(out_path.relative_to(config.ROOT)), "already_local")
+        # Each thread gets its own scraper to avoid shared-session issues
+        scraper = make_scraper()
         source = resolve_and_download(scraper, doi, out_path, use_scihub, scihub_only=scihub_only)
         if source:
-            df.at[idx, "pdf_path"] = str(out_path.relative_to(config.ROOT))
-            df.at[idx, "pdf_source"] = source
-            found += 1
-            log(f"[{processed}/{len(todo)}] {zkey}: OK via {source}")
-        else:
-            log(f"[{processed}/{len(todo)}] {zkey}: not found")
+            return (idx, zkey, str(out_path.relative_to(config.ROOT)), source)
+        return (idx, zkey, "", "")
 
-        if processed % CHECKPOINT_EVERY == 0:
-            df.drop(columns=["_has_pdf"]).to_csv(csv_path, index=False, encoding="utf-8-sig")
-            log(f"  ...checkpoint saved ({found} found so far)")
-        time.sleep(0.4)
+    rows = list(todo.iterrows())
+    with ThreadPoolExecutor(max_workers=workers) as ex:
+        futures = {ex.submit(process_row, r): r for r in rows}
+        for fut in as_completed(futures):
+            idx, zkey, pdf_path, source = fut.result()
+            with lock:
+                processed += 1
+                if pdf_path:
+                    df.at[idx, "pdf_path"] = pdf_path
+                    df.at[idx, "pdf_source"] = source
+                    found += 1
+                    log(f"[{processed}/{len(todo)}] {zkey}: OK via {source}")
+                elif source == "":
+                    pass  # no DOI
+                else:
+                    log(f"[{processed}/{len(todo)}] {zkey}: not found")
+                if processed % CHECKPOINT_EVERY == 0:
+                    df.drop(columns=["_has_pdf"]).to_csv(csv_path, index=False, encoding="utf-8-sig")
+                    log(f"  ...checkpoint saved ({found} found so far)")
 
     df.drop(columns=["_has_pdf"]).to_csv(csv_path, index=False, encoding="utf-8-sig")
     log("-" * 60)

@@ -137,7 +137,14 @@ def main() -> None:
     has_pdf = df["has_pdf"].str.lower().isin(["true", "1", "yes"])
     fetched = df["pdf_path"].str.strip() != ""
     done = df["attach_status"].isin(["uploaded", "exists"])
-    todo = df[fetched & (~has_pdf) & (~done)].copy()
+
+    # --force: upload even when Zotero already has a PDF (for empty stubs)
+    force = "--force" in sys.argv
+
+    if force:
+        todo = df[fetched & (~done)].copy()
+    else:
+        todo = df[fetched & (~has_pdf) & (~done)].copy()
     if limit:
         todo = todo.head(limit)
     log(f"PDFs to attach to Zotero: {len(todo)}")
