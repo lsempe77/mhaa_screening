@@ -87,6 +87,12 @@ def process_cell(fw, records, cell: dict, args) -> dict:
     """Re-reconcile one stored cell. Gated-out cells pass through unchanged."""
     if cell.get("gated_out"):
         return cell
+    # Skip cells already produced by a gated reconciliation (the live run applies
+    # the gate), unless --force. Saves re-paying for reconciler calls on cells
+    # that are already correct; only the pre-gate `llm` cells get re-reconciled.
+    method = (cell.get("reconciled") or {}).get("_method", "")
+    if not args.force and not args.no_gate and method.endswith("gated"):
+        return cell
     rid = str(cell["record_id"])
     group = fw.group(cell["group_id"])
     record = records.get(rid, {"record_id": rid})
@@ -133,6 +139,8 @@ def main():
     p.add_argument("--out", required=True)
     p.add_argument("--reconciler-model", default=config.DEFAULT_RECONCILER)
     p.add_argument("--no-gate", action="store_true", help="Disable the quote-gate (for A/B).")
+    p.add_argument("--force", action="store_true",
+                   help="Re-reconcile ALL cells, even ones already gated (default skips them).")
     p.add_argument("--no-reconcile", action="store_true",
                    help="Heuristic merge instead of the reconciler LLM (deterministic, no API).")
     p.add_argument("--temperature", type=float, default=0.0)
