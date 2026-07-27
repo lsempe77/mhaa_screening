@@ -20,7 +20,7 @@ from pathlib import Path
 # ---------------------------------------------------------------------------
 LIBRARY_TYPE = "groups"          # "groups" or "users"
 LIBRARY_ID = "6580398"           # StrongMinds group
-COLLECTION_KEY = "6JEVFD99"      # target collection
+COLLECTION_KEY = "ZQTYWIVK"      # ULCM INCLUDEs collection (imported from RIS)
 INCLUDE_SUBCOLLECTIONS = True
 
 ZOTERO_API_BASE = "https://api.zotero.org"
