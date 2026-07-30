@@ -53,6 +53,11 @@ def main():
     fts_bydoi = {ndoi(r["doi"]): r["record_id"] for r in fts if ndoi(r.get("doi"))}
     fts_bytitle = {ntitle(r["title"]): r["record_id"] for r in fts}
     pred = {str(r["record_id"]): r for r in load_jsonl(ROOT / "data/output/results_fts_v19_tiebreak.jsonl")}
+    # Recovered-set FTS results are keyed directly by EPPI (records came from ris_records),
+    # so they join to the GT without the DOI/title bridge. Optional (may not exist yet).
+    _rec_path = ROOT / "data/output/results_fts_recovered_tiebreak.jsonl"
+    rec_fts = {str(r["record_id"]): r["screening_decision"]
+               for r in load_jsonl(_rec_path)} if _rec_path.exists() else {}
 
     rows = []
     for g in gt:
@@ -61,14 +66,21 @@ def main():
         rres = ris_res.get(e, {})
         ris_dec = rres.get("screening_decision", "")
         ris_code = rres.get("screening_code", "")
-        # bridge to FTS
+        # FTS decision: prefer the recovered set (direct EPPI join); else bridge to the
+        # original FTS run via DOI/title -> zotero key.
         zk = None
-        d = ndoi(rr.get("doi"))
-        if d and d in fts_bydoi:
-            zk = fts_bydoi[d]
-        elif ntitle(rr.get("title")) in fts_bytitle:
-            zk = fts_bytitle[ntitle(rr.get("title"))]
-        fts_dec = pred.get(zk, {}).get("screening_decision") if zk else ""
+        fts_src = ""
+        if e in rec_fts:
+            fts_dec = rec_fts[e]; fts_src = "recovered"
+        else:
+            d = ndoi(rr.get("doi"))
+            if d and d in fts_bydoi:
+                zk = fts_bydoi[d]
+            elif ntitle(rr.get("title")) in fts_bytitle:
+                zk = fts_bytitle[ntitle(rr.get("title"))]
+            fts_dec = pred.get(zk, {}).get("screening_decision") if zk else ""
+            if fts_dec:
+                fts_src = "original"
         if ris_dec == "EXCLUDE":
             disp = "EXCLUDE@RIS"
         elif fts_dec == "EXCLUDE":
@@ -82,7 +94,7 @@ def main():
         rows.append({"eppi": e, "short_title": g["short_title"], "human": human,
                      "ris_decision": ris_dec, "ris_code": ris_code,
                      "zotero_key": zk or "", "fts_decision": fts_dec or "",
-                     "disposition": disp, "note": g.get("note", "")})
+                     "fts_source": fts_src, "disposition": disp, "note": g.get("note", "")})
 
     Path(a.out).parent.mkdir(parents=True, exist_ok=True)
     with open(a.out, "w", newline="", encoding="utf-8-sig") as f:

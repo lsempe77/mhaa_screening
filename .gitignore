@@ -51,6 +51,7 @@ projects/strongminds/data/rescreen_*.jsonl
 projects/strongminds/data/fts/
 projects/strongminds/data/fts_recovered/
 projects/strongminds/data/extraction/
+projects/strongminds/data/extraction_recovered/
 # Raw RIS corpus (large source exports, ~80 MB)
 projects/strongminds/strongminds_ris/
 

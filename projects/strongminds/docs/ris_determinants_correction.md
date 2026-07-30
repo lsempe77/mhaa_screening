@@ -37,6 +37,30 @@ were excluded at RIS/TA**. The RIS-stage confusion matrix:
 Sensitivity **0.40**, κ ≈ 0. **23 of the 27** dropped human-includes carried
 `EXCLUDE_INTERVENTION_TOPIC` — the determinants signature.
 
+### 2b. The FTS screener itself is healthy (validation)
+
+Once the recovered records went through full-text screening, 33 of the 71 GT records had
+an FTS decision (18 original + 15 recovered). The **FTS-stage** confusion matrix
+(human full-text decision vs router-ON v1.9-fts):
+
+| | LLM INCLUDE | LLM EXCLUDE |
+|---|---|---|
+| **Human INCLUDE** | 25 | 1 |
+| **Human EXCLUDE** | 7 | 0 |
+
+Sensitivity **0.962**, and only 1 missed include. It over-includes (all 7 human-excludes
+were included) — a **high-sensitivity, permissive filter** that leaves final exclusion to
+human review (the intended "second reviewer / triage" role). Caveat: small, include-skewed
+sample (33 records, 7 excludes) — sensitivity is trustworthy, the over-inclusion is
+directional. Regenerate with `scripts/fts_confusion.py`.
+
+**The failure was entirely upstream at TAS, not in full-text screening:**
+
+| Stage | Sensitivity | Note |
+|---|---|---|
+| **TAS** (original `--no-router`) | **0.40** | systematically dropped determinants (the bug) |
+| **FTS** (router-ON v1.9-fts) | **0.96** | healthy; over-includes on nuance by design |
+
 ## 3. Scale confirmation (no-API, then empirical)
 
 - `EXCLUDE_INTERVENTION_TOPIC` = **17,033 records = 58%** of the whole 29,251 corpus (the
@@ -72,15 +96,16 @@ intervention 111** (routes overlap). Recovered IDs: `data/output/rescreen_eit_re
 | Re-screen EIT (router ON) → 1,670 recovered | ✅ done |
 | Corrected TA-includes RIS (4,125 + 1,670 = **5,795**) → `includes_ta_corrected_5795.ris` | ✅ done |
 | FTR-retrieve PDFs for the 1,670 (**Sci-Hub OFF**) → `inventory_recovered_1670.csv` | ✅ **1,066/1,670 (64%)** — unpaywall 578, elsevier 322, publisher 92, browser/MDPI 46, openalex 20, s2 7. Steps: step2 + step1b + step2c + step2d + step2b. 604 missing (52 no-DOI) → manual worklist. |
-| FTS-screen retrieved PDFs (router-ON v1.9-fts) + merge into extraction corpus | ⏳ pending |
-| Regenerate **final full-text includes RIS** for the merged extraction set | ⏳ pending |
+| FTS-screen retrieved PDFs (router-ON v1.9-fts) | ✅ **901/1,066 INCLUDE** (0 errors, 0 to human review). `results_fts_recovered_tiebreak.jsonl` |
+| Merge into extraction corpus | ✅ **records_extract_final_2670.jsonl** (2,369 reviews / 301 primary) |
+| Regenerate **final full-text includes RIS** | ✅ **includes_fts_final_2670.ris** (1,769 original + 901 recovered) |
 
 ## 6. Count summary
 
 | Metric | Before | After |
 |---|---|---|
 | TA / title-abstract includes | 4,125 | **5,795** (+1,670) |
-| Full-text (extraction) includes | 1,769 | 1,769 + (recovered PDFs passing FTS) — pending |
+| Full-text (extraction) includes | 1,769 | **2,670** (+901 recovered; 1,066 fetched → 901 FTS-included) |
 
 ## 7. Files
 

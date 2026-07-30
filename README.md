@@ -35,7 +35,7 @@ ground-truth labels (sensitivity, Cohen's κ, ECE, Brier, reliability).
 > | **TA (RIS)** ✅ done | 29,251 records | `includes_worklist.csv` | 4,125 includes → **5,795 after correction** |
 > | **FTR** ✅ done | 4,125 includes | `full_text_retrieval/pdfs/` | PDFs retrieved (see [FTR README](pipeline/ftr/README.md)) |
 > | **FTS (full text)** ✅ done | 2,721 PDFs | `includes_fts.ris` | **1,769 includes** (0 unresolved) |
-> | **RIS determinants correction** 🔄 | 17,033 `EXCLUDE_INTERVENTION_TOPIC` | `includes_ta_corrected_5795.ris` | **+1,670 recovered** (RQ1/RQ18); FTR fetched **1,066 PDFs** (no Sci-Hub); FTS screening in progress |
+> | **RIS determinants correction** ✅ done | 17,033 `EXCLUDE_INTERVENTION_TOPIC` | `includes_fts_final_2670.ris` | +1,670 TA recovered → 1,066 PDFs (no Sci-Hub) → **+901 FTS includes**. Full-text includes **1,769 → 2,670** |
 >
 > FTS prompt **v1.9-fts**, run 2026-07-27/28. Write-ups:
 > [`fts_screening_process.md`](projects/strongminds/docs/fts_screening_process.md) ·
