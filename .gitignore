@@ -46,8 +46,16 @@ projects/strongminds/data/checkpoints/
 projects/strongminds/data/records_*.jsonl
 projects/strongminds/data/gt_*.json
 projects/strongminds/data/ris_records.jsonl
+projects/strongminds/data/rescreen_*.jsonl
+# Full-text screening + extraction records/outputs (large, regenerable)
+projects/strongminds/data/fts/
+projects/strongminds/data/fts_recovered/
+projects/strongminds/data/extraction/
 # Raw RIS corpus (large source exports, ~80 MB)
 projects/strongminds/strongminds_ris/
+
+# Claude Code file-based memory (internal working notes, not a repo deliverable)
+memory/
 
 # Temp / scratch scripts
 pipeline/_*.py

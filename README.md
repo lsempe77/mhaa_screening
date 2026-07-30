@@ -16,19 +16,31 @@ panel of LLMs via [OpenRouter](https://openrouter.ai/), runs a k-sampled consens
 adjudicates uncertain records with a critic model, and calibrates the panel against human
 ground-truth labels (sensitivity, Cohen's κ, ECE, Brier, reliability).
 
-> **Status (2026-07-22):**
+> **Status (2026-07-28):**
 >
 > **MHAA** — TA prompt at **v1.4.3**: sens 0.943 / κ 0.719 / ECE 0.081 on the 462-record
 > seed (κ ✅, ECE ✅, sens 0.007 short). Full-text: 388 PDFs screened, awaiting human
 > review. Metrics: [`projects/girl_effect/METRICS.md`](projects/girl_effect/METRICS.md).
 >
-> **ULCM** — Orchestrator at **v1.9** (canonical, final): **all three thresholds passed** —
+> **ULCM** — Orchestrator at **v1.9** (canonical): **all three thresholds passed** —
 > sensitivity 0.966, κ 0.790, ECE 0.042 on the 510-record seed (23 GT corrections).
-> Full RIS corpus run (29,251 records) **in progress** — k=1/temp 0, Claude+GLM primary,
-> Gemini 2.5 Pro tie-breaker on disagreements, human review CSV for 3-way splits.
 > Metrics: [`projects/strongminds/METRICS.md`](projects/strongminds/METRICS.md).
 > Full iteration history (Parts I–VI, §1–§41):
 > [`projects/strongminds/docs/ITERATION_LOG.md`](projects/strongminds/docs/ITERATION_LOG.md).
+>
+> The ULCM corpus has now been screened end-to-end across three stages:
+>
+> | Stage | Input | Output | Result |
+> |---|---|---|---|
+> | **TA (RIS)** ✅ done | 29,251 records | `includes_worklist.csv` | 4,125 includes → **5,795 after correction** |
+> | **FTR** ✅ done | 4,125 includes | `full_text_retrieval/pdfs/` | PDFs retrieved (see [FTR README](pipeline/ftr/README.md)) |
+> | **FTS (full text)** ✅ done | 2,721 PDFs | `includes_fts.ris` | **1,769 includes** (0 unresolved) |
+> | **RIS determinants correction** 🔄 | 17,033 `EXCLUDE_INTERVENTION_TOPIC` | `includes_ta_corrected_5795.ris` | **+1,670 recovered** (RQ1/RQ18); FTR fetched **1,066 PDFs** (no Sci-Hub); FTS screening in progress |
+>
+> FTS prompt **v1.9-fts**, run 2026-07-27/28. Write-ups:
+> [`fts_screening_process.md`](projects/strongminds/docs/fts_screening_process.md) ·
+> [`ris_determinants_correction.md`](projects/strongminds/docs/ris_determinants_correction.md)
+> (the `--no-router` RIS run wrongly dropped ~1,670 determinants/measurement includes; being recovered).
 
 ---
 
@@ -44,8 +56,11 @@ mhaa_screening/
 ├── pipeline/                       # shared engine — run as `python pipeline/<script>.py`
 │   ├── k5_runner.py                #   main k-sampled screener + calibration
 │   ├── orchestrator.py             #   ULCM router → screener → critic runner
-│   ├── ingest.py / ingest_fts.py   #   dataset / PDF ingestion
-│   ├── orchestrator.py             #   ULCM router → screener → critic runner
+│   ├── ingest.py                   #   dataset ingestion (Excel/CSV → records + gt)
+│   ├── ingest_fts.py               #   PDF ingestion (GE full text → records)
+│   ├── ingest_fts_strongminds.py   #   PDF ingestion (ULCM full text → records)
+│   ├── summarize_fts.py            #   results JSONL → flat review CSV
+│   ├── extraction/                 #   post-screening data extraction (dual-model + reconcile)
 │   └── ...                         #   merge, critic, triage, quote-fix helpers
 ├── pipeline/ftr/                   # full-text retrieval pipeline (step0-step3 + helpers)
 │   ├── config.py                   #   FTR config (FTR_PROJECT_DIR env var for project data)
@@ -58,11 +73,13 @@ mhaa_screening/
 │   │   ├── ta_screening/           #   TA stage: data/ + output/
 │   │   └── full_text/              #   FTR + FTS: pdfs/, data/, output/, reports/
 │   └── strongminds/                # ULCM — brief psych. interventions, adult depression LMICs
-│       ├── prompts/                #   ulcm-*.md (orchestrator + monolithic)
-│       ├── scripts/                #   project-specific analysis scripts
+│       ├── prompts/                #   ulcm-*.md (orchestrator TA + v1.9-fts full text)
+│       ├── scripts/                #   run_ris_v19.ps1, run_fts.ps1, tiebreak_ris.py, export_ris.py, ...
 │       ├── data/                   #   records, ground truth, run outputs
+│       │   ├── fts/                #     full-text records: records_fts_2721.jsonl + audit logs
+│       │   └── output/             #     all run results (TA RIS + FTS) + includes/review CSVs
 │       ├── artifacts/              #   analysis outputs (adjudication, few-shot, RIS scores)
-│       ├── docs/                   #   protocol, scope memos, ITERATION_LOG.md
+│       ├── docs/                   #   protocol, scope memos, ITERATION_LOG.md, fts_screening_process.md
 │       ├── strongminds_ris/        #   raw RIS corpus
 │       └── full_text_retrieval/    #   FTR project data (pdfs/, logs/, .env)
 │           ├── pdfs/               #     retrieved PDFs (git-ignored)
@@ -79,7 +96,8 @@ mhaa_screening/
 | `pipeline/k5_runner.py` | **Main runner.** k-sampled screening via OpenRouter, per-model + cross-model aggregation, §2 critic adjudication on flagged records, verbatim-quote validation (with PDF-aware fuzzy fallback) and re-prompt, and calibration (ECE / Brier / κ / sensitivity / per-model + inter-model breakdown). Supports both `--project mhaa` and `--project strongminds`. |
 | `pipeline/orchestrator.py` | **ULCM runner.** Router → route-specific screener → critic pipeline; output is `k5_runner --calibrate`-compatible. |
 | `pipeline/ingest.py` | Convert an Excel/CSV screening dataset into `records_<n>.jsonl` + `gt_<n>.json` for the runner. MHAA + StrongMinds paired-row CSV layouts. |
-| `pipeline/ingest_fts.py` | **Full-text variant.** Extract PDF text via PyMuPDF → `records_<n>.jsonl` with the full article text in the `abstract` field. Produces audit logs for missing/low-text/truncated PDFs. |
+| `pipeline/ingest_fts.py` | **Full-text variant (GE).** Extract PDF text via PyMuPDF → `records_<n>.jsonl` with the full article text in the `abstract` field. Produces audit logs for missing/low-text/truncated PDFs. |
+| `pipeline/ingest_fts_strongminds.py` | **Full-text variant (ULCM).** Same as above but reads the FTR `inventory_merged.csv` + `pdfs/` layout → `projects/strongminds/data/fts/records_fts_<n>.jsonl`. |
 | `pipeline/merge_results.py` | Merge stored Claude runs with a new GLM-only run file and re-aggregate (no new API calls). |
 | `pipeline/run_critic.py` | Re-run only the §2 critic on flagged records in an existing results JSONL (parallel). |
 | `pipeline/summarize_fts.py` | Flatten a results JSONL into a review-friendly CSV (one row per record). |
@@ -102,7 +120,8 @@ mhaa_screening/
 | `projects/strongminds/prompts/ulcm-tas-screening-prompts-hierarchical.md` | ULCM | **Monolithic TA screener + critic with RQ routing (v1.1, best monolithic).** Superseded by the orchestrator prompt below from v1.6 onward; kept for reproducibility. 18 RQs across 7 routes (see below). Route-conditional exclusion: RQ1 (determinants) and RQ18 (measurement) skip the intervention criterion; RQ7-9/12/14 allow specialist delivery and HIC evidence; RQ11 allows non-case populations. Supports `screening_level: review \| primary_study`. |
 | `projects/strongminds/prompts/ulcm-orchestrator-prompts.md` | ULCM | **Orchestrator prompts (v1.7).** Router → no_intervention screener (RQ1/RQ18) → intervention screener (all other routes) → critic. Superseded by v1.9 (below) as canonical for new runs. |
 | `projects/strongminds/prompts/ulcm-orchestrator-prompts-v1.8.md` | ULCM | v1.8 staged prompts (ZS scope rules: bio-mechanism exclusion, sub-population scope, RQ18 instruments). Intermediate — superseded by v1.9. |
-| `projects/strongminds/prompts/ulcm-orchestrator-prompts-v1.9.md` | ULCM | **v1.9 prompts (canonical, final).** v1.8.1 + 7 surgical fixes: unstated-age rule, mixed-age rule, working-memory/task-sharing/process-study PASS additions, CMD promotion. All three thresholds passed (sens 0.966, κ 0.790, ECE 0.042). |
+| `projects/strongminds/prompts/ulcm-orchestrator-prompts-v1.9.md` | ULCM | **v1.9 prompts (canonical for TA).** v1.8.1 + 7 surgical fixes: unstated-age rule, mixed-age rule, working-memory/task-sharing/process-study PASS additions, CMD promotion. All three thresholds passed (sens 0.966, κ 0.790, ECE 0.042). Used for the 29,251-record RIS run. |
+| `projects/strongminds/prompts/ulcm-orchestrator-prompts-v1.9-fts.md` | ULCM | **Full-text screening variant of v1.9.** Router + no_intervention + intervention + critic sections, adapted for full PDF text (quotes may come from the body). Canonical for the ULCM FTS run (2,721 PDFs). |
 
 ### Data & outputs
 
@@ -113,6 +132,8 @@ mhaa_screening/
 | `projects/girl_effect/ta_screening/data/gt_462.json` | Ground-truth labels for the 462 seed. |
 | `projects/girl_effect/ta_screening/output/*.jsonl` | Aggregated per-record results from past MHAA runs (git-ignored). |
 | `projects/strongminds/data/` | ULCM ingested records + ground-truth (`gt_510.json`, git-ignored; `groundtruth.csv` tracked). |
+| `projects/strongminds/data/fts/` | **ULCM full-text records.** `records_fts_2721.jsonl` (full PDF text) + audit logs (`truncated.jsonl`, `low_text.jsonl`). |
+| `projects/strongminds/data/output/` | ULCM run results. **TA/RIS:** `results_ris_v19_tiebreak.jsonl`, `includes_worklist.csv`, `includes.ris` (4,125 includes). **FTS:** `results_fts_v19_tiebreak.jsonl`, `fts_summary.csv`, `includes_fts.ris` (1,769 includes). |
 | `projects/strongminds/artifacts/` | ULCM analysis outputs: GT adjudication, few-shot results, RIS scores. |
 | `projects/strongminds/docs/` | ULCM protocol, scope memos, and `ITERATION_LOG.md` (full history). |
 | `reports/` | Calibration outputs (shared): `metrics.json`, `confusion_matrix.png`, `reliability_diagram.png`, `errors.jsonl`. Overwritten by each `--calibrate` run (git-ignored). |
@@ -491,6 +512,40 @@ powershell -ExecutionPolicy Bypass -File projects/strongminds/scripts/run_ris_v1
 Get-Content projects/strongminds/data/output/ris_run.log -Tail 10
 ```
 
+### Full-text screening (FTS) run
+
+The 4,125 RIS includes went through FTR (PDF retrieval), then full-text screening. FTS
+screens each PDF on its **entire text** with the router **on** (route-conditional screening
+is where full text pays off) and a 2-model panel + Gemini tie-breaker — same engine as the
+RIS run, driven by [`run_fts.ps1`](projects/strongminds/scripts/run_fts.ps1). Full write-up
+and command reference: [`projects/strongminds/docs/fts_screening_process.md`](projects/strongminds/docs/fts_screening_process.md).
+
+```powershell
+# 1. Ingest retrieved PDFs → full-text records
+python pipeline/ingest_fts_strongminds.py `
+    --csv projects/strongminds/full_text_retrieval/logs/inventory_merged.csv `
+    --pdfs-dir projects/strongminds/full_text_retrieval/pdfs `
+    --out-dir projects/strongminds/data/fts
+
+# 2. Screen + tie-break + review CSV (persistent, auto-restart, router ON, gpt-4o-mini router)
+& "C:\...\projects\strongminds\scripts\run_fts.ps1"      # use an ABSOLUTE path
+
+# 3. Review artifacts
+python pipeline/summarize_fts.py `
+    --results projects/strongminds/data/output/results_fts_v19_tiebreak.jsonl `
+    --records projects/strongminds/data/fts/records_fts_2721.jsonl `
+    --out projects/strongminds/data/output/fts_summary.csv
+python projects/strongminds/scripts/export_ris.py `
+    --results projects/strongminds/data/output/results_fts_v19_tiebreak.jsonl `
+    --records projects/strongminds/data/fts/records_fts_meta.jsonl `
+    --out projects/strongminds/data/output/includes_fts.ris --decision INCLUDE
+```
+
+> **Router model matters:** the FTS router must be `openai/gpt-4o-mini`, **not** `z-ai/glm-5.2`.
+> On ~30k-token full-text input with the router's 500-token cap, glm-5.2 (a reasoning model)
+> returns null content and every record fails. glm-5.2 is fine as a *screener* (4000-token
+> budget). See §8 of the FTS process doc.
+
 ---
 
 ## ULCM: status & handoff
@@ -498,17 +553,18 @@ Get-Content projects/strongminds/data/output/ris_run.log -Tail 10
 **v1.9 final — all three thresholds passed** (sens 0.966 ✅, κ 0.790 ✅, ECE 0.042 ✅).
 Metrics: [`projects/strongminds/METRICS.md`](projects/strongminds/METRICS.md).
 
-**Full RIS corpus run in progress** — 29,251 records via 3-stage pipeline:
-1. Orchestrator (Claude + GLM, k=1, temp 0, no critic, `--no-router`) — persistent, auto-restart, ~30 rec/min
-2. Gemini 2.5 Pro tie-breaker on ~3,900 disagreements (majority of 3)
-3. Human review CSV for unresolved 3-way splits
+**TA/RIS run ✅ complete** — 29,251 records screened + tie-broken → **4,125 includes**
+(`includes_worklist.csv`), 0 unresolved 3-way splits.
 
-Check progress: `Get-Content projects/strongminds/data/output/ris_run.log -Tail 10`
+**FTS run ✅ complete** — 2,721 PDFs (2,711 unique) screened + tie-broken → **1,769 includes**
+(`includes_fts.ris`), 0 unresolved decision splits, 0 errors. Details:
+[`projects/strongminds/docs/fts_screening_process.md`](projects/strongminds/docs/fts_screening_process.md).
 
-**Next steps after RIS run completes:**
-- Review the `human_review_3way.csv` (expected ~500–800 records)
-- Produce a ranked worklist / priority screening output
-- The tool is a **second reviewer / triage tool**, not an autonomous excluder (§14 finding)
+**Next steps:**
+
+- Post-screening **data extraction** on the 1,769 FTS includes — see [`pipeline/extraction/README.md`](pipeline/extraction/README.md).
+- Two FTS QA items before extraction: re-fetch/OCR the one image-only PDF (`5HCUQKYA`, included on 9 chars of text) and clean the 10 duplicate Zotero keys in `inventory_merged.csv` (see FTS process doc §7).
+- The tool is a **second reviewer / triage tool**, not an autonomous excluder (§14 finding).
 
 Full iteration history (Parts I–VI, §1–§41):
 [`projects/strongminds/docs/ITERATION_LOG.md`](projects/strongminds/docs/ITERATION_LOG.md).
