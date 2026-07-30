@@ -60,6 +60,17 @@ miss at extraction (a bug the pilot caught and we fixed).
 - Data-quality carry-forward: **3 recovered records are 1-page stub PDFs** (abstract-only
   fetches) — re-fetch before trusting their extraction.
 
+## Rigor-review additions (2026-07-30)
+
+- **Tolerant quote matcher** (exact → reflow → fuzzy): halves PDF-reflow false quote-fails; remaining fails are real grounding issues.
+- **Array grounding**: `additional_outcomes[]` / `rq_contributions[]` cells (per-timepoint effect sizes) now quote-checked — previously ungrounded.
+- **Audit stamping**: every output record carries `_meta` {model, prompt version, k, timestamp}.
+- **doctype/design spacing normalization** ("Journal article" → "Journal-article").
+- **`comparator`** field added (headline-effect comparator — needed to interpret/pool effects).
+- **`n_included_studies` + `included_study_ids`** added (reviews) — enables cross-review **overlap / double-counting** detection (corrected covered area). Confirmed extracting (e.g. 18 studies with author-year IDs).
+
+Still open for the review team (from the rigor review): use `included_study_ids` for an **overlap analysis at synthesis**; the **primary-study drill-down** (source_review_ids / dedup / tier) is **not yet operational** — the 301 `primary_study` records are heuristic; and confirm **GRADE certainty** is a synthesis-stage step.
+
 ## Run it
 
 ```powershell

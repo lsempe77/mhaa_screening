@@ -536,6 +536,13 @@ fields.
   "pop_n":            { "value": <int|null>, "span": "", "section": "" },
   "pop_descr":        { "value": "<free text>", "span": "", "section": "" },
 
+  // Included-studies capture (reviews) — enables cross-review OVERLAP / double-counting
+  // detection (corrected covered area). n_included_studies = the review's count of included
+  // primary studies. included_study_ids = their identifiers from the included-studies table /
+  // PRISMA (author-year and/or DOI / trial-registration id), as many as the table provides.  [v1.7]
+  "n_included_studies": { "value": <int|null>, "span": "", "section": "" },
+  "included_study_ids": { "value": ["<author-year | DOI | trial-reg id>"], "span": "", "section": "" },
+
   // Severity stratum (D.3)
   "sev_strat":        { "value": "<D.8.2>", "span": "", "section": "" },
   "sev_scale":        { "value": "<D.3 sev_scale>", "span": "", "section": "" },
@@ -583,6 +590,9 @@ fields.
   "out_primary":       { "value": "<free text>", "span": "", "section": "" },
   "out_scale":         { "value": "<D.7 scale>", "span": "", "section": "" },
   "out_timepoint":     { "value": <num|null>, "span": "", "section": "" },
+  // Comparator for the headline effect — required to interpret/pool it  [v1.7]
+  // For reviews pooling mixed comparators, use "Various-mixed".
+  "comparator":        { "value": "TAU" | "Waitlist" | "Attention-control" | "Active-psychological" | "Enhanced-usual-care" | "No-treatment" | "Pharmacological" | "Various-mixed" | "Not-applicable" | "Other" | "Not-reported", "span": "", "section": "" },
   "eff_metric":        { "value": "SMD" | "Cohen d" | "Mean-diff" | "RR" | "OR" | "Remission-rate" | "Other", "span": "", "section": "" },
   "eff_value":         { "value": <num|null>, "span": "", "section": "" },
   "eff_se":            { "value": <num|null>, "span": "", "section": "" },
@@ -1241,4 +1251,4 @@ Every prompt version, model API string, seed, and full response is stored as JSO
 | 1.4 | 2026-07 | **[REVISION — pending user review]** Added AMSTAR-2 itemised checklist (§3.11A): 16 items × verdict + span + notes, seven critical (I2, I4, I7, I9, I11, I13, I15) + nine non-critical, with rapid critical-domains mode, confidence-band derivation from Shea 2017 rules, and explicit tie-in to the review-only RQs (RQ1–4, 11, 15, 17, 18) where AMSTAR-2 is the sole quality signal. Rules 20–26. |
 | 1.5 | 2026-07 | **[REVISION — pending user review]** Added: (a) §3.4A sub-module decomposition — 11 named programmes with sub-module vocabularies, session-share %, contribution, and evidence type (rule 27); (b) §3.8A repeating additional_outcomes array — every {construct × instrument × timepoint × subgroup} with full effect / arm-mean / SD / N / adjustment fields (rule 28); (c) §3.12A rq_contributions array — one entry per {study × RQ} with contribution type, strength, direction, backing fields, and Decision Brief mapping (rule 29). Exported extraction sheet materialises rq_contributions as long-format one-row-per-{sid × rq_id}. |
 | 1.6 | 2026-07 | Constrained §3.8A to DEPRESSION OUTCOMES ONLY per review-team decision. `outcome_construct` restricted to {Depression-symptoms, Depression-remission, Depression-response, Depression-recovery, Depression-relapse}. `outcome_scale` restricted to validated depression instruments (PHQ-9, PHQ-2, CES-D, HAMD/HDRS, MADRS, BDI/BDI-II, EPDS, QIDS, Zung-SDS, GDS, DASS-21-dep, SCL-90-dep, SRQ-20-dep, K10-dep-cutoff, MINI-dep, CIDI-dep, SCID-dep, Other-depression-instrument). Non-depression outcomes stay in existing dedicated blocks (§3.7 cost, §3.9 engage/safety, §3.10 psychometrics, §3A.4.3 attrition). |
-| 1.7 | 2026-07 | **[DEVIATION — logged]** Working copy derived from `DEX/ULCM_M_1.MD` (pristine protocol artifact kept unchanged). Added `eligibility_flag` + `eligibility_concern` to Section C: a **flag-only** eligibility re-confirmation that surfaces likely false-includes for human review. It does NOT re-decide inclusion (which remains a full-text-screening decision) and never withholds extraction — it addresses the FTS over-inclusion (specificity ~0 on the GT check) by making suspect records visible rather than silently present. |
+| 1.7 | 2026-07 | **[DEVIATION — logged]** Working copy derived from `DEX/ULCM_M_1.MD` (pristine protocol artifact kept unchanged). Added `eligibility_flag` + `eligibility_concern` to Section C: a **flag-only** eligibility re-confirmation that surfaces likely false-includes for human review. It does NOT re-decide inclusion (which remains a full-text-screening decision) and never withholds extraction — it addresses the FTS over-inclusion (specificity ~0 on the GT check) by making suspect records visible rather than silently present. Also added (rigor review): `comparator` (headline-effect comparator, required to interpret/pool effects) and `n_included_studies` + `included_study_ids` (review included-studies capture, to detect cross-review overlap / double-counting). |

@@ -27,6 +27,7 @@ from __future__ import annotations
 import argparse, json, re, sys
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import datetime, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))  # import k5_runner
@@ -132,19 +133,63 @@ def merge_k3(runs: list[dict]) -> tuple[dict, dict]:
     return merged, audit
 
 
-def check_quotes(merged: dict, source: str) -> int:
-    """Deterministic verbatim check on each non-null span. Sets _quote_ok. Returns #failed."""
-    nsrc = k.norm(source); failed = 0
-    for key, cell in merged.items():
-        if not isinstance(cell, dict) or "value" in cell and cell.get("value") in (None, "", [], "NA"):
+def _match_span(span: str, nsrc: str, nsrc_ns: str, src_toks: set) -> str | None:
+    """Tolerant verbatim match. Returns match tier ('exact'|'reflow'|'fuzzy') or None (fail).
+
+    PDF text extraction reflows columns/tables and inserts stray tokens, so a strict
+    substring check false-fails genuine ≤40-word spans. Tiers, cheapest first:
+      exact  — normalized substring (hyphenation/whitespace/typography already folded by k.norm)
+      reflow — whitespace-stripped substring (fixes line/column breaks inside the span)
+      fuzzy  — >=90% of span tokens present AND a 6-token contiguous anchor present
+               (tolerates a stray inserted token / a reflowed number mid-span)
+    """
+    ns = k.norm(span)
+    if not ns:
+        return None
+    if ns in nsrc:
+        return "exact"
+    if ns.replace(" ", "") in nsrc_ns:
+        return "reflow"
+    toks = ns.split()
+    if len(toks) >= 4:
+        uniq = set(toks)
+        overlap = sum(1 for t in uniq if t in src_toks) / len(uniq)
+        if overlap >= 0.9 and " ".join(toks[:6]) in nsrc:
+            return "fuzzy"
+    return None
+
+
+def _check_cells(container: dict, nsrc: str, nsrc_ns: str, src_toks: set) -> int:
+    """Set _quote_ok / _quote_match on every non-null provenance cell in a dict. Returns #failed."""
+    failed = 0
+    for cell in container.values():
+        if not (isinstance(cell, dict) and "value" in cell):
+            continue
+        if cell.get("value") in (None, "", [], "NA"):
             continue
         span = cell.get("span") or ""
         if not span:
             cell["_quote_ok"] = None; continue
-        ok = k.norm(span) in nsrc
-        cell["_quote_ok"] = ok
-        if not ok:
+        tier = _match_span(span, nsrc, nsrc_ns, src_toks)
+        cell["_quote_ok"] = tier is not None
+        cell["_quote_match"] = tier or "fail"
+        if tier is None:
             failed += 1
+    return failed
+
+
+def check_quotes(merged: dict, source: str) -> int:
+    """Tolerant verbatim check on every non-null span — including inside the repeating
+    arrays (additional_outcomes[], rq_contributions[]), whose per-timepoint effect sizes
+    are the highest-value data and were previously ungrounded. Returns #failed."""
+    nsrc = k.norm(source)
+    nsrc_ns = nsrc.replace(" ", "")
+    src_toks = set(nsrc.split())
+    failed = _check_cells(merged, nsrc, nsrc_ns, src_toks)
+    for arr in ("additional_outcomes", "rq_contributions"):
+        for el in merged.get(arr, []) or []:
+            if isinstance(el, dict):
+                failed += _check_cells(el, nsrc, nsrc_ns, src_toks)
     return failed
 
 
@@ -164,6 +209,11 @@ def process(rec: dict, prompts: dict, args) -> dict:
         return {"record_id": rec["record_id"], "_error": "all variants failed",
                 "_raw_errors": [r.get("_error") for r in runs]}
     merged, audit = merge_k3(good)
+    # normalize spacing drift on closed-list categoricals (e.g. "Journal article" -> "Journal-article")
+    for kk in ("doctype", "design"):
+        c = merged.get(kk)
+        if isinstance(c, dict) and isinstance(c.get("value"), str) and c["value"].strip():
+            c["value"] = re.sub(r"\s+", "-", c["value"].strip())
     n_qfail = check_quotes(merged, rec.get("segmented_full_text", ""))
     # High-stakes fields that need human eyes: non-null quant/appraisal fields whose quote
     # failed to verify or whose runs disagreed. These are the review-queue priorities.
@@ -213,10 +263,13 @@ def main():
     print(f"DEX: {len(recs)} selected, {len(done)} already done, {len(todo)} to run "
           f"(extractor={args.extractor}, k={args.k})")
 
+    run_meta = {"model": args.extractor, "k": args.k, "prompt": Path(args.prompt).name,
+                "ts": datetime.now(timezone.utc).isoformat(timespec="seconds")}
     with open(out_path, "a", encoding="utf-8") as f, ThreadPoolExecutor(max_workers=args.workers) as ex:
         futs = {ex.submit(process, r, prompts, args): r for r in todo}
         for i, fut in enumerate(as_completed(futs), 1):
             res = fut.result()
+            res["_meta"] = run_meta          # audit: model + prompt version + k + timestamp
             f.write(json.dumps(res, ensure_ascii=False) + "\n"); f.flush()
             a = res.get("audit", {})
             tag = "ERROR" if res.get("_error") else (
