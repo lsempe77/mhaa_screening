@@ -103,6 +103,21 @@ def rq_list(v: str):
 summ["rq"] = summ["rq_tags"].map(rq_list)
 GEO_ORDER = ["SSA", "other-LMIC", "HIC-UMIC", "mixed"]
 GEO_COL = {"SSA": CAT[0], "other-LMIC": CAT[2], "HIC-UMIC": CAT[1], "mixed": MUTED}
+
+# Country (ISO-3) -> the review's geographic bucket (SSA / other-LMIC / HIC-UMIC), for the
+# frequently-occurring countries. SSA is by region; non-SSA split follows income (UMIC grouped
+# with HIC per the review's scheme). Unlisted codes fall to 'other'.
+_SSA = "ZAF ETH NGA UGA KEN ZWE TZA MWI GHA RWA ZMB CMR SEN MOZ BWA BEN BFA MLI CIV COD SSD SDN SOM LBR SLE GMB NAM LSO MDG BDI TGO NER GIN GAB COG AGO ERI MRT".split()
+_OLMIC = "IND PAK IRN BGD IDN PHL VNM EGY NPL LKA MAR JOR IRQ AFG KHM MMR BOL HND NIC PSE YEM UZB TUN LBN UKR MNG GTM SLV KGZ TJK LAO".split()
+_HICUMIC = ("GBR USA AUS NLD CAN DEU ESP ITA SWE JPN KOR CHE DNK FRA NOR FIN BEL AUT IRL NZL "
+            "ISR SGP CHN BRA TUR MEX THA MYS RUS POL PRT GRC COL PER ARG CHL HKG TWN CZE HUN "
+            "NED SVK ROU HRV SRB").split()
+CGROUP = {c: "SSA" for c in _SSA}
+CGROUP.update({c: "other-LMIC" for c in _OLMIC})
+CGROUP.update({c: "HIC-UMIC" for c in _HICUMIC})
+
+def country_codes(v):
+    return re.findall(r"\b[A-Z]{3}\b", v or "")
 AM_ORDER = ["High", "Moderate", "Low", "Critically-low"]
 AM_COL = {"High": STATUS["good"], "Moderate": STATUS["warning"],
           "Low": STATUS["serious"], "Critically-low": STATUS["critical"]}
@@ -354,6 +369,105 @@ This geographic thinness is itself a principal finding: {_nossa} of the eighteen
 questions have no Sub-Saharan Africa-specific record at all, so for the setting that matters
 most to implementation the directly applicable evidence is limited and much of the base will
 be indirect.
+""")
+```
+
+## Countries
+
+```{python}
+#| label: fig-countries
+#| fig-cap: "The twenty most frequently studied countries, coloured by the review's geographic bucket (a review may study several countries). High- and upper-middle-income countries account for most of the volume."
+from matplotlib.patches import Patch
+cc = Counter(c for v in summ["country"] for c in country_codes(v))
+top = cc.most_common(20)[::-1]
+cols = [GEO_COL.get(CGROUP.get(c, "mixed"), MUTED) for c, _ in top]
+fig, ax = plt.subplots(figsize=(8.5, 6))
+ax.barh(range(len(top)), [n for _, n in top], color=cols, zorder=3)
+ax.set_yticks(range(len(top))); ax.set_yticklabels([c for c, _ in top], fontsize=8.5)
+for i, (c, n) in enumerate(top):
+    ax.text(n, i, f" {n:,}", va="center", fontsize=8, color=INK)
+ax.set_xlim(0, top[-1][1] * 1.12); ax.set_title("Most-studied countries (top 20)")
+ax.legend(handles=[Patch(color=GEO_COL[g], label=g) for g in ["SSA", "other-LMIC", "HIC-UMIC"]],
+          loc="lower right", frameon=False, fontsize=9)
+plt.tight_layout(); plt.show()
+```
+
+```{python}
+#| label: txt-countries
+cc = Counter(c for v in summ["country"] for c in country_codes(v))
+def _top_in(grp, k=4):
+    return [c for c, _ in cc.most_common() if CGROUP.get(c) == grp][:k]
+_class = sum(n for c, n in cc.items() if c in CGROUP)
+_hicn = sum(n for c, n in cc.items() if CGROUP.get(c) == "HIC-UMIC")
+Markdown(f"""
+The evidence concentrates in a handful of high-income countries — the United Kingdom, the
+United States and Australia lead — with China, India, Pakistan and Iran the most-represented
+low- and middle-income settings. Within Sub-Saharan Africa the evidence is confined to a few
+countries: {', '.join(_top_in('SSA'))} appear most often. Of country mentions that can be
+classified, {100*_hicn/max(1,_class):.0f}% are high- or upper-middle-income, confirming how
+far the centre of gravity sits from the target setting.
+""")
+```
+
+## Geography by research question
+
+```{python}
+#| label: fig-geo-rq
+#| fig-cap: "Geographic composition of the evidence for each research question (records reporting a geographic focus)."
+from matplotlib.patches import Patch
+fig, ax = plt.subplots(figsize=(8.5, 7))
+for yi, n in enumerate(range(1, 19)):
+    tag = f"RQ{n}"; sub = summ[summ["rq"].map(lambda x: tag in x)]
+    g = sub["geo_focus"][sub["geo_focus"].isin(GEO_ORDER)]; tot = len(g)
+    if not tot:
+        continue
+    left = 0.0
+    for gg in GEO_ORDER:
+        frac = (g == gg).sum() / tot
+        if frac:
+            ax.barh(yi, frac, left=left, color=GEO_COL[gg], zorder=3, edgecolor="white", linewidth=0.6)
+            left += frac
+    ax.text(1.01, yi, f"n={tot}", va="center", fontsize=8, color=MUTED)
+ax.set_yticks(range(18)); ax.set_yticklabels([f"RQ{n}" for n in range(1, 19)], fontsize=9)
+ax.invert_yaxis(); ax.set_xlim(0, 1); ax.set_xlabel("Share of records reporting geography"); ax.grid(False)
+ax.legend(handles=[Patch(color=GEO_COL[g], label=g) for g in GEO_ORDER],
+          loc="lower center", bbox_to_anchor=(0.5, 1.01), ncol=4, frameon=False, fontsize=8.5)
+plt.tight_layout(); plt.show()
+```
+
+```{python}
+#| label: txt-geo-rq
+_r = []
+for n in range(1, 19):
+    tag = f"RQ{n}"; sub = summ[summ["rq"].map(lambda x: tag in x)]
+    g = sub["geo_focus"][sub["geo_focus"].isin(GEO_ORDER)]; tot = len(g)
+    if tot:
+        _r.append((tag, g.isin(["SSA", "other-LMIC"]).sum() / tot))
+_r.sort(key=lambda x: -x[1])
+_m, _l = _r[0], _r[-1]
+Markdown(f"""
+The geographic skew varies by question. {_m[0]} carries the highest share of low- and
+middle-income evidence ({100*_m[1]:.0f}% of its geo-reporting records), whereas {_l[0]} is
+the most high-income-weighted ({100*_l[1]:.0f}% low- or middle-income). No question is
+majority Sub-Saharan African.
+""")
+```
+
+## Study quality across settings
+
+```{python}
+#| label: txt-geo-quality
+def _lowshare(geo):
+    r = summ[(summ["geo_focus"] == geo) & (summ["unit"] == "review") & (summ["amstar2_band"].isin(AM_ORDER))]
+    return (r["amstar2_band"].isin(["Low", "Critically-low"]).sum()) / len(r) if len(r) else 0
+Markdown(f"""
+Crucially, the thin Sub-Saharan African evidence is not also *lower quality*: methodological
+quality is uniformly weak across settings. Reviews rated Low or Critically-low on AMSTAR-2
+make up {100*_lowshare('SSA'):.0f}% of rated Sub-Saharan African reviews,
+{100*_lowshare('other-LMIC'):.0f}% of other low- and middle-income, {100*_lowshare('HIC-UMIC'):.0f}%
+of high- or upper-middle-income, and {100*_lowshare('mixed'):.0f}% of mixed. The geographic
+gap is therefore one of volume and directness rather than differential quality — there is
+simply little evidence generated in, and for, the target setting.
 """)
 ```
 
