@@ -63,7 +63,7 @@ def main():
                for l in open(a.records, encoding="utf-8") if l.strip()}
     out_dir = Path(a.out_dir); out_dir.mkdir(parents=True, exist_ok=True)
 
-    summary_rows, long_rows, outcome_rows, queue_rows = [], [], [], []
+    summary_rows, long_rows, outcome_rows, queue_rows, contrib_rows = [], [], [], [], []
 
     for rid, r in sorted(results.items()):
         rm = recmeta.get(rid, {})
@@ -115,6 +115,15 @@ def main():
                 row[k2] = c2.get("value") if isinstance(c2, dict) else c2
             outcome_rows.append(row)
 
+        # --- rq_contributions long (one row per study x RQ contribution) ---
+        for el in f.get("rq_contributions", []) or []:
+            if not isinstance(el, dict):
+                continue
+            row = {"record_id": rid}
+            for k2, c2 in el.items():
+                row[k2] = c2.get("value") if isinstance(c2, dict) else c2
+            contrib_rows.append(row)
+
         # --- review queue (prioritised: eligibility concern, high-stakes fields needing
         # review, or an extraction error — NOT every low-priority descriptive quote-fail) ---
         reasons = []
@@ -156,6 +165,7 @@ def main():
     outs = [write_csv("dex_summary.csv", summary_rows),
             write_csv("dex_long.csv", long_rows),
             write_csv("dex_outcomes_long.csv", outcome_rows),
+            write_csv("dex_rq_contributions_long.csv", contrib_rows),
             write_csv("dex_review_queue.csv", queue_rows)]
 
     # optional Excel workbook

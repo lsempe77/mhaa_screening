@@ -753,6 +753,54 @@ consequential for the synthesis.
 """)
 ```
 
+# Research questions in detail
+
+This section consolidates the evidence for each question. Each profile reports the
+study-level *contributions* extracted for the question — one entry per study that the
+extraction judged to bear on it — together with their strength profile and a few
+representative summaries taken verbatim from the extraction (with the source record id).
+Contribution strengths and summaries are machine-extracted and unverified: they describe what
+the reviews report and how strongly the extractor judged each to bear on the question, not a
+graded synthesis of effect.
+
+```{python}
+#| label: rq-profiles
+#| output: asis
+rqc = pd.read_csv(REPORTS / "dex_rq_contributions_long.csv", dtype=str).fillna("")
+STR_ORD = {"High": 0, "Moderate": 1, "Low": 2, "Critically-low": 3, "Insufficient": 4, "": 5}
+lines = []
+for n in range(1, 19):
+    rq = f"RQ{n}"
+    rs = rqstats[rqstats["rq"] == rq].iloc[0]
+    sub = rqc[rqc["rq_id"] == rq]
+    st = Counter(sub["rq_contribution_strength"])
+    ty = Counter(sub["rq_contribution_type"])
+    dirn = Counter([d for d in sub["rq_contribution_direction"] if d and d != "Not-applicable"])
+    hi = st.get("High", 0) + st.get("Moderate", 0)
+    low = st.get("Low", 0) + st.get("Critically-low", 0) + st.get("Insufficient", 0)
+    prim = ty.get("Primary-evidence", 0)
+    pred = "low" if low >= hi else "moderate-to-high"
+    dirtxt = f"most often *{dirn.most_common(1)[0][0].lower()}*" if dirn else "not consistently stated"
+    lines.append(f"## {rq}. {RQ_LABEL[n]}\n")
+    lines.append(f"*{rs['records']} records ({rs['reviews']} reviews) · {rs['status']} · "
+                 f"Sub-Saharan Africa: {rs['ssa']} records*\n")
+    lines.append(f"{len(sub):,} study-level contributions address this question "
+                 f"({prim:,} rated primary evidence). Contribution strength is predominantly "
+                 f"{pred} ({hi:,} high or moderate, {low:,} low or insufficient), and the "
+                 f"direction of contribution is {dirtxt}.\n")
+    reps = sub[sub["rq_contribution_summary"].str.len() > 25].copy()
+    reps["ord"] = reps["rq_contribution_strength"].map(lambda s: STR_ORD.get(s, 5))
+    reps = reps.sort_values("ord").drop_duplicates("rq_contribution_summary").head(3)
+    if len(reps):
+        lines.append("Representative extracted evidence:\n")
+        for _, r in reps.iterrows():
+            s = r["rq_contribution_strength"] or "strength not rated"
+            _sm = r["rq_contribution_summary"].strip().rstrip(".")
+            lines.append(f"- {_sm}. *({r['record_id']}, {s} strength)*")
+    lines.append("\n")
+print("\n".join(lines))
+```
+
 # Evidence gaps
 
 ```{python}
