@@ -36,7 +36,7 @@ ground-truth labels (sensitivity, Cohen's κ, ECE, Brier, reliability).
 > | **FTR** ✅ done | 4,125 includes | `full_text_retrieval/pdfs/` | PDFs retrieved (see [FTR README](pipeline/ftr/README.md)) |
 > | **FTS (full text)** ✅ done | 2,721 PDFs | `includes_fts.ris` | **1,769 includes** (0 unresolved) |
 > | **RIS determinants correction** ✅ done | 17,033 `EXCLUDE_INTERVENTION_TOPIC` | `includes_fts_final_2670.ris` | +1,670 TA recovered → 1,066 PDFs (no Sci-Hub) → **+901 FTS includes**. Full-text includes **1,769 → 2,670** |
-> | **DEX (data extraction)** 🔄 pilot done | 2,670 full-text includes | `records_extract_final_2670.jsonl` → ~220-field schema | 5-study pilot PASSED (Sonnet, k=1, route-aware eligibility flag). Full run pending. [`dex_extraction_process.md`](projects/strongminds/docs/dex_extraction_process.md) |
+> | **DEX (data extraction)** ✅ done | 2,670 full-text includes | `reports/dex_*.csv` + `dex_review.xlsx` | **2,668/2,670 extracted** (Sonnet, k=1, grounded, audit-stamped). Review queue 1,200 (eligibility + high-stakes). 2 residual (oversized umbrella reviews). [`dex_extraction_process.md`](projects/strongminds/docs/dex_extraction_process.md) |
 >
 > FTS prompt **v1.9-fts**, run 2026-07-27/28. Write-ups:
 > [`fts_screening_process.md`](projects/strongminds/docs/fts_screening_process.md) ·

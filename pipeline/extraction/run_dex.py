@@ -258,7 +258,12 @@ def main():
     out_path = Path(args.out); out_path.parent.mkdir(parents=True, exist_ok=True)
     done = set()
     if out_path.exists():
-        done = {str(json.loads(l)["record_id"]) for l in open(out_path, encoding="utf-8") if l.strip()}
+        for l in open(out_path, encoding="utf-8"):
+            if not l.strip():
+                continue
+            r = json.loads(l)
+            if not r.get("_error"):          # retry errored records on restart
+                done.add(str(r["record_id"]))
     todo = [r for r in recs if str(r["record_id"]) not in done]
     print(f"DEX: {len(recs)} selected, {len(done)} already done, {len(todo)} to run "
           f"(extractor={args.extractor}, k={args.k})")

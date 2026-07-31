@@ -3,7 +3,14 @@
 **Stage 4** of the pipeline (TAS → FTR → FTS → **DEX**). Pulls the structured ULCM schema
 (~220 fields) out of each full-text include for synthesis / the Decision Brief.
 
-**Status:** 5-study pilot PASSED (2026-07-30). Full 2,670-record run pending go-ahead.
+**Status:** ✅ **Full run complete (2026-07-31): 2,668 / 2,670 extracted** (Sonnet, k=1).
+2 residual: the two most extreme umbrella reviews (`CN2UHGBP`, `YEC958EM`) exceed Sonnet's
+200k-token context even after section-pruning — flagged as errors in the review queue for
+manual handling. Oversized reviews (>~200k tokens) were re-pruned to a context-safe cap and
+re-run (29 → 8 → 2). Deliverables: `data/extraction/reports/dex_summary.csv`,
+`dex_long.csv`, `dex_outcomes_long.csv`, `dex_review_queue.csv` (1,200 rows),
+`dex_review.xlsx`. Run wrapper: [run_dex_full.ps1](../scripts/run_dex_full.ps1);
+export: [dex_export.py](../../../pipeline/extraction/dex_export.py).
 
 ---
 
