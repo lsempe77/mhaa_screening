@@ -100,6 +100,24 @@ n_review = int((summ["unit"] == "review").sum())
 n_primary = int((summ["unit"] == "primary_study").sum())
 rq_counts = Counter(t for tags in summ["rq"] for t in tags)
 ssa = int((summ["geo_focus"] == "SSA").sum())
+
+def rq_has(tag):
+    return summ["rq"].map(lambda x: tag in x)
+
+# per-RQ statistics used throughout the narrative (single source, keeps text consistent)
+_rows = []
+for n in range(1, 19):
+    tag = f"RQ{n}"; sub = summ[rq_has(tag)]; revs = sub[sub["unit"] == "review"]
+    rated = revs["amstar2_band"].isin(AM_ORDER)
+    _rows.append({
+        "rq": tag, "n": n, "label": RQ_LABEL[n], "records": len(sub),
+        "reviews": int((sub["unit"] == "review").sum()),
+        "ssa": int((sub["geo_focus"] == "SSA").sum()),
+        "rated": int(rated.sum()),
+        "hq": int(revs["amstar2_band"].isin(["High", "Moderate"]).sum()),
+        "lowq": int(revs["amstar2_band"].isin(["Low", "Critically-low"]).sum()),
+    })
+rqstats = pd.DataFrame(_rows)
 ```
 
 # Summary
@@ -167,12 +185,25 @@ for i, v in enumerate(a.values):
 plt.tight_layout(); plt.show()
 ```
 
-The corpus is dominated by review-level evidence: `{python} f"{n_review:,}"` of `{python} f"{N:,}"`
-records are systematic reviews or meta-analyses. Methodological quality, appraised with
-AMSTAR-2 (Shea et al. 2017) for the reviews that reported enough to rate, is
-predominantly low or critically low. This is consistent with a rapidly grown but
-methodologically uneven literature, and it bears directly on the certainty that can be
-attached to any synthesised estimate.
+```{python}
+#| label: txt-base
+_rev = summ[summ["unit"] == "review"]
+_rated = _rev[_rev["amstar2_band"].isin(AM_ORDER)]
+_low2 = int(_rated["amstar2_band"].isin(["Low", "Critically-low"]).sum())
+_hi = int((_rated["amstar2_band"] == "High").sum())
+_des = _rev["design"].replace("", np.nan).dropna().value_counts()
+_topname = "n/a" if _des.empty else _des.index[0]
+_topn = 0 if _des.empty else int(_des.iloc[0])
+Markdown(f"""
+The corpus is dominated by review-level evidence: {n_review:,} of {N:,} records
+({100*n_review/N:.0f}%) are systematic reviews or meta-analyses, most commonly coded as
+*{_topname}* ({_topn:,} reviews); the remaining {n_primary:,} are primary studies. Of the
+{len(_rated):,} reviews carrying enough detail to rate on AMSTAR-2 (Shea et al. 2017),
+{_low2:,} ({100*_low2/max(1,len(_rated)):.0f}%) fall in the Low or Critically-low confidence
+bands and only {_hi} are rated High. Methodological quality, rather than the volume of
+evidence, is therefore the binding constraint on the certainty of any synthesised estimate.
+""")
+```
 
 # Evidence and gap map across RQ1–RQ18
 
@@ -243,10 +274,22 @@ trdf = pd.DataFrame(tr)
  .tab_source_note(gtmd("*Records contribute to every RQ they address, so column sums exceed the corpus size. AMSTAR-2 counts reviews rated High or Moderate.*")))
 ```
 
-Evidence is heaviest on the intervention-effectiveness questions and on determinants, and
-thinnest on the design-parameter questions. The `High/Mod AMSTAR-2` column is the more
-sobering read: for most questions only a small minority of contributing reviews reach
-moderate or high methodological quality.
+```{python}
+#| label: txt-egm
+_t = rqstats.sort_values("records", ascending=False)
+_top, _bot = _t.iloc[0], _t.iloc[-1]
+_nossa = rqstats[rqstats["ssa"] == 0]["rq"].tolist()
+_hqshare = 100 * rqstats["hq"].sum() / max(1, rqstats["rated"].sum())
+Markdown(f"""
+Evidence volume is highly uneven across the eighteen questions. {_top['rq']}
+({_top['label'].lower()}) draws the most, with {_top['records']:,} contributing records,
+whereas {_bot['rq']} ({_bot['label'].lower()}) draws the fewest ({_bot['records']}).
+{"Every question has at least some Sub-Saharan African evidence." if not _nossa else f"{len(_nossa)} of the eighteen questions have no Sub-Saharan Africa-specific record ({', '.join(_nossa)})."}
+The colour dimension is the more sobering read: across all contributing reviews only
+{_hqshare:.0f}% reach moderate or high AMSTAR-2 confidence, so for most questions the
+evidence that exists is methodologically weak.
+""")
+```
 
 # Geography and the low- and middle-income lens
 
@@ -264,12 +307,26 @@ ax.set_xlim(0, g.max() * 1.18); ax.set_title("Records by geographic focus")
 plt.tight_layout(); plt.show()
 ```
 
+```{python}
+#| label: txt-geo
+_g = summ["geo_focus"].value_counts()
+_ssa = int(_g.get("SSA", 0)); _olmic = int(_g.get("other-LMIC", 0))
+_hic = int(_g.get("HIC-UMIC", 0)); _mix = int(_g.get("mixed", 0))
+_lmic = _ssa + _olmic
+_nossa = int((rqstats["ssa"] == 0).sum())
+Markdown(f"""
 The review targets ultra-low-cost delivery in low- and middle-income countries, yet the
-evidence base is weighted toward high- and upper-middle-income or mixed settings.
-Sub-Saharan Africa is the focus of only `{python} ssa` of `{python} f"{N:,}"` records
-(`{python} f"{100*ssa/N:.0f}"`%). This geographic thinness is itself a principal finding:
-for the questions that matter most to implementation in the target setting, directly
-applicable evidence is limited, and much of the base will be indirect.
+evidence base is weighted toward high- or upper-middle-income and mixed settings.
+Sub-Saharan Africa is the geographic focus of only {_ssa:,} of {N:,} records
+({100*_ssa/N:.0f}%). Explicitly low- or middle-income settings — Sub-Saharan Africa plus
+other LMICs — account for {_lmic:,} records ({100*_lmic/N:.0f}%), against {_hic:,}
+({100*_hic/N:.0f}%) high- or upper-middle-income and {_mix:,} ({100*_mix/N:.0f}%) mixed.
+This geographic thinness is itself a principal finding: {_nossa} of the eighteen research
+questions have no Sub-Saharan Africa-specific record at all, so for the setting that matters
+most to implementation the directly applicable evidence is limited and much of the base will
+be indirect.
+""")
+```
 
 # Study quality by research question
 
@@ -298,10 +355,22 @@ ax.legend(handles=handles, loc="lower center", bbox_to_anchor=(0.5, 1.01), ncol=
 plt.tight_layout(); plt.show()
 ```
 
+```{python}
+#| label: txt-quality
+_r = rqstats[rqstats["rated"] > 0].copy()
+_r["hq_share"] = _r["hq"] / _r["rated"]
+_best = _r.sort_values("hq_share", ascending=False).iloc[0]
+_low_overall = 100 * rqstats["lowq"].sum() / max(1, rqstats["rated"].sum())
+Markdown(f"""
 Across every research question the rated reviews are dominated by the two lowest AMSTAR-2
-bands. High-confidence reviews are scarce throughout. In practical terms, the certainty of
-any conclusion drawn per question will be constrained less by the *volume* of evidence than
-by its *quality*, and the synthesis should weight and caveat accordingly.
+bands: {_low_overall:.0f}% of all rated reviews are Low or Critically-low. High-confidence
+reviews are scarce throughout; even the best-appraised question, {_best['rq']}
+({_best['label'].lower()}), reaches moderate or high confidence in only {int(_best['hq'])}
+of its {int(_best['rated'])} rated reviews. The certainty attainable per question is
+therefore constrained less by the volume of evidence than by its quality, and the synthesis
+should weight and caveat accordingly.
+""")
+```
 
 # Interventions
 
@@ -326,10 +395,25 @@ if top:
     plt.tight_layout(); plt.show()
 ```
 
-The extracted techniques are dominated by the established brief, structured modalities that
-define the ULCM scope — cognitive-behavioural, interpersonal, problem-solving, behavioural
-activation, and psychoeducational approaches — consistent with the review's inclusion
-criteria.
+```{python}
+#| label: txt-int
+_tech = Counter()
+for v in long.loc[long["field"] == "int_techniques", "value"]:
+    try:
+        for t in json.loads(v):
+            _tech[str(t)] += 1
+    except Exception:
+        pass
+_top3 = _tech.most_common(3)
+_txt = "; ".join(f"{t} ({c:,} records)" for t, c in _top3) if _top3 else "not consistently reported"
+Markdown(f"""
+The most frequently extracted techniques are {_txt}. These are the established brief,
+structured modalities that define the ULCM scope, consistent with the review's inclusion
+criteria. The field is multi-select, so a single intervention often combines several
+components; disentangling their independent contribution is the task of the component
+questions (RQ5, RQ6, RQ14).
+""")
+```
 
 # Effects: descriptive harvest
 
@@ -364,11 +448,19 @@ ax.legend(handles=handles, loc="lower center", bbox_to_anchor=(0.5, 1.01), ncol=
 plt.tight_layout(); plt.show()
 ```
 
-The harvest shows that, where a direction is reported, records overwhelmingly favour the
-intervention. This is expected and must be read cautiously: it reflects what reviews report,
-carries the field's known small-study and publication biases, and has not been verified or
-weighted by quality. It is a signal of where effects have been claimed, not an estimate of
-their size or certainty.
+```{python}
+#| label: txt-effects
+_DIRS = ["Favours-intervention", "Null", "Favours-control", "Unclear"]
+_d = summ["eff_dir"][summ["eff_dir"].isin(_DIRS)]
+_fi = 100 * (_d == "Favours-intervention").sum() / max(1, len(_d))
+Markdown(f"""
+Where a direction is reported ({len(_d):,} records), {_fi:.0f}% favour the intervention.
+This is expected and must be read cautiously: it reflects what the reviews report, carries
+the field's well-documented small-study and publication biases, and has not been verified or
+weighted by study quality. It marks where effects have been *claimed*, not their size or
+certainty; quantitative pooling follows verification.
+""")
+```
 
 # Overlap and evidence concentration
 
