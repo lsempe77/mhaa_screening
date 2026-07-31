@@ -133,6 +133,18 @@ def main():
                 "n_quote_fail": aud.get("n_quote_fail", ""),
             })
 
+    # Merge cross-review overlap columns into the summary if the overlap analysis has run
+    # (dex_overlap.py writes dex_overlap_reviews.csv, keyed by record_id).
+    ov_path = out_dir / "dex_overlap_reviews.csv"
+    if ov_path.exists():
+        ov = {r["record_id"]: r for r in csv.DictReader(open(ov_path, encoding="utf-8-sig"))}
+        for row in summary_rows:
+            o = ov.get(row["record_id"], {})
+            row["overlap_cluster_id"] = o.get("cluster_id", "")
+            row["overlap_n_shared_studies"] = o.get("n_shared_studies", "")
+            row["overlap_max_jaccard"] = o.get("max_jaccard", "")
+            row["overlap_cluster_size"] = o.get("cluster_size", "")
+
     def write_csv(name, rows):
         path = out_dir / name
         with open(path, "w", newline="", encoding="utf-8-sig") as fh:

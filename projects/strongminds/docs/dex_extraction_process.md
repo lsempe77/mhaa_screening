@@ -76,7 +76,16 @@ miss at extraction (a bug the pilot caught and we fixed).
 - **`comparator`** field added (headline-effect comparator — needed to interpret/pool effects).
 - **`n_included_studies` + `included_study_ids`** added (reviews) — enables cross-review **overlap / double-counting** detection (corrected covered area). Confirmed extracting (e.g. 18 studies with author-year IDs).
 
-Still open for the review team (from the rigor review): use `included_study_ids` for an **overlap analysis at synthesis**; the **primary-study drill-down** (source_review_ids / dedup / tier) is **not yet operational** — the 301 `primary_study` records are heuristic; and confirm **GRADE certainty** is a synthesis-stage step.
+**Cross-review overlap analysis — built + run** ([dex_overlap.py](../../../pipeline/extraction/dex_overlap.py)):
+9,042 unique primary studies across 940 reviews; **1,631 (18%) shared by >1 review**; 59 clusters.
+Landmark trials pooled widely (o'mahen 2013 in 19 reviews; rahman 2008 in 15). Outputs
+`dex_overlap_{studies,reviews,clusters}.csv` (+ overlap columns merged into `dex_summary.csv`).
+Genuinely redundant clusters (e.g. cluster 36: 7 reviews, CCA 10.9% "high") are flagged for the
+review team to resolve (keep most comprehensive/highest-AMSTAR-2 review, or drop to primary-level).
+
+Still open for the review team: **resolve the high-overlap clusters**; the **primary-study
+drill-down** (source_review_ids / dedup / tier) is **not yet operational** — the 301
+`primary_study` records are heuristic; and confirm **GRADE certainty** is a synthesis-stage step.
 
 ## Run it
 
