@@ -54,6 +54,7 @@ projects/strongminds/data/extraction/
 projects/strongminds/data/extraction_recovered/
 # Quarto rendered reports (regenerable; shared via the project folder) + cache
 projects/strongminds/analysis/*.html
+projects/strongminds/analysis/*.pdf
 projects/strongminds/analysis/.quarto/
 projects/strongminds/analysis/*_files/
 # Raw RIS corpus (large source exports, ~80 MB)
