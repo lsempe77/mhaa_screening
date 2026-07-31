@@ -1,0 +1,469 @@
+---
+title: "StrongMinds ULCM rapid review: evidence and gap map"
+subtitle: "High-level descriptive overview of the extracted evidence base across RQ1–RQ18"
+author: "3ie — ULCM review team"
+date: today
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 2
+    toc-location: left
+    number-sections: true
+    embed-resources: true
+    fig-width: 8
+    fig-height: 5
+    fig-dpi: 140
+    code-fold: true
+    code-tools: true
+    df-print: paged
+execute:
+  echo: false
+  warning: false
+  message: false
+  cache: false
+---
+
+```{python}
+#| label: setup
+import json, csv, re
+from collections import Counter, defaultdict
+from pathlib import Path
+import numpy as np
+import pandas as pd
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
+
+REPORTS = Path("../data/extraction/reports")
+
+# ---- validated (CVD-safe) palette: dataviz reference instance, light surface ----
+CAT   = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#4a3aa7", "#e34948"]
+SEQ   = ["#cde2fb", "#9ec5f4", "#6da7ec", "#3987e5", "#256abf", "#184f95", "#0d366b"]
+DIV   = {"neg": "#256abf", "mid": "#b8b7b2", "pos": "#e34948"}     # blue ↔ red, gray midpoint
+STATUS = {"good": "#0ca30c", "warning": "#fab219", "serious": "#ec835a", "critical": "#d03b3b"}
+INK, INK2, MUTED, GRID, SURFACE = "#0b0b0b", "#52514e", "#898781", "#e1e0d9", "#fcfcfb"
+
+mpl.rcParams.update({
+    "figure.facecolor": SURFACE, "axes.facecolor": SURFACE, "savefig.facecolor": SURFACE,
+    "font.family": "sans-serif", "font.size": 11,
+    "text.color": INK, "axes.labelcolor": INK2, "axes.edgecolor": "#c3c2b7",
+    "xtick.color": MUTED, "ytick.color": MUTED,
+    "axes.spines.top": False, "axes.spines.right": False,
+    "axes.grid": True, "grid.color": GRID, "grid.linewidth": 0.6,
+    "axes.titlesize": 12, "axes.titleweight": "bold", "axes.titlecolor": INK,
+})
+
+# ---- research-question labels (from the Fields-by-RQ specification) ----
+RQ_LABEL = {
+    1:  "Determinants of adult depression (LMIC)",
+    2:  "Which low-intensity group interventions are effective",
+    3:  "Parameters determining effectiveness",
+    4:  "Facilitator training / supervision / background",
+    5:  "Components associated with symptom reduction",
+    6:  "Components that can be dropped",
+    7:  "Minimum viable dose (length × sessions)",
+    8:  "Durability: short- vs longer-term effects",
+    9:  "When single- vs multi-session is appropriate",
+    10: "Group-size ranges",
+    11: "Spillover to general populations",
+    12: "Stepped-care model design",
+    13: "Non-specialist / lay / peer delivery",
+    14: "Therapeutic model and active ingredients",
+    15: "Design choices and engagement",
+    16: "Cost drivers and cost-per-participant",
+    17: "Safety monitoring and referral pathways",
+    18: "Measurement tools: validity and reliability (LMIC)",
+}
+RQ_ORDER = [f"RQ{n}" for n in range(1, 19)]
+
+# ---- load extraction tables ----
+summ = pd.read_csv(REPORTS / "dex_summary.csv", dtype=str).fillna("")
+long = pd.read_csv(REPORTS / "dex_long.csv", dtype=str).fillna("")
+ov_studies = pd.read_csv(REPORTS / "dex_overlap_studies.csv")
+ov_clusters = pd.read_csv(REPORTS / "dex_overlap_clusters.csv")
+
+def rq_list(v: str):
+    """Parse a stored rq_tags cell like "['RQ1', 'RQ18']" -> ['RQ1','RQ18']."""
+    return [t for t in re.sub(r"[\[\]'\"]", "", v).replace(" ", "").split(",")
+            if re.fullmatch(r"RQ\d{1,2}", t)]
+
+summ["rq"] = summ["rq_tags"].map(rq_list)
+GEO_ORDER = ["SSA", "other-LMIC", "HIC-UMIC", "mixed"]
+GEO_COL = {"SSA": CAT[0], "other-LMIC": CAT[2], "HIC-UMIC": CAT[1], "mixed": MUTED}
+AM_ORDER = ["High", "Moderate", "Low", "Critically-low"]
+AM_COL = {"High": STATUS["good"], "Moderate": STATUS["warning"],
+          "Low": STATUS["serious"], "Critically-low": STATUS["critical"]}
+
+N = len(summ)
+n_review = int((summ["unit"] == "review").sum())
+n_primary = int((summ["unit"] == "primary_study").sum())
+rq_counts = Counter(t for tags in summ["rq"] for t in tags)
+ssa = int((summ["geo_focus"] == "SSA").sum())
+```
+
+# Summary
+
+This report is a descriptive overview of the evidence extracted for the StrongMinds
+Ultra-Low-Cost Model (ULCM) rapid review. It maps what evidence exists across the
+eighteen research questions (RQ1–RQ18), by geography and by study quality, and identifies
+where evidence is sparse or weak. It is an *evidence and gap map* in the sense used by
+3ie: a structured description of the evidence base, not a synthesis of effects.
+
+```{python}
+#| label: summary-numbers
+from IPython.display import Markdown
+shared = int((ov_studies["n_reviews"] > 1).sum())
+tot_studies = len(ov_studies)
+md = f"""
+The extracted corpus comprises **{N:,} included records** — {n_review:,} systematic
+reviews or meta-analyses and {n_primary:,} primary studies. Every record was extracted
+into an approximately 220-field schema in which each value is tied to a verbatim quote
+from the source. The evidence is unevenly distributed across the review's questions, is
+concentrated in high- and upper-middle-income or mixed settings, and rests substantially
+on systematic reviews of low or critically low methodological quality. Across the
+{tot_studies:,} distinct primary studies pooled by the reviews, **{shared:,}
+({100*shared/tot_studies:.0f}%) appear in more than one review**, so evidence is
+materially shared and must be counted once at synthesis.
+
+All quantitative values in this report are machine-extracted and **not yet human-verified**;
+they are reported to characterise the evidence base, not as review findings. Effect
+information is shown as a descriptive harvest only and is not pooled.
+"""
+Markdown(md)
+```
+
+# The evidence base
+
+```{python}
+#| label: fig-base
+#| fig-cap: "Composition of the extracted corpus: unit of extraction, review design, and study-quality appraisal (AMSTAR-2, reviews only)."
+fig, ax = plt.subplots(1, 3, figsize=(9.5, 3.4))
+
+# unit
+u = summ["unit"].value_counts()
+lab = {"review": "Reviews", "primary_study": "Primary\nstudies"}
+vals = [u.get("review", 0), u.get("primary_study", 0)]
+ax[0].bar([0, 1], vals, color=[CAT[0], CAT[2]], width=0.62, zorder=3)
+ax[0].set_xticks([0, 1]); ax[0].set_xticklabels(["Reviews", "Primary"])
+for i, v in enumerate(vals):
+    ax[0].text(i, v, f"{v:,}", ha="center", va="bottom", color=INK, fontsize=10)
+ax[0].set_title("Unit of extraction"); ax[0].set_ylim(0, max(vals) * 1.15)
+
+# review design (top 6)
+d = summ.loc[summ["unit"] == "review", "design"].replace("", np.nan).dropna().value_counts().head(6)[::-1]
+ax[1].barh(range(len(d)), d.values, color=CAT[0], zorder=3)
+ax[1].set_yticks(range(len(d))); ax[1].set_yticklabels([x[:22] for x in d.index], fontsize=8.5)
+ax[1].set_title("Review design (top 6)")
+
+# amstar-2
+a = summ.loc[summ["unit"] == "review", "amstar2_band"].replace("", np.nan).dropna()
+a = a[a.isin(AM_ORDER)].value_counts().reindex(AM_ORDER).fillna(0)
+ax[2].bar(range(4), a.values, color=[AM_COL[b] for b in AM_ORDER], width=0.7, zorder=3)
+ax[2].set_xticks(range(4)); ax[2].set_xticklabels(["High", "Mod", "Low", "Crit-low"], fontsize=8.5)
+ax[2].set_title("AMSTAR-2 (reviews)")
+for i, v in enumerate(a.values):
+    ax[2].text(i, v, f"{int(v)}", ha="center", va="bottom", color=INK, fontsize=9)
+plt.tight_layout(); plt.show()
+```
+
+The corpus is dominated by review-level evidence: `{python} f"{n_review:,}"` of `{python} f"{N:,}"`
+records are systematic reviews or meta-analyses. Methodological quality, appraised with
+AMSTAR-2 (Shea et al. 2017) for the reviews that reported enough to rate, is
+predominantly low or critically low. This is consistent with a rapidly grown but
+methodologically uneven literature, and it bears directly on the certainty that can be
+attached to any synthesised estimate.
+
+# Evidence and gap map across RQ1–RQ18
+
+The evidence and gap map is the core of this overview. Each research question is placed
+against the geographic focus of its evidence; the area of each marker is proportional to
+the number of records contributing to that question in that setting, and its colour shows
+the modal AMSTAR-2 quality of those records. Empty or small cells are gaps; large cells
+coloured for low quality are questions where evidence exists but is weak.
+
+```{python}
+#| label: fig-egm
+#| fig-cap: "Evidence and gap map. Marker area ∝ number of contributing records; colour = modal AMSTAR-2 band of the contributing reviews (grey where unrated / primary-only). Records contribute to every research question they address."
+rows = []
+for _, r in summ.iterrows():
+    g = r["geo_focus"] if r["geo_focus"] in GEO_ORDER else None
+    if not g:
+        continue
+    for t in r["rq"]:
+        rows.append((t, g, r["amstar2_band"]))
+em = pd.DataFrame(rows, columns=["rq", "geo", "am"])
+
+fig, ax = plt.subplots(figsize=(9, 8))
+maxc = em.groupby(["rq", "geo"]).size().max()
+for yi, rq in enumerate(RQ_ORDER):
+    for xi, g in enumerate(GEO_ORDER):
+        sub = em[(em["rq"] == rq) & (em["geo"] == g)]
+        c = len(sub)
+        if not c:
+            continue
+        modal = sub["am"][sub["am"].isin(AM_ORDER)]
+        color = AM_COL[modal.mode().iloc[0]] if len(modal) else MUTED
+        ax.scatter(xi, yi, s=40 + 620 * c / maxc, color=color, alpha=0.85,
+                   edgecolor="white", linewidth=1.1, zorder=3)
+        ax.text(xi, yi, str(c), ha="center", va="center", fontsize=7.5,
+                color="white" if c / maxc > 0.25 else INK, zorder=4)
+ax.set_xticks(range(4)); ax.set_xticklabels(GEO_ORDER)
+ax.set_yticks(range(18)); ax.set_yticklabels([f"RQ{n}  {RQ_LABEL[n]}" for n in range(1, 19)], fontsize=8.5)
+ax.set_ylim(-0.6, 17.6); ax.set_xlim(-0.6, 3.6); ax.invert_yaxis()
+ax.grid(True, alpha=0.4)
+handles = [Line2D([0], [0], marker="o", color="w", markerfacecolor=AM_COL[b], markersize=9, label=b) for b in AM_ORDER]
+handles.append(Line2D([0], [0], marker="o", color="w", markerfacecolor=MUTED, markersize=9, label="unrated / primary"))
+ax.legend(handles=handles, title="Modal AMSTAR-2", loc="upper center",
+          bbox_to_anchor=(0.5, -0.05), ncol=5, frameon=False, fontsize=8, title_fontsize=8.5)
+plt.tight_layout(); plt.show()
+```
+
+```{python}
+#| label: tbl-rq
+from great_tables import GT, md as gtmd
+tr = []
+for n in range(1, 19):
+    rq = f"RQ{n}"
+    sub = summ[summ["rq"].map(lambda x: rq in x)]
+    revs = sub[sub["unit"] == "review"]
+    am = revs["amstar2_band"][revs["amstar2_band"].isin(["High", "Moderate"])].shape[0]
+    tr.append({
+        "RQ": rq, "Question": RQ_LABEL[n], "Records": len(sub),
+        "Reviews": int((sub["unit"] == "review").sum()),
+        "SSA": int((sub["geo_focus"] == "SSA").sum()),
+        "High/Mod AMSTAR-2": am,
+    })
+trdf = pd.DataFrame(tr)
+(GT(trdf, rowname_col="RQ")
+ .tab_header(title="Evidence by research question",
+             subtitle="Contributing records, review share, Sub-Saharan Africa evidence, and higher-quality reviews")
+ .data_color(columns=["Records"], palette=["#cde2fb", "#256abf"])
+ .data_color(columns=["SSA"], palette=["#fcfcfb", "#1baf7a"])
+ .tab_source_note(gtmd("*Records contribute to every RQ they address, so column sums exceed the corpus size. AMSTAR-2 counts reviews rated High or Moderate.*")))
+```
+
+Evidence is heaviest on the intervention-effectiveness questions and on determinants, and
+thinnest on the design-parameter questions. The `High/Mod AMSTAR-2` column is the more
+sobering read: for most questions only a small minority of contributing reviews reach
+moderate or high methodological quality.
+
+# Geography and the low- and middle-income lens
+
+```{python}
+#| label: fig-geo
+#| fig-cap: "Geographic focus of the evidence base. 'mixed' denotes reviews spanning income settings without a separable subgroup."
+g = summ["geo_focus"].replace("", np.nan).dropna()
+g = g[g.isin(GEO_ORDER)].value_counts().reindex(GEO_ORDER).fillna(0)
+fig, ax = plt.subplots(figsize=(7.5, 3.2))
+ax.barh(range(4), g.values, color=[GEO_COL[x] for x in GEO_ORDER], zorder=3)
+ax.set_yticks(range(4)); ax.set_yticklabels(GEO_ORDER); ax.invert_yaxis()
+for i, v in enumerate(g.values):
+    ax.text(v, i, f"  {int(v):,} ({100*v/g.sum():.0f}%)", va="center", color=INK, fontsize=9.5)
+ax.set_xlim(0, g.max() * 1.18); ax.set_title("Records by geographic focus")
+plt.tight_layout(); plt.show()
+```
+
+The review targets ultra-low-cost delivery in low- and middle-income countries, yet the
+evidence base is weighted toward high- and upper-middle-income or mixed settings.
+Sub-Saharan Africa is the focus of only `{python} ssa` of `{python} f"{N:,}"` records
+(`{python} f"{100*ssa/N:.0f}"`%). This geographic thinness is itself a principal finding:
+for the questions that matter most to implementation in the target setting, directly
+applicable evidence is limited, and much of the base will be indirect.
+
+# Study quality by research question
+
+```{python}
+#| label: fig-quality
+#| fig-cap: "AMSTAR-2 confidence rating of the reviews contributing to each research question (reviews with a rating only). Bars are proportions; the count of rated reviews is shown at right."
+fig, ax = plt.subplots(figsize=(8.5, 7))
+for yi, n in enumerate(range(1, 19)):
+    rq = f"RQ{n}"
+    sub = summ[(summ["rq"].map(lambda x: rq in x)) & (summ["unit"] == "review")]
+    bands = sub["amstar2_band"][sub["amstar2_band"].isin(AM_ORDER)]
+    tot = len(bands)
+    if not tot:
+        continue
+    left = 0.0
+    for b in AM_ORDER:
+        frac = (bands == b).sum() / tot
+        if frac:
+            ax.barh(yi, frac, left=left, color=AM_COL[b], zorder=3, edgecolor="white", linewidth=0.6)
+            left += frac
+    ax.text(1.01, yi, f"n={tot}", va="center", fontsize=8, color=MUTED)
+ax.set_yticks(range(18)); ax.set_yticklabels([f"RQ{n}" for n in range(1, 19)], fontsize=9)
+ax.invert_yaxis(); ax.set_xlim(0, 1); ax.set_xlabel("Share of rated reviews"); ax.grid(False)
+handles = [Line2D([0], [0], marker="s", color="w", markerfacecolor=AM_COL[b], markersize=10, label=b) for b in AM_ORDER]
+ax.legend(handles=handles, loc="lower center", bbox_to_anchor=(0.5, 1.01), ncol=4, frameon=False, fontsize=8.5)
+plt.tight_layout(); plt.show()
+```
+
+Across every research question the rated reviews are dominated by the two lowest AMSTAR-2
+bands. High-confidence reviews are scarce throughout. In practical terms, the certainty of
+any conclusion drawn per question will be constrained less by the *volume* of evidence than
+by its *quality*, and the synthesis should weight and caveat accordingly.
+
+# Interventions
+
+```{python}
+#| label: fig-int
+#| fig-cap: "Most frequently extracted intervention techniques (multi-select field; a record may list several)."
+tech = Counter()
+for v in long.loc[long["field"] == "int_techniques", "value"]:
+    try:
+        for t in json.loads(v):
+            tech[str(t)] += 1
+    except Exception:
+        pass
+top = tech.most_common(12)[::-1]
+if top:
+    fig, ax = plt.subplots(figsize=(8, 4.6))
+    ax.barh(range(len(top)), [c for _, c in top], color=CAT[0], zorder=3)
+    ax.set_yticks(range(len(top))); ax.set_yticklabels([t[:34] for t, _ in top], fontsize=9)
+    for i, (_, c) in enumerate(top):
+        ax.text(c, i, f"  {c}", va="center", fontsize=8.5, color=INK)
+    ax.set_xlim(0, top[-1][1] * 1.15); ax.set_title("Intervention techniques (top 12)")
+    plt.tight_layout(); plt.show()
+```
+
+The extracted techniques are dominated by the established brief, structured modalities that
+define the ULCM scope — cognitive-behavioural, interpersonal, problem-solving, behavioural
+activation, and psychoeducational approaches — consistent with the review's inclusion
+criteria.
+
+# Effects: descriptive harvest
+
+```{python}
+#| label: fig-effects
+#| fig-cap: "Direction of the headline effect reported per record, by research question (records reporting a direction only). Descriptive harvest — effects are neither verified nor pooled."
+dir_map = long.loc[long["field"] == "eff_direction", ["record_id", "value"]].set_index("record_id")["value"].to_dict()
+summ["eff_dir"] = summ["record_id"].map(dir_map).fillna("")
+DIRS = ["Favours-intervention", "Null", "Favours-control", "Unclear"]
+DCOL = {"Favours-intervention": DIV["pos"], "Null": DIV["mid"], "Favours-control": DIV["neg"], "Unclear": GRID}
+fig, ax = plt.subplots(figsize=(8.5, 7))
+any_row = False
+for yi, n in enumerate(range(1, 19)):
+    rq = f"RQ{n}"
+    sub = summ[summ["rq"].map(lambda x: rq in x)]
+    d = sub["eff_dir"][sub["eff_dir"].isin(DIRS)]
+    tot = len(d)
+    if not tot:
+        continue
+    any_row = True; left = 0.0
+    for k in DIRS:
+        frac = (d == k).sum() / tot
+        if frac:
+            ax.barh(yi, frac, left=left, color=DCOL[k], zorder=3, edgecolor="white", linewidth=0.6)
+            left += frac
+    ax.text(1.01, yi, f"n={tot}", va="center", fontsize=8, color=MUTED)
+ax.set_yticks(range(18)); ax.set_yticklabels([f"RQ{n}" for n in range(1, 19)], fontsize=9)
+ax.invert_yaxis(); ax.set_xlim(0, 1); ax.set_xlabel("Share of records reporting a direction"); ax.grid(False)
+handles = [Line2D([0], [0], marker="s", color="w", markerfacecolor=DCOL[k], markersize=10,
+                  label=k.replace("-", " ")) for k in DIRS]
+ax.legend(handles=handles, loc="lower center", bbox_to_anchor=(0.5, 1.01), ncol=4, frameon=False, fontsize=8.5)
+plt.tight_layout(); plt.show()
+```
+
+The harvest shows that, where a direction is reported, records overwhelmingly favour the
+intervention. This is expected and must be read cautiously: it reflects what reviews report,
+carries the field's known small-study and publication biases, and has not been verified or
+weighted by quality. It is a signal of where effects have been claimed, not an estimate of
+their size or certainty.
+
+# Overlap and evidence concentration
+
+Because the entry points are systematic reviews, the same primary trials are pooled across
+many of them. Ignoring this double-counts evidence and overstates certainty. Overlap was
+quantified with the Corrected Covered Area (CCA; Pieper et al. 2014).
+
+```{python}
+#| label: fig-overlap
+#| fig-cap: "Left: the primary trials pooled by the most reviews (double-counting anchors). Right: distribution of review clusters by CCA overlap band."
+fig, ax = plt.subplots(1, 2, figsize=(10, 4.2), gridspec_kw={"width_ratios": [1.35, 1]})
+tops = ov_studies[ov_studies["n_reviews"] > 1].nlargest(10, "n_reviews")[::-1]
+ax[0].barh(range(len(tops)), tops["n_reviews"], color=CAT[1], zorder=3)
+ax[0].set_yticks(range(len(tops))); ax[0].set_yticklabels(tops["study_key"], fontsize=8.5)
+for i, v in enumerate(tops["n_reviews"]):
+    ax[0].text(v, i, f"  {v}", va="center", fontsize=8.5, color=INK)
+ax[0].set_xlim(0, tops["n_reviews"].max() * 1.15); ax[0].set_title("Most-shared primary trials (reviews)")
+
+order = ["slight", "moderate", "high", "very-high"]
+rc = ov_clusters["overlap_rating"].value_counts().reindex(order).fillna(0)
+rcol = [STATUS["good"], STATUS["warning"], STATUS["serious"], STATUS["critical"]]
+ax[1].bar(range(4), rc.values, color=rcol, width=0.7, zorder=3)
+ax[1].set_xticks(range(4)); ax[1].set_xticklabels(order, fontsize=8.5, rotation=20)
+for i, v in enumerate(rc.values):
+    ax[1].text(i, v, f"{int(v)}", ha="center", va="bottom", fontsize=9, color=INK)
+ax[1].set_title("Review clusters by CCA band"); ax[1].set_ylim(0, rc.max() * 1.2 if rc.max() else 1)
+plt.tight_layout(); plt.show()
+```
+
+A small number of landmark trials anchor a large share of the evidence: the most-pooled
+trial appears in `{python} int(ov_studies['n_reviews'].max())` reviews. One large, loosely
+connected component chains most reviews together at low corrected covered area, but the
+majority of the discrete clusters overlap substantially:
+`{python} int(ov_clusters['overlap_rating'].isin(['high','very-high']).sum())` of
+`{python} len(ov_clusters)` are rated high or very high. In those clusters the synthesis
+should retain the single most comprehensive, highest-quality review, or move to the
+primary-study level, rather than treating the reviews as independent.
+
+# Evidence gaps
+
+```{python}
+#| label: gaps
+gaps = []
+for n in range(1, 19):
+    rq = f"RQ{n}"
+    sub = summ[summ["rq"].map(lambda x: rq in x)]
+    revs = sub[sub["unit"] == "review"]
+    hq = revs["amstar2_band"][revs["amstar2_band"].isin(["High", "Moderate"])].shape[0]
+    ssa_n = int((sub["geo_focus"] == "SSA").sum())
+    gaps.append((rq, len(sub), hq, ssa_n))
+g = pd.DataFrame(gaps, columns=["rq", "records", "hq", "ssa"])
+thin = g[g["records"] <= g["records"].quantile(0.25)]["rq"].tolist()
+lowq = g[g["hq"] == 0]["rq"].tolist()
+nossa = g[g["ssa"] == 0]["rq"].tolist()
+from IPython.display import Markdown
+Markdown(f"""
+Three kinds of gap are visible in the map above.
+
+Questions with the **thinnest evidence** (bottom quartile by contributing records):
+{', '.join(thin) if thin else 'none'}.
+
+Questions with **no high- or moderate-quality review**:
+{', '.join(lowq) if lowq else 'none'}.
+
+Questions with **no Sub-Saharan Africa-specific evidence**:
+{', '.join(nossa) if nossa else 'none'}.
+
+These are where the review can, at most, offer indirect or low-certainty conclusions, and
+where the report should be explicit about the limits of the evidence.
+""")
+```
+
+# Methods and caveats
+
+The evidence base was assembled through a four-stage pipeline — title/abstract screening,
+full-text retrieval, full-text screening, and data extraction — described in the
+accompanying process documents. A ground-truth check during screening identified and
+corrected a configuration error that had excluded determinant and measurement studies at
+title/abstract; the recovered records are included here.
+
+Extraction was performed by a large language model against a protocol-defined schema, with
+every non-null value grounded in a verbatim quote from the source and validated against the
+source text. The figures above therefore describe *what the reviews report*, mediated by
+automated extraction. Two limitations bound their interpretation. First, values are
+machine-extracted and **not yet human-verified**; verification of the quantitative fields,
+prioritised through the review queue, precedes any use in synthesis. Second, this is a
+**descriptive** map: counts, directions, and quality ratings are not pooled estimates, and
+no causal or comparative claim should be drawn from them. Geographic focus, research-question
+tags, and quality ratings are themselves extracted fields and inherit the same caveat.
+
+Overlap is computed from extracted lists of included studies, matched on author–year or DOI
+keys; matching is approximate and the high-overlap clusters warrant manual confirmation. The
+primary-study records were classified heuristically and do not yet carry sourcing-review
+links, so the primary-level analysis here is preliminary.
+
+*Methods: AMSTAR-2 (Shea et al. 2017); Corrected Covered Area (Pieper et al. 2014); evidence
+and gap map (3ie).*
+```
