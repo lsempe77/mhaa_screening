@@ -1,0 +1,116 @@
+```{python}
+#| label: setup
+#| echo: false
+import chapter_helpers as H
+import figures as F
+N = 14
+rs = H.rqstats.iloc[N - 1]
+cons, fav, tot = H.eff_consistency(N)
+sm = H.smd_magnitude(N)
+gl = H.grade_lite(N)
+```
+
+# RQ14 · Therapeutic model and active ingredients {#sec-rq14}
+
+**Workstream B — Active ingredients & dose** · Stream 1 (Barbui et al. 2020 umbrella, refreshed for adult common mental disorder) · Direction of effect: **`{python} cons`** · GRADE-lite confidence (provisional): **`{python} gl`**
+
+> *What therapeutic model underpins the effective interventions, and what are their active ingredients?*
+
+::: {.callout-note appearance="simple"}
+## Key messages
+
+- **The field converges on a brief cognitive-behavioural model.** Where a theoretical framework is named it is overwhelmingly cognitive-behavioural, delivered through the same recurring techniques (cognitive restructuring, behavioural activation, problem-solving and psychoeducation) with interpersonal, behavioural-activation and problem-solving programme families named alongside it.
+- **The direction of benefit is consistent and robust** (`{python} H._pct(fav, tot)` of records favour the intervention), holding across quality, geography and delivery.
+- **We know the model far better than the mechanism.** Formal mediation analyses are scarce, so the evidence establishes *which model works* but says little about *why* — which active ingredient or process carries the effect.
+- **This converges with RQ5.** The therapeutic model and the effective components are two views of the same brief cognitive-behavioural core; neither can isolate a single active ingredient from the current evidence.
+:::
+
+## The evidence base
+
+```{python}
+#| label: fig-rq14-context
+#| fig-cap: "Methodological quality of the contributing reviews (AMSTAR-2) and their geographic focus."
+#| echo: false
+_ = F.quality_geography(N)
+```
+
+The question draws on `{python} f"{int(rs['records']):,}"` records, `{python} int(rs['reviews'])` of them systematic reviews or meta-analyses (@fig-rq14-context). Quality and geography follow the pattern seen across the review — `{python} int(rs['hq'])` reviews rated high or moderate, `{python} int(rs['ssa'])` records focused on sub-Saharan Africa. Because this is a Stream 1 question read from the refreshed Barbui umbrella, it shares its base with RQ5 and RQ6; the difference is one of framing, asking about the overarching *model* and its *mechanism* rather than the presence of individual components.
+
+## The model and its building blocks
+
+```{python}
+#| label: fig-rq14-techniques
+#| fig-cap: "Therapeutic techniques recorded across the contributing interventions (multi-select)."
+#| echo: false
+_ = F.category_bar(N, "int_techniques", label="intervention techniques")
+```
+
+Where a therapeutic model is named it is dominated by cognitive-behavioural therapy and its principles, with acceptance-and-commitment and interpersonal approaches appearing behind it. The techniques that populate these models are the now-familiar set (@fig-rq14-techniques): cognitive restructuring most often, then behavioural activation, problem-solving, psychoeducation, supportive counselling and mindfulness-based elements. At the programme level the named families — brief CBT, group interpersonal therapy, behavioural-activation-based and problem-solving-based programmes, and Problem Management Plus — are the low-intensity, transdiagnostic formats built for non-specialist delivery. The practical reading is that "the therapeutic model" for this evidence base is not a single branded therapy but a brief cognitive-behavioural family, adaptable in content and deliverable by lay providers.
+
+## Direction and magnitude of effect
+
+```{python}
+#| label: fig-rq14-harvest
+#| fig-cap: "Harvest of the reported direction of effect (Ogilvie et al. 2008)."
+#| echo: false
+_ = F.effect_direction(N)
+```
+
+The direction of effect is **`{python} cons`**: `{python} f"{fav} of {tot}"` records favour the intervention (@fig-rq14-harvest), the reported standardized effects being too heterogeneous to summarise as a single magnitude. The consistency across a family of cognitive-behavioural models is itself informative: it suggests the benefit is a property of the broad approach rather than of one specific therapy or brand.
+
+## How robust is the signal?
+
+```{python}
+#| label: fig-rq14-robust
+#| fig-cap: "Share of records favouring the intervention across the subsets that test the headline."
+#| echo: false
+_ = F.robustness(N)
+```
+
+The model-level signal is robust (@fig-rq14-robust): the share favouring the intervention holds in high- and moderate-quality reviews (92%), in LMIC records (89%), and under non-specialist delivery (94%), softening only in the small sub-Saharan subset (83%, twelve records). As elsewhere in this workstream, robustness of the whole-model direction does not extend to any claim about individual ingredients.
+
+## Do we know why it works?
+
+The second half of the question (the active ingredients) is where the evidence stops short. Establishing an active ingredient means showing that a specific process or component mediates the effect, and formal mediation analyses are scarce in the corpus: only a small minority of records report one. The interventions are therefore well characterised as cognitive-behavioural in model and consistent in effect, but poorly characterised in mechanism. This is the same limitation seen from the component side in RQ5: whether the operative element is cognitive change, behavioural activation, problem-solving skill, therapeutic contact, or simply structured attention cannot be adjudicated here. For the ULCM the consequence is that the *model* can be specified with reasonable confidence while the *mechanism* remains an open, and testable, question.
+
+## Consistency across reviews
+
+```{python}
+#| label: overlap
+#| output: asis
+#| echo: false
+print(H.concordance_md(N))
+```
+
+The convergence on a cognitive-behavioural family is drawn from many overlapping reviews rather than independent trials, so it reflects a broad consensus in how the literature describes the model more than a large body of separate confirmations.
+
+## Contributing records
+
+The strongest-contributing records are set out in @tbl-rq14. The table locates the reviews behind the model picture; its highest-strength entries are recent meta-analyses spanning high-income and mixed settings, and the record identifiers trace into the extraction where the named models and any mechanism analyses can be inspected.
+
+```{python}
+#| label: tbl-rq14
+#| output: asis
+#| echo: false
+et, ntot = H.evidence_table_df(N)
+print(et.to_markdown(index=False))
+```
+
+: The strongest-contributing records (up to 15 of `{python} f"{ntot}"`). The complete set is in `dex_by_rq.xlsx`, sheet **RQ14**.
+
+## Representative evidence
+
+The extracts below, each with its verbatim source, illustrate how the model is described across reviews; they are machine-extracted and illustrative, and they show the emphasis on cognitive-behavioural content and the relative silence on mechanism.
+
+```{python}
+#| label: quotes
+#| output: asis
+#| echo: false
+print(H.evidence_quotes_md(N, 6))
+```
+
+::: {.callout-important appearance="simple"}
+## RQ14 answer
+
+The effective interventions rest on a brief cognitive-behavioural model — cognitive restructuring, behavioural activation, problem-solving and psychoeducation, delivered in group formats such as brief CBT, group interpersonal therapy and Problem Management Plus — and the benefit is consistent and robust across this family (`{python} H._pct(fav, tot)` of records favour the intervention, *`{python} cons`*). What the evidence cannot supply is the mechanism: mediation analyses are too few to say which ingredient or process drives the effect, so the model is specifiable but its active ingredient is not. GRADE-lite confidence is **`{python} gl`** and provisional. For the ULCM this supports adopting a brief cognitive-behavioural, transdiagnostic model as the clinical backbone with reasonable confidence, while recognising (as in RQ5 and RQ6) that the choice and weighting of its ingredients is underdetermined by the evidence and belongs in Phase 5 mechanism-oriented testing.
+:::

@@ -1,0 +1,26 @@
+# Background and scope {.unnumbered}
+
+## The decision this review serves
+
+StrongMinds is designing an Ultra-Low-Cost Model (ULCM) to deliver group-based support for adult depression in low- and middle-income countries at approximately USD 1 per client treated, as part of an ambition to reach very large populations with government-adoptable depression care. Achieving that price point requires a redesign of how people enter and move through care: brief, structured, task-shifted interventions delivered by non-specialists within a stepped-care architecture, rather than specialist-delivered therapy.
+
+A Phase 3 pilot produced directional signals on three points that this review was commissioned to triangulate against the wider evidence: that psychoeducation and problem-solving were the most promising active ingredients; that multi-session interventions outperformed single-session ones at three months; and that the minimum effective dose might be as low as two sessions. Those signals came from a non-randomised design with a single counsellor per arm and wide uncertainty, so before committing to a minimum-viable-product specification the Phase 4 academic workstream set them against the external literature. This rapid review is that triangulation. Its purpose is to establish what is known and not known across the design dimensions of the model, to identify where the external evidence agrees and disagrees with the internal signals, and to describe a candidate design space with the residual uncertainties made explicit.
+
+## The questions and workstreams
+
+The review answers sixteen pre-specified research questions, grouped into four evidence workstreams:
+
+- **A — Context & drivers** (RQ1): the determinants of adult depression and who is affected.
+- **B — Active ingredients & dose** (RQ2, RQ5, RQ6, RQ7, RQ8, RQ9, RQ14): what works, which components matter, the minimum viable dose, durability, and the therapeutic model.
+- **C — Delivery, workforce & engagement** (RQ3, RQ4, RQ10, RQ12, RQ13, RQ15): how interventions are delivered, by whom, at what group size, within what care architecture, and how participants are engaged.
+- **D — Cost & spillovers** (RQ11, RQ16): cost drivers and cost-effectiveness, and whether benefits spill over to non-cases.
+
+Two further dimensions, **safety monitoring** (RQ17) and **measurement tools** (RQ18), were not among the protocol's sixteen questions but were captured during extraction because both are decision-critical for deploying a lay-delivered intervention at scale; they are presented as added dimensions and flagged as such.
+
+## The two-stream evidence base
+
+Following the protocol, the review uses existing systematic reviews as the gateway to the evidence and then follows those reviews to their primary studies. Questions that fall within the scope of the Barbui et al. (2020) umbrella review of psychosocial interventions in low- and middle-income countries are answered through **Stream 1** — the umbrella refreshed and narrowed to adult common mental disorder, with a targeted update search from 2019 onward. Questions the umbrella does not cover (determinants, dose-response, spillover and stepped care) are answered through **Stream 2**, anchored on named seed reviews and expanded by one-hop citation chasing.
+
+Two scope decisions shape how the chapters should be read. First, primary-study drill-down was performed only for the questions that need per-study granularity for design; the remaining questions are answered at the review level. Second, for the dose, single-session and stepped-care questions the review deliberately admits reviews drawn predominantly from high-income and specialist-delivered settings, because that is where dose-response evidence is concentrated — so a high-income skew on those questions is a design choice rather than a gap. Sub-Saharan African evidence is prioritised in synthesis weighting for the context-sensitive questions (determinants, facilitator model, non-specialist delivery).
+
+This report is the descriptive evidence map produced from the extraction. It is one input to the milestone: it characterises the evidence base and a candidate design space, and feeds the decision-ready evidence pack and the integration workshop that follow.

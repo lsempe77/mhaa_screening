@@ -1,0 +1,113 @@
+```{python}
+#| label: setup
+#| echo: false
+import chapter_helpers as H
+import figures as F
+N = 3
+rs = H.rqstats.iloc[N - 1]
+cons, fav, tot = H.eff_consistency(N)
+gl = H.grade_lite(N)
+```
+
+# RQ3 · Parameters determining effectiveness {#sec-rq3}
+
+**Workstream C — Delivery, workforce & engagement** · Stream 1 (Barbui et al. 2020 umbrella, with scalability terms added) · Direction of effect: **`{python} cons`** · GRADE-lite confidence (provisional): **`{python} gl`**
+
+> *Which clinical, delivery and cost-relevant parameters determine whether these interventions are effective and scalable?*
+
+::: {.callout-note appearance="simple"}
+## Key messages
+
+- **This is an aggregating question, and its answer is assembled from the specific chapters.** The parameters that determine effectiveness — the therapeutic components, the dose, the delivery format, the facilitator and the engagement design — are each treated in depth elsewhere; here they are drawn together.
+- **The recurring effective configuration is consistent:** a brief course of cognitive-behavioural techniques, delivered in a group and face-to-face, by a non-specialist, with a specialist available in reserve for a substantial share of models.
+- **The direction of overall effectiveness is consistent** (`{python} H._pct(fav, tot)` of records favour the intervention) on a smaller base than the core questions.
+- **No single parameter emerges as decisive.** Effectiveness is a property of the configuration as a whole rather than of any one adjustable dial, which limits how much the review can prescribe.
+:::
+
+## The evidence base
+
+```{python}
+#| label: fig-rq3-context
+#| fig-cap: "Methodological quality of the contributing reviews (AMSTAR-2) and their geographic focus."
+#| echo: false
+_ = F.quality_geography(N)
+```
+
+The question draws on `{python} f"{int(rs['records']):,}"` records, `{python} int(rs['reviews'])` of them systematic reviews or meta-analyses, `{python} int(rs['ssa'])` focused on sub-Saharan Africa (@fig-rq3-context). It is a Stream 1 question with scalability terms added to the umbrella search. Its evidence base is smaller than the effectiveness questions and overlaps them heavily, because "what determines effectiveness" is answered by the same reviews that answer "what works", "at what dose" and "delivered how".
+
+## The parameters that recur
+
+```{python}
+#| label: fig-rq3-techniques
+#| fig-cap: "Therapeutic techniques recorded across the contributing interventions (multi-select)."
+#| echo: false
+_ = F.category_bar(N, "int_techniques", label="intervention techniques")
+```
+
+Read across the records, the effective configuration is the one that recurs throughout Workstream B and the start of Workstream C (@fig-rq3-techniques): the cognitive-behavioural technique set (supportive counselling, problem-solving, behavioural activation, cognitive restructuring, psychoeducation), delivered overwhelmingly group and face-to-face, by non-specialists, with a specialist backstop retained in roughly a third of models. What this question adds is not a new parameter but the observation that these features travel together in the effective interventions — they are not independently tunable dials so much as a coherent package.
+
+## Direction and robustness
+
+```{python}
+#| label: fig-rq3-harvest
+#| fig-cap: "Harvest of the reported direction of effect (Ogilvie et al. 2008)."
+#| echo: false
+_ = F.effect_direction(N)
+```
+
+```{python}
+#| label: fig-rq3-robust
+#| fig-cap: "Share of records favouring the intervention across the subsets that test the headline."
+#| echo: false
+_ = F.robustness(N)
+```
+
+The direction of effect is **`{python} cons`** (`{python} f"{fav} of {tot}"` favour the intervention) and holds reasonably across quality, LMIC and non-specialist subsets, softening in the small sub-Saharan subset (@fig-rq3-harvest, @fig-rq3-robust). As a determinants-of-effectiveness question, though, the interesting quantity is not the overall direction but which parameter moves it — and the corpus, being mostly whole-package evaluations, does not isolate individual parameters, so the question inherits the same limitation as RQ5 and RQ6.
+
+## Does the evidence isolate what *determines* effectiveness?
+
+To say a parameter *determines* effectiveness — rather than merely being present in effective interventions — the evidence has to either vary that parameter (a dismantling design) or test how effect changes across levels of it (a moderator or subgroup analysis). The corpus does neither at scale. Dismantling studies are scarce, as RQ5 and RQ6 show. And moderation is almost entirely untested here because the single most important potential moderator, baseline severity, is essentially never stratified: the overwhelming majority of records draw on mixed, severity-unstratified populations, so an intervention's effect cannot be compared between mild and severe participants within this evidence. The result is that the review can describe the *configuration* that tends to be effective, but cannot say which element of it carries the effect, nor for whom it works best.
+
+Two partial exceptions are worth naming, because they are the only places the evidence reaches toward genuine effect-modification. Baseline severity does surface as a moderator where it is examined — more severely depressed participants tend to show larger effects (RQ7) — which is the clearest determinant-of-effectiveness signal in the review, and the basis for severity-based routing. And a small number of reviews apply moderator or machine-learning methods to individual characteristics, but they are too few and too heterogeneous to yield a usable moderator set. Beyond these, "what determines effectiveness" is answered at the level of the package, not its dials, and the honest statement is that the review can specify a configuration to reproduce but not a hierarchy of parameters to optimise.
+
+## Consistency across reviews
+
+```{python}
+#| label: overlap
+#| output: asis
+#| echo: false
+print(H.concordance_md(N))
+```
+
+In any case, consistency across these overlapping reviews cannot substitute for the component-isolation evidence this question really needs, because the parameters are bundled together in whole interventions rather than varied independently.
+
+## Contributing records
+
+The strongest-contributing records are set out in @tbl-rq3. The table locates the reviews that speak to scalability parameters; the record identifiers lead into the extraction where the delivery, workforce and dose fields for each study can be read together — which is where the parameter picture is actually assembled.
+
+```{python}
+#| label: tbl-rq3
+#| output: asis
+#| echo: false
+et, ntot = H.evidence_table_df(N)
+print(et.to_markdown(index=False))
+```
+
+: The strongest-contributing records (up to 15 of `{python} f"{ntot}"`). The complete set is in `dex_by_rq.xlsx`, sheet **RQ03**.
+
+## Representative evidence
+
+The extracts below, each with its verbatim source, illustrate how reviews describe the parameters of effectiveness; they are machine-extracted and illustrative, and they tend to describe effective configurations as wholes rather than isolating a decisive parameter.
+
+```{python}
+#| label: quotes
+#| output: asis
+#| echo: false
+print(H.evidence_quotes_md(N, 5))
+```
+
+::: {.callout-important appearance="simple"}
+## RQ3 answer
+
+The parameters that determine effectiveness are the ones detailed across the other chapters — a brief cognitive-behavioural technique set, group face-to-face delivery, non-specialist facilitation, and engagement-sensitive design — and they recur together in the effective interventions rather than acting as independently tunable dials. The direction of overall effectiveness is consistent (`{python} H._pct(fav, tot)` favour the intervention), but no single parameter emerges as decisive, because the evidence evaluates configurations rather than isolating parameters. GRADE-lite confidence is **`{python} gl`** and provisional. For the ULCM the practical reading is that the effective configuration is reasonably well specified as a *package*, and that the design task is to reproduce that package faithfully rather than to optimise any one parameter on the strength of this evidence.
+:::

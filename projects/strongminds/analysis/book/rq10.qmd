@@ -1,0 +1,107 @@
+```{python}
+#| label: setup
+#| echo: false
+import chapter_helpers as H
+import figures as F
+N = 10
+rs = H.rqstats.iloc[N - 1]
+cons, fav, tot = H.eff_consistency(N)
+gl = H.grade_lite(N)
+```
+
+# RQ10 · Group-size ranges {#sec-rq10}
+
+**Workstream C — Delivery, workforce & engagement** · Stream 1 (Barbui et al. 2020 umbrella) · Direction of effect: **`{python} cons`** · GRADE-lite confidence (provisional): **`{python} gl`**
+
+> *What group-size ranges are used in effective interventions?*
+
+::: {.callout-note appearance="simple"}
+## Key messages
+
+- **Group delivery is clearly effective**, with a consistent direction of benefit (`{python} H._pct(fav, tot)` of records favour the intervention), but the specific question of group *size* rests on very few records that report a number.
+- **Where size is reported, groups are small-to-moderate** — a central value of around eight to ten participants, with most falling between about seven and the high teens.
+- **The evidence does not identify an optimal size or a ceiling.** It describes the sizes that have been used, not a dose–response of effect against group size, so it cannot say whether larger groups (which the ULCM needs for cost) sacrifice effect.
+- **This is a design parameter the review under-determines**, and one directly in tension with the USD-1 cost target, which pushes towards larger groups than the evidence documents.
+:::
+
+## The evidence base
+
+```{python}
+#| label: fig-rq10-context
+#| fig-cap: "Methodological quality of the contributing reviews (AMSTAR-2) and their geographic focus."
+#| echo: false
+_ = F.quality_geography(N)
+```
+
+The question draws on `{python} f"{int(rs['records']):,}"` records, `{python} int(rs['reviews'])` of them systematic reviews or meta-analyses, with almost no sub-Saharan African focus (`{python} int(rs['ssa'])` records) (@fig-rq10-context). It is a small base, and a still smaller fraction of it records an actual group size — most records confirm a group format without stating its size, so the quantitative question rests on a handful of studies.
+
+## What group sizes are used
+
+```{python}
+#| label: fig-rq10-size
+#| fig-cap: "Reported mean group size across the records that state one."
+#| echo: false
+_ = F.numeric_hist(N, "group_size_mean", unit=" participants")
+```
+
+Among the records that report a group size, the central value is around eight to ten participants, with the range running from roughly seven up into the high teens (@fig-rq10-size). This describes the sizes at which these interventions have been *tested*, not an optimum: because the records do not vary group size against effect within a common design, the evidence cannot say whether effect falls off as groups grow. The delivery format is otherwise as expected — overwhelmingly group and face-to-face.
+
+## Direction and robustness
+
+```{python}
+#| label: fig-rq10-harvest
+#| fig-cap: "Harvest of the reported direction of effect (Ogilvie et al. 2008)."
+#| echo: false
+_ = F.effect_direction(N)
+```
+
+```{python}
+#| label: fig-rq10-robust
+#| fig-cap: "Share of records favouring the intervention across the subsets available for this small base."
+#| echo: false
+_ = F.robustness(N)
+```
+
+The direction of effect is **`{python} cons`** (`{python} f"{fav} of {tot}"` favour the intervention) and holds under non-specialist delivery, though the LMIC subset is small and softens (@fig-rq10-harvest, @fig-rq10-robust). But the direction is about group interventions working at the sizes tested; it carries no information about the size question itself, which the sparse size data leave open.
+
+## Consistency across reviews
+
+```{python}
+#| label: overlap
+#| output: asis
+#| echo: false
+print(H.concordance_md(N))
+```
+
+With few contributing reviews and fewer still reporting a size, overlap adds little; the binding constraint is how rarely group size is quantified, not the independence of the reviews.
+
+## Contributing records
+
+The strongest-contributing records are set out in @tbl-rq10. The table is close to an inventory for this small question; the record identifiers lead into the extraction where the reported group sizes (where present) can be read directly, which is the only way to see how thin the quantitative base is.
+
+```{python}
+#| label: tbl-rq10
+#| output: asis
+#| echo: false
+et, ntot = H.evidence_table_df(N)
+print(et.to_markdown(index=False))
+```
+
+: The strongest-contributing records (up to 15 of `{python} f"{ntot}"`). The complete set is in `dex_by_rq.xlsx`, sheet **RQ10**.
+
+## Representative evidence
+
+The extracts below, each with its verbatim source, illustrate how group size is reported; they are machine-extracted and illustrative, and they typically state a size in passing rather than testing its effect.
+
+```{python}
+#| label: quotes
+#| output: asis
+#| echo: false
+print(H.evidence_quotes_md(N, 5))
+```
+
+::: {.callout-important appearance="simple"}
+## RQ10 answer
+
+Group delivery is effective, and where a size is reported groups are small-to-moderate — around eight to ten participants, ranging up into the high teens. But the evidence describes the sizes that have been used, not an optimum, and cannot say whether effect is lost as groups grow, because no body of records varies size against effect. GRADE-lite confidence is **`{python} gl`** and provisional. This is acutely relevant for the ULCM, whose cost target pushes towards larger groups than the literature documents: the review can neither endorse nor rule out the larger group sizes a USD-1 model may need, so group size (and specifically whether effect holds at, say, twenty or more) is a design parameter the evidence leaves open and a clear Phase 5 test.
+:::

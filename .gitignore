@@ -57,6 +57,10 @@ projects/strongminds/analysis/*.html
 projects/strongminds/analysis/*.pdf
 projects/strongminds/analysis/.quarto/
 projects/strongminds/analysis/*_files/
+# Per-RQ book (Quarto book project): rendered output + cache
+projects/strongminds/analysis/book/_book/
+projects/strongminds/analysis/book/.quarto/
+projects/strongminds/analysis/book/*_files/
 # Raw RIS corpus (large source exports, ~80 MB)
 projects/strongminds/strongminds_ris/
 

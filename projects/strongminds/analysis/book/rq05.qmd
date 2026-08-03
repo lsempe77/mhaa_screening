@@ -1,0 +1,116 @@
+```{python}
+#| label: setup
+#| echo: false
+import chapter_helpers as H
+import figures as F
+N = 5
+rs = H.rqstats.iloc[N - 1]
+cons, fav, tot = H.eff_consistency(N)
+sm = H.smd_magnitude(N)
+gl = H.grade_lite(N)
+```
+
+# RQ5 · Components that drive symptom reduction {#sec-rq5}
+
+**Workstream B — Active ingredients & dose** · Stream 1 (Barbui et al. 2020 umbrella, refreshed for adult common mental disorder) · Direction of effect: **`{python} cons`** · GRADE-lite confidence (provisional): **`{python} gl`**
+
+> *Which therapeutic components are associated with symptom improvement in low-intensity, group-based interventions for adult depression?*
+
+::: {.callout-note appearance="simple"}
+## Key messages
+
+- **The effective interventions are built on a small, recurring set of components:** cognitive restructuring, behavioural activation, problem-solving and psychoeducation, with supportive counselling and mindfulness-based elements behind them.
+- **The direction of benefit is highly consistent and holds across the subsets tested.** `{python} H._pct(fav, tot)` of records favour the intervention, and (rare among these questions) that share barely moves when restricted to high-quality reviews, to LMIC records, or to non-specialist delivery.
+- **The evidence cannot say which component *drives* the effect.** Only a handful of records come from dismantling or mediation studies, so the review identifies the ingredients *present in* effective packages, not the one causally responsible. The signal is about a family of brief cognitive-behavioural techniques, not a single active ingredient.
+- **Effects are measured almost entirely against usual care, no treatment or mixed controls**, so this is evidence of benefit over little or nothing, not of one component beating another.
+:::
+
+## The evidence base
+
+```{python}
+#| label: fig-rq5-context
+#| fig-cap: "Methodological quality of the contributing reviews (AMSTAR-2) and their geographic focus."
+#| echo: false
+_ = F.quality_geography(N)
+```
+
+The question draws on `{python} f"{int(rs['records']):,}"` records, `{python} int(rs['reviews'])` of them systematic reviews or meta-analyses (@fig-rq5-context). As across the review, methodological quality is the binding constraint: `{python} int(rs['hq'])` of the rated reviews reach high or moderate quality on AMSTAR-2 against `{python} int(rs['lowq'])` low or critically low, and only `{python} int(rs['ssa'])` records (`{python} H._pct(int(rs['ssa']), int(rs['records']))`) focus on sub-Saharan Africa. Unlike the dose question, this is a Stream 1 question answered from the refreshed Barbui umbrella, so its evidence is squarely within the adult common-mental-disorder, low-intensity scope the ULCM occupies.
+
+## The components in the effective interventions
+
+```{python}
+#| label: fig-rq5-techniques
+#| fig-cap: "Therapeutic techniques recorded across the interventions associated with symptom reduction (multi-select; a record may report several)."
+#| echo: false
+_ = F.category_bar(N, "int_techniques", label="intervention techniques")
+```
+
+A small set of components recurs across the interventions that show benefit (@fig-rq5-techniques). Cognitive restructuring appears most often, closely followed by behavioural activation, then problem-solving and psychoeducation, with supportive counselling and mindfulness-based approaches behind them. At the programme level the records are a mix, but the named families — brief CBT, behavioural-activation-based programmes, group interpersonal therapy, problem-solving-based programmes and Problem Management Plus — are exactly the low-intensity formats the ULCM is weighing. The practical reading is that the effective interventions are variations on a common brief cognitive-behavioural core rather than a diverse or exotic set of therapies.
+
+## Direction and magnitude of effect
+
+```{python}
+#| label: fig-rq5-harvest
+#| fig-cap: "Harvest of the reported direction of effect (Ogilvie et al. 2008)."
+#| echo: false
+_ = F.effect_direction(N)
+```
+
+The direction of effect is **`{python} cons`** on the vote-count rule: `{python} f"{fav} of {tot}"` records with a codable direction favour the intervention (@fig-rq5-harvest). The reported standardized mean differences use different instruments and inconsistent sign conventions, so a dependable average magnitude cannot be recovered from them; direction is read from the harvest rather than from the sign or size of these records, and no effects are pooled.
+
+## How robust is the signal?
+
+```{python}
+#| label: fig-rq5-robust
+#| fig-cap: "Share of records favouring the intervention, overall and in the subsets that test the headline. The dashed line is the 75% consistency threshold."
+#| echo: false
+_ = F.robustness(N)
+```
+
+This is one of the more robust signals in the review (@fig-rq5-robust). The share favouring the intervention is essentially unchanged in the high- and moderate-quality reviews (94%), in LMIC-focused records (94%), and among non-specialist-delivered interventions (94%); only the sub-Saharan-Africa-only subset falls, to 80%, and that rests on ten records. The chief qualification is not robustness but comparison: only twelve records use an active psychological comparator, the rest measuring against usual care, no treatment or mixed controls. The components therefore have good evidence of helping relative to little or nothing, and almost none of one component outperforming another.
+
+## Which component actually drives the effect?
+
+This is the question the ULCM most needs answered, and it is the question the evidence is least able to answer. Isolating a causal ingredient requires dismantling designs (which remove or add one component) or formal mediation analysis, and both are scarce here: only a small minority of records come from dismantling studies or report a mediation analysis. The overwhelming majority evaluate whole packages against a control, so they establish that interventions *containing* cognitive restructuring, behavioural activation, problem-solving and psychoeducation work — not that any one of these is the operative element. Where component-level signal is recorded it is suggestive rather than decisive: multicomponent packages tend to report the largest effects, and cognitive-behavioural content recurs in the strongest reviews, but this is consistent both with a genuine core ingredient and with more intensive interventions simply doing more. The answer is that RQ5 identifies a *shortlist* of components that belong in an effective package, and hands the question of which to keep (RQ6's question) to dedicated dismantling evidence the corpus does not contain in quantity.
+
+## Consistency across reviews
+
+```{python}
+#| label: overlap
+#| output: asis
+#| echo: false
+print(H.concordance_md(N))
+```
+
+The consistency above is carried by many overlapping reviews of a smaller primary base, so it is weaker evidence than the record count suggests — and it bears on whether these interventions *work*, not on which component is responsible, which remains the question's real gap.
+
+## Contributing records
+
+The strongest-contributing records are set out in @tbl-rq5. As with the other well-populated questions, the table is a route into the underlying evidence rather than a results table: its highest-strength entries are recent meta-analyses and systematic reviews spanning high-income and mixed settings, and each row carries a record identifier that traces back into the full extraction. It is most useful for locating the specific reviews behind a component claim, not for reading effects directly.
+
+```{python}
+#| label: tbl-rq5
+#| output: asis
+#| echo: false
+et, ntot = H.evidence_table_df(N)
+print(et.to_markdown(index=False))
+```
+
+: The strongest-contributing records (up to 15 of `{python} f"{ntot}"`, ordered by contribution strength then recency). The complete set is in `dex_by_rq.xlsx`, sheet **RQ05**.
+
+## Representative evidence
+
+The extracts below convey the qualitative texture behind the component counts, each paired with the verbatim sentence from the source that grounds it. They are illustrative rather than exhaustive and (like all values in this report) machine-extracted and not yet human-verified; several point to the same pattern, that multicomponent cognitive-behavioural packages carry the strongest and most consistent signal.
+
+```{python}
+#| label: quotes
+#| output: asis
+#| echo: false
+print(H.evidence_quotes_md(N, 6))
+```
+
+::: {.callout-important appearance="simple"}
+## RQ5 answer
+
+Effective low-intensity interventions for adult depression are built on a small, recurring set of components (cognitive restructuring, behavioural activation, problem-solving and psychoeducation) and the direction of benefit is highly consistent (`{python} H._pct(fav, tot)` of records favour the intervention, *`{python} cons`*), at a magnitude the mixed, unverified records do not allow to be summarised reliably, and robust across quality, geography and delivery subsets. The decisive limitation is causal: dismantling and mediation studies are scarce, so the evidence names the components *present in* effective packages but cannot rank them or isolate the one that drives improvement. GRADE-lite confidence is **`{python} gl`** and provisional (machine-extracted, not yet human-verified). For the ULCM this supports building the intervention around that brief cognitive-behavioural core with reasonable confidence, while treating the *choice among* those components (and any decision to drop one) as underdetermined by the current evidence and a matter for RQ6 and for Phase 5 testing rather than for the review to settle.
+:::

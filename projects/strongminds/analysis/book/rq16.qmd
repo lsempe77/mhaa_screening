@@ -1,0 +1,115 @@
+```{python}
+#| label: setup
+#| echo: false
+import chapter_helpers as H
+import figures as F
+N = 16
+rs = H.rqstats.iloc[N - 1]
+cons, fav, tot = H.eff_consistency(N)
+gl = H.grade_lite(N)
+```
+
+# RQ16 · Cost drivers and cost per participant {#sec-rq16}
+
+**Workstream D — Cost & spillovers** · Stream 1 (Barbui et al. 2020 umbrella, with a dedicated cost search) · Direction of effect: **`{python} cons`** · GRADE-lite confidence (provisional): **`{python} gl`**
+
+> *What are the cost drivers and the cost-per-participant ranges across low-intensity models, and how cost-effective are they?*
+
+::: {.callout-note appearance="simple"}
+## Key messages
+
+- **Cost is reported often, but heterogeneously.** Most records that address this question report a cost figure; the metrics, currencies and costing years differ so widely that the figures cannot be pooled or directly compared.
+- **The reported cost per participant is orders of magnitude above the USD-1 target.** Where a per-participant cost is given it ranges, in the study's own currency, from tens to thousands of units; the currencies and years are not comparable, so no single figure applies, but every reported cost is far above a dollar and the external literature contains essentially nothing at the ULCM's price point.
+- **Interventions are nonetheless generally judged cost-effective** against conventional willingness-to-pay thresholds — but those thresholds are high-income benchmarks (tens of thousands per QALY), not a USD-1 affordability test.
+- **The review cannot validate the USD-1 figure.** It can confirm that low-intensity group delivery is cheaper than specialist care and often cost-effective by standard criteria, while making clear that the model's target lies far below the range the evidence describes.
+:::
+
+## The evidence base
+
+```{python}
+#| label: fig-rq16-context
+#| fig-cap: "Methodological quality of the contributing reviews (AMSTAR-2) and their geographic focus."
+#| echo: false
+_ = F.quality_geography(N)
+```
+
+The question draws on `{python} f"{int(rs['records']):,}"` records, `{python} int(rs['reviews'])` of them systematic reviews or meta-analyses (@fig-rq16-context). Cost is not a Barbui outcome, so this evidence comes from a dedicated cost search layered onto the umbrella; quality is the usual constraint (`{python} int(rs['hq'])` high or moderate) and sub-Saharan African cost evidence is very thin (`{python} int(rs['ssa'])` records), which matters because cost structures are highly setting-specific.
+
+## What is measured, and in what units
+
+```{python}
+#| label: fig-rq16-metric
+#| fig-cap: "Cost metrics reported across the contributing records."
+#| echo: false
+_ = F.category_bar(N, "cost_metric", label="cost metric reported")
+```
+
+The first finding is methodological: the records measure cost in incompatible ways (@fig-rq16-metric). Some report a simple cost per participant or per patient; others report cost per QALY, cost-effectiveness ratios, or cost per depression-free day. Currencies span US dollars, pounds and euros, and costing years are rarely aligned. This heterogeneity is why the protocol commits to standardising figures to a common currency and year at synthesis and why, in this descriptive report, the cost numbers are presented as ranges rather than a single pooled figure. Where a per-participant cost is recorded it spans, across studies, from the low tens to the low thousands of the study's own currency unit. Because the currencies and costing years differ, these values cannot be combined into a single figure and no meaningful average exists; what can be said is that the entire distribution sits far above the model's target, with even the lowest reported costs many times a dollar.
+
+## The distance to USD 1
+
+The decisive comparison for the ULCM is not between interventions but between this evidence and the model's price point. The ULCM aims to deliver care at approximately USD 1 per client; the external literature's per-participant costs are two to three orders of magnitude higher. No record in this evidence base describes an intervention delivered at anything close to a dollar. This does not mean the target is unreachable — the ULCM's design (large groups, lay facilitators, minimal materials, no specialist time) is precisely an attempt to move below the existing cost frontier — but it does mean the target is *unprecedented in the evidence*, and cannot be validated by reference to it. The most the external cost literature can do is establish the components that drive cost down (group rather than individual delivery, lay rather than specialist facilitators, brief rather than extended courses), all of which the model already exploits, and confirm that even at conventional costs these interventions are usually judged good value. The USD-1 claim itself remains a design ambition to be demonstrated in Phase 5, not a figure the review can corroborate.
+
+## Direction and cost-effectiveness
+
+```{python}
+#| label: fig-rq16-harvest
+#| fig-cap: "Harvest of the reported direction of the cost-effectiveness or effectiveness judgement (Ogilvie et al. 2008)."
+#| echo: false
+_ = F.effect_direction(N)
+```
+
+Where a cost-effectiveness or effectiveness judgement is codable, the direction is **`{python} cons`**: `{python} f"{fav} of {tot}"` records favour the intervention (@fig-rq16-harvest), and the qualitative record echoes this — interventions are frequently described as cost-effective, with reported ratios ranging from a few dollars per depression-free day to tens of thousands of pounds per QALY, generally sitting inside conventional willingness-to-pay thresholds. The caveat is that those thresholds are high-income affordability benchmarks; being "cost-effective" against a £20,000–£30,000-per-QALY threshold is a different and far weaker claim than costing a dollar.
+
+## How robust is the signal?
+
+```{python}
+#| label: fig-rq16-robust
+#| fig-cap: "Share of records favouring the intervention across the subsets that test the headline."
+#| echo: false
+_ = F.robustness(N)
+```
+
+The cost-effectiveness direction is reasonably robust to quality (85%) and holds in LMIC records (86%), but the sub-Saharan subset collapses to a handful of records (@fig-rq16-robust), so the setting whose cost structure matters most to the ULCM is essentially unrepresented in the cost-effectiveness evidence.
+
+## Consistency across reviews
+
+```{python}
+#| label: overlap
+#| output: asis
+#| echo: false
+print(H.concordance_md(N))
+```
+
+The underlying primary cost studies are in any case few, and the heterogeneity of currencies, costing years and methods limits how much weight any consistency of the cost-effectiveness signal can bear.
+
+## Contributing records
+
+The strongest-contributing records are set out in @tbl-rq16. The table is the entry point to the economic evaluations specifically; the record identifiers lead into the extraction where each study's currency, costing year, perspective and metric can be read — detail that is essential before any figure here is used, given the heterogeneity described above.
+
+```{python}
+#| label: tbl-rq16
+#| output: asis
+#| echo: false
+et, ntot = H.evidence_table_df(N)
+print(et.to_markdown(index=False))
+```
+
+: The strongest-contributing records (up to 15 of `{python} f"{ntot}"`). The complete set is in `dex_by_rq.xlsx`, sheet **RQ16**.
+
+## Representative evidence
+
+The extracts below, each with its verbatim source, show the form the cost evidence takes — cost-effectiveness statements and specific ratios in assorted currencies. They are machine-extracted and illustrative, and they make concrete both the general "good value" verdict and the distance of every reported figure from a USD-1 cost.
+
+```{python}
+#| label: quotes
+#| output: asis
+#| echo: false
+print(H.evidence_quotes_md(N, 6))
+```
+
+::: {.callout-important appearance="simple"}
+## RQ16 answer
+
+Low-intensity group interventions are consistently reported as cost-effective by conventional standards, and the external evidence identifies the levers that lower cost (group delivery, lay facilitation, brief courses) all of which the ULCM already uses. What the evidence does **not** do is reach the model's price point: reported costs per participant range from tens to thousands of units in their original, non-comparable currencies, so no single figure is meaningful — but every reported cost is at least tens of times, and most hundreds of times, the USD-1 target, and no study describes delivery at anything near a dollar. Being cost-effective against a high-income QALY threshold is not the same as costing a dollar, and the sub-Saharan cost evidence is almost absent. GRADE-lite confidence is **`{python} gl`** and provisional (machine-extracted, not yet human-verified; costs not yet standardised to a common currency and year). For the ULCM the implication is stark and useful: the USD-1 target is unprecedented in the literature and must be evidenced by the model's own Phase 3/Phase 5 cost data, not inferred from a body of evidence that operates an order of magnitude or more above it.
+:::

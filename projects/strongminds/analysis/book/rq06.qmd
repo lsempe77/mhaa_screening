@@ -1,0 +1,116 @@
+```{python}
+#| label: setup
+#| echo: false
+import chapter_helpers as H
+import figures as F
+N = 6
+rs = H.rqstats.iloc[N - 1]
+cons, fav, tot = H.eff_consistency(N)
+sm = H.smd_magnitude(N)
+gl = H.grade_lite(N)
+```
+
+# RQ6 · Components that can be dropped {#sec-rq6}
+
+**Workstream B — Active ingredients & dose** · Stream 1 (Barbui et al. 2020 umbrella, refreshed for adult common mental disorder) · Direction of effect: **`{python} cons`** · GRADE-lite confidence (provisional): **`{python} gl`**
+
+> *Which therapeutic components can be dropped or de-prioritised without losing effectiveness?*
+
+::: {.callout-note appearance="simple"}
+## Key messages
+
+- **The evidence cannot confidently identify a component to drop.** Answering this question requires dismantling trials that add or remove one component at a time, and only a small minority of records come from such designs; the rest evaluate whole packages.
+- **Where components are compared, none stands out as redundant.** The recurring elements — problem-solving, psychoeducation, skills training, cognitive-behavioural content, relaxation — carry similar, individually small contributions rather than one large effect that could be kept and the rest discarded.
+- **The direction of overall benefit is highly consistent** (`{python} H._pct(fav, tot)` of records favour the intervention) and robust to quality and delivery, but that speaks to whole interventions working, not to which parts are dispensable.
+- **The safe reading is subtractive caution:** the corpus supports keeping the brief cognitive-behavioural core intact and testing any removal empirically, rather than dropping a component on the strength of this evidence.
+:::
+
+## The evidence base
+
+```{python}
+#| label: fig-rq6-context
+#| fig-cap: "Methodological quality of the contributing reviews (AMSTAR-2) and their geographic focus."
+#| echo: false
+_ = F.quality_geography(N)
+```
+
+The question draws on `{python} f"{int(rs['records']):,}"` records, almost all systematic reviews or meta-analyses (@fig-rq6-context). Quality is low as elsewhere — `{python} int(rs['hq'])` rated high or moderate against `{python} int(rs['lowq'])` low or critically low — and sub-Saharan African evidence is almost absent (`{python} int(rs['ssa'])` records). This is a Stream 1 question read from the refreshed Barbui umbrella, so it shares its evidence base with RQ5: the same reviews that show *which* components are present in effective interventions are asked here *which* could be removed.
+
+## The components in play
+
+```{python}
+#| label: fig-rq6-techniques
+#| fig-cap: "Therapeutic techniques recorded across the contributing interventions (multi-select)."
+#| echo: false
+_ = F.category_bar(N, "int_techniques", label="intervention techniques")
+```
+
+The components under consideration are the same brief cognitive-behavioural set seen throughout Workstream B (@fig-rq6-techniques): cognitive restructuring, behavioural activation, problem-solving, supportive counselling and psychoeducation. The question is whether any of these can be removed. Answering it well needs evidence that isolates each component's marginal contribution, which is exactly what the corpus is thin in.
+
+## Direction and magnitude of effect
+
+```{python}
+#| label: fig-rq6-harvest
+#| fig-cap: "Harvest of the reported direction of effect (Ogilvie et al. 2008)."
+#| echo: false
+_ = F.effect_direction(N)
+```
+
+At the level of whole interventions the direction of effect is **`{python} cons`**: `{python} f"{fav} of {tot}"` records favour the intervention (@fig-rq6-harvest), the reported standardized effects being too heterogeneous in instrument and sign to yield a dependable magnitude. But this is the effect of *packages*, not of components, and it cannot on its own tell us which part is doing the work — the central difficulty of the question.
+
+## How robust is the signal?
+
+```{python}
+#| label: fig-rq6-robust
+#| fig-cap: "Share of records favouring the intervention across the subsets that test the headline."
+#| echo: false
+_ = F.robustness(N)
+```
+
+The overall benefit is robust: essentially unchanged in high- and moderate-quality reviews (93%), in LMIC records (94%), and among non-specialist delivery (93%), with the sub-Saharan subset resting on only four records (@fig-rq6-robust). None of this, however, bears on component redundancy; it establishes that the interventions work across conditions, not that any element is surplus.
+
+## Can any component be dropped?
+
+This is the question the ULCM would most like answered in the affirmative (every component removed lowers cost) and it is the one the evidence is least equipped to answer. Only a small minority of records come from dismantling designs, and few report a formal mediation analysis, so the corpus overwhelmingly evaluates complete packages against a control rather than component against component. Where component-level contributions are recorded they are informative in a limited way: the elements that recur — problem-solving, psychoeducation, skills training, cognitive-behavioural content, relaxation — tend to carry similar, individually modest effects (standardized differences of roughly 0.15 to 0.35 where quantified), rather than one dominant component flanked by dispensable extras. That pattern cuts against a clean subtraction: if no single element carries the bulk of the effect, removing any one risks a proportionate loss, and the evidence to quantify that loss for a specific component is not present. The defensible answer is that the review cannot license dropping a named component; it can only recommend that any candidate for removal be tested directly, since the observational component signal here is too weak to distinguish a redundant ingredient from an active one.
+
+## Consistency across reviews
+
+```{python}
+#| label: overlap
+#| output: asis
+#| echo: false
+print(H.concordance_md(N))
+```
+
+In any case, whole-package consistency (carried by overlapping reviews) is not the quantity this question needs; that is dismantling evidence, which the corpus does not contain in quantity.
+
+## Contributing records
+
+The strongest-contributing records are set out in @tbl-rq6. As with RQ5, the table locates the reviews behind the component picture rather than reporting component effects directly; its highest-strength entries are recent meta-analyses, and the record identifiers trace into the full extraction where the underlying component data can be inspected.
+
+```{python}
+#| label: tbl-rq6
+#| output: asis
+#| echo: false
+et, ntot = H.evidence_table_df(N)
+print(et.to_markdown(index=False))
+```
+
+: The strongest-contributing records (up to 15 of `{python} f"{ntot}"`). The complete set is in `dex_by_rq.xlsx`, sheet **RQ06**.
+
+## Representative evidence
+
+The extracts below show the kind of component-level statement the corpus contains, each with its verbatim source. They are illustrative and machine-extracted; note that even the most specific of them report several components with similar small effects rather than isolating one that could be dropped.
+
+```{python}
+#| label: quotes
+#| output: asis
+#| echo: false
+print(H.evidence_quotes_md(N, 6))
+```
+
+::: {.callout-important appearance="simple"}
+## RQ6 answer
+
+The review cannot confidently name a component to drop. Whole low-intensity interventions work consistently (`{python} H._pct(fav, tot)` of records favour the intervention, *`{python} cons`*, robust across quality and delivery), but the dismantling and mediation evidence needed to isolate a redundant ingredient is scarce, and where components are compared they carry similar, individually small contributions rather than one dominant part and several dispensable ones. GRADE-lite confidence is **`{python} gl`** and provisional. For the ULCM the implication is subtractive caution: keep the brief cognitive-behavioural core (problem-solving, behavioural activation, cognitive restructuring, psychoeducation) intact for the minimum viable product, and treat any proposal to remove a component as a Phase 5 experiment with its own outcome measurement, not as a saving the current evidence can justify.
+:::

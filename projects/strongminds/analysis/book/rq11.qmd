@@ -1,0 +1,100 @@
+```{python}
+#| label: setup
+#| echo: false
+import chapter_helpers as H
+import figures as F
+N = 11
+rs = H.rqstats.iloc[N - 1]
+cons, fav, tot = H.eff_consistency(N)
+gl = H.grade_lite(N)
+```
+
+# RQ11 · Spillover to general populations {#sec-rq11}
+
+**Workstream D — Cost & spillovers** · Stream 2 (Robinson et al. 2020 plus a targeted spillover search) · Direction of effect: **`{python} cons`** · GRADE-lite confidence (provisional): **`{python} gl`**
+
+> *Do brief, light-touch interventions delivered to general or non-case populations reduce depressive symptoms — that is, do benefits spill over beyond diagnosed cases?*
+
+::: {.callout-note appearance="simple"}
+## Key messages
+
+- **The evidence is thin and heterogeneous.** Only `{python} int(rs['records'])` records address spillover, drawn from populations as varied as students, older adults, community samples and subthreshold groups — too disparate to support a general claim.
+- **The direction is favourable but fragile.** Most records with a codable direction favour the intervention, but the base is small and the signal weakens sharply in the LMIC subset.
+- **Spillover is a prevention question in disguise**, and the review relaxed its usual case-definition to capture it; the outcomes reported are correspondingly mixed, spanning symptom reduction and incidence in non-case groups.
+- **For the ULCM this is a secondary consideration**: a possible additional benefit of delivering at population scale, supported too weakly to factor into the core value case.
+:::
+
+## The evidence base
+
+```{python}
+#| label: fig-rq11-context
+#| fig-cap: "Methodological quality of the contributing reviews (AMSTAR-2) and their geographic focus."
+#| echo: false
+_ = F.quality_geography(N)
+```
+
+The question draws on only `{python} int(rs['records'])` records, `{python} int(rs['reviews'])` of them systematic reviews or meta-analyses, with essentially no sub-Saharan African focus (@fig-rq11-context). It is a Stream 2 question served by a targeted spillover search, and to capture it the review relaxed its population criteria to admit universal- and selective-prevention samples in which most participants do not screen above a depression threshold. The result is a small base spanning heterogeneous populations, which limits any general conclusion.
+
+## What "spillover" covers here
+
+The records grouped under this question are unusually varied in population — intergenerational community programmes, sport participants, university students, older adults, subthreshold community samples, and perinatal women without pre-existing disorder — and correspondingly varied in outcome, from depressive-symptom change to the incidence of new depression in non-cases. The interventions themselves are the familiar cognitive-behavioural set. This heterogeneity is the defining feature: "spillover" is not one phenomenon here but a bundle of prevention-adjacent effects in different non-case groups, which is why the evidence resists a single summary.
+
+## Direction and robustness
+
+```{python}
+#| label: fig-rq11-harvest
+#| fig-cap: "Harvest of the reported direction of effect (Ogilvie et al. 2008). Counts are small."
+#| echo: false
+_ = F.effect_direction(N)
+```
+
+```{python}
+#| label: fig-rq11-robust
+#| fig-cap: "Share of records favouring the intervention across the subsets available for this small base."
+#| echo: false
+_ = F.robustness(N)
+```
+
+Of the records with a codable direction, `{python} f"{fav} of {tot}"` favour the intervention (@fig-rq11-harvest) — nominally **`{python} cons`**, but on a base small enough that the label is fragile, and the LMIC subset falls to around half (@fig-rq11-robust). The reading is a weak, favourable-leaning signal that brief interventions can reduce depressive symptoms in non-case populations, without enough evidence to say for whom or how much.
+
+## Consistency across reviews
+
+```{python}
+#| label: overlap
+#| output: asis
+#| echo: false
+print(H.concordance_md(N))
+```
+
+With so few and such varied reviews, cross-review overlap is barely informative; the constraint is the quantity and heterogeneity of the evidence, not its independence.
+
+## Contributing records
+
+The strongest-contributing records are set out in @tbl-rq11. The table is close to a complete inventory for this small question, and it is the clearest way to see how heterogeneous the populations are; the record identifiers lead into the extraction where each study's population and outcome can be read.
+
+```{python}
+#| label: tbl-rq11
+#| output: asis
+#| echo: false
+et, ntot = H.evidence_table_df(N)
+print(et.to_markdown(index=False))
+```
+
+: The strongest-contributing records (up to 15 of `{python} f"{ntot}"`). The complete set is in `dex_by_rq.xlsx`, sheet **RQ11**.
+
+## Representative evidence
+
+The extracts below, each with its verbatim source, illustrate the range of spillover findings; they are machine-extracted and illustrative, and they span distinct non-case populations rather than converging on one.
+
+```{python}
+#| label: quotes
+#| output: asis
+#| echo: false
+print(H.evidence_quotes_md(N, 5))
+```
+
+::: {.callout-important appearance="simple"}
+## RQ11 answer
+
+Brief interventions delivered to non-case populations lean towards reducing depressive symptoms, but the evidence is too thin and too heterogeneous to support a firm claim: `{python} int(rs['records'])` records spanning students, older adults, community and subthreshold samples, with a favourable direction that weakens in LMIC settings and almost no sub-Saharan representation. GRADE-lite confidence is **`{python} gl`** and provisional. For the ULCM spillover is best treated as a possible bonus rather than a central part of the case: delivering at community scale may confer some preventive benefit on non-cases, but the review cannot quantify it, and the model's value proposition should rest on its effect in the depressed populations it targets, not on spillover the evidence cannot substantiate.
+:::

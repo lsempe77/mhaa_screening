@@ -1,0 +1,85 @@
+```{python}
+#| label: setup
+#| echo: false
+import chapter_helpers as H
+import figures as F
+N = 18
+rs = H.rqstats.iloc[N - 1]
+gl = H.grade_lite(N)
+```
+
+# RQ18 · Measurement tools: validity and reliability {#sec-rq18}
+
+**Added dimension** (captured in extraction, beyond the protocol's RQ1–RQ16) · Evidence type: instrument-validation mapping · GRADE-lite confidence (provisional): **`{python} gl`**
+
+> *Which depression measurement instruments are valid and reliable for use in low- and middle-income settings?*
+
+::: {.callout-note appearance="simple"}
+## Key messages
+
+- **The PHQ-9 is the field's workhorse.** It is the most frequently used instrument, ahead of the EPDS (perinatal), the CES-D and the BDI — a short, free, non-proprietary screener well suited to lay administration.
+- **The conventional cut-off holds.** Where a threshold is reported it centres on a score of about ten, the standard PHQ-9 cut-off for probable depression.
+- **Diagnostic accuracy is moderate, where reported.** Sensitivity and specificity, when given, sit in the high-sixties to low-seventies per cent — adequate for screening, not for diagnosis, and reported for only a minority of records.
+- **Local validation is the gap.** The instruments are validated across many languages and settings, but sub-Saharan-African and LMIC-specific validation is limited, so a screener's performance in the ULCM's exact setting and language cannot be assumed from this evidence.
+:::
+
+## The evidence base
+
+```{python}
+#| label: fig-rq18-context
+#| fig-cap: "Methodological quality of the contributing reviews (AMSTAR-2) and their geographic focus."
+#| echo: false
+_ = F.quality_geography(N)
+```
+
+The question draws on `{python} f"{int(rs['records']):,}"` records, `{python} int(rs['reviews'])` of them systematic reviews or meta-analyses, `{python} int(rs['ssa'])` focused on sub-Saharan Africa (@fig-rq18-context). Measurement was not one of the protocol's sixteen questions; it was captured in extraction because the choice of outcome instrument is a concrete design decision for the model. Like the determinants question, this is a mapping rather than an effect estimate (the review's vote-count and effect-direction tools do not apply) so the chapter characterises which instruments are used and how well they perform, not a direction of benefit. Quality is low (`{python} int(rs['hq'])` high or moderate), as throughout.
+
+## Which instruments, at what threshold
+
+```{python}
+#| label: fig-rq18-instrument
+#| fig-cap: "Measurement instruments recorded across the contributing records."
+#| echo: false
+_ = F.category_bar(N, "psychom_instrument", label="measurement instrument")
+```
+
+A small set of instruments dominates (@fig-rq18-instrument). The PHQ-9 is the most frequently recorded, followed by the Edinburgh Postnatal Depression Scale in perinatal populations, the CES-D and the BDI, with a long tail of less common tools. For the ULCM the PHQ-9's prominence is convenient: it is brief, free, non-proprietary, and designed for administration by non-specialists, which matches the delivery model. Where a cut-off is reported it clusters at a score of about ten (the conventional PHQ-9 threshold for probable depression) so the instrument and its operating point are both well established. The construct measured is, unsurprisingly, depressive symptoms and screening rather than diagnosis.
+
+## How well do they perform, and where
+
+Two performance features matter. First, diagnostic accuracy: where sensitivity and specificity are reported they sit in the high-sixties to low-seventies per cent — respectable for a screening tool used to identify probable cases, but not accurate enough to serve as a diagnosis, and reported for only a minority of records. Second, validation coverage: the instruments have been validated across a wide range of languages (English most often, then Chinese, Spanish, Korean, Portuguese and others) and settings from primary care to perinatal services and national surveys. What is comparatively thin is validation in the ULCM's own context: sub-Saharan-African and broader LMIC-specific validation is limited, and a screener's sensitivity, specificity and cut-off can shift with language and culture. The evidence therefore supports the *choice* of instrument strongly while supporting its *local calibration* weakly.
+
+## Consistency and certainty
+
+The instrument landscape is consistent (the same handful of screeners recurs across the contributing reviews) but "consistency" here is of usage patterns, not of an effect, and the effect-direction and robustness tools used elsewhere are deliberately not applied. GRADE-lite confidence is low, reflecting both the quality of the underlying reviews and the descriptive, mapping nature of the question.
+
+## Contributing records
+
+The strongest-contributing records are set out in @tbl-rq18. The table is the route into the validation studies; the record identifiers lead into the extraction where each instrument's reported reliability, sensitivity, specificity, cut-off, language and setting can be inspected — the detail needed to judge fitness for a specific deployment.
+
+```{python}
+#| label: tbl-rq18
+#| output: asis
+#| echo: false
+et, ntot = H.evidence_table_df(N)
+print(et.to_markdown(index=False))
+```
+
+: The strongest-contributing records (up to 15 of `{python} f"{ntot}"`). The complete set is in `dex_by_rq.xlsx`, sheet **RQ18**.
+
+## Representative evidence
+
+The extracts below, each with its verbatim source, illustrate how the reviews describe instrument validity; they are machine-extracted and illustrative, and they emphasise the PHQ-9's standing and the variability of performance across settings.
+
+```{python}
+#| label: quotes
+#| output: asis
+#| echo: false
+print(H.evidence_quotes_md(N, 6))
+```
+
+::: {.callout-important appearance="simple"}
+## RQ18 answer
+
+The PHQ-9 is the best-supported measurement choice for the ULCM: it is the most widely used instrument, brief, free and lay-administrable, with a well-established cut-off of about ten and moderate screening accuracy (sensitivity and specificity in the high-sixties to low-seventies per cent where reported). The EPDS is the standard alternative for perinatal populations. GRADE-lite confidence is **`{python} gl`** and provisional, and this is a mapping rather than an effect estimate. The one substantive caveat is local calibration: validation is concentrated outside sub-Saharan Africa, and a screener's performance can move with language and culture, so the model should adopt the PHQ-9 at a cut-off of around ten as its outcome measure while validating that threshold in its own languages and setting during Phase 5, rather than assuming the imported operating point transfers unchanged.
+:::

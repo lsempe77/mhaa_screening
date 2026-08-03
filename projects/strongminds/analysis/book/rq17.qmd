@@ -1,0 +1,100 @@
+```{python}
+#| label: setup
+#| echo: false
+import chapter_helpers as H
+import figures as F
+N = 17
+rs = H.rqstats.iloc[N - 1]
+cons, fav, tot = H.eff_consistency(N)
+gl = H.grade_lite(N)
+```
+
+# RQ17 · Safety monitoring and referral pathways {#sec-rq17}
+
+**Added dimension** (captured in extraction, beyond the protocol's RQ1–RQ16) · Direction of effect: **`{python} cons`** · GRADE-lite confidence (provisional): **`{python} gl`**
+
+> *What adverse events, safety-monitoring practices and referral pathways are reported for these interventions?*
+
+::: {.callout-note appearance="simple"}
+## Key messages
+
+- **The interventions appear low-risk.** Where adverse events are reported, they are most often none or minimal, with no pattern of serious harm — consistent with the low-intensity, non-pharmacological nature of the interventions.
+- **But safety is badly under-reported.** Only about half of records report on adverse events at all, and only around a quarter describe a referral or safety pathway; reviews repeatedly note that negative psychological effects are not routinely monitored.
+- **Where monitoring exists it centres on suicide risk.** The recorded practices are suicide-risk assessment and ideation screening, clinical supervision, and referral protocols — a small, sensible core that most studies nonetheless omit.
+- **This is a design obligation, not a reassurance.** The apparent safety of the interventions does not remove the need to build monitoring and referral in; the evidence shows both that harm is uncommon and that the field measures it poorly.
+:::
+
+## The evidence base
+
+```{python}
+#| label: fig-rq17-context
+#| fig-cap: "Methodological quality of the contributing reviews (AMSTAR-2) and their geographic focus."
+#| echo: false
+_ = F.quality_geography(N)
+```
+
+The question draws on `{python} f"{int(rs['records']):,}"` records, `{python} int(rs['reviews'])` of them systematic reviews or meta-analyses, `{python} int(rs['ssa'])` focused on sub-Saharan Africa (@fig-rq17-context). Safety was not one of the protocol's sixteen questions; it was captured during extraction because it is decision-critical for deploying a lay-delivered intervention at scale. The evidence is therefore opportunistic (safety information as reported incidentally by effectiveness reviews) rather than the product of a dedicated safety search.
+
+## What the safety record shows
+
+The safety picture has two halves. On harm itself, the signal is favourable: adverse events, where reported, are predominantly none or minimal, adverse-event rates cluster at or near zero, and no serious or systematic harm emerges — as expected for brief, non-pharmacological, group interventions. On reporting, the signal is poor: only about half of records address adverse events at all, and only around a quarter describe a referral or safety pathway. Reviews are explicit that this is a gap — that negative psychological effects (confronting distress, rumination, deterioration) are not routinely measured, and that randomised evidence on safety is needed. Where monitoring practices are recorded they form a coherent minimum — suicide-risk assessment and ideation screening, clinical supervision of facilitators, and defined referral protocols — but these are described in a small fraction of records rather than as standard practice.
+
+## Direction and robustness
+
+```{python}
+#| label: fig-rq17-harvest
+#| fig-cap: "Harvest of the reported direction of the safety-relevant judgement (Ogilvie et al. 2008)."
+#| echo: false
+_ = F.effect_direction(N)
+```
+
+```{python}
+#| label: fig-rq17-robust
+#| fig-cap: "Share of records favouring the intervention across the subsets that test the headline."
+#| echo: false
+_ = F.robustness(N)
+```
+
+Where a safety-relevant direction is codable it is **`{python} cons`** (`{python} f"{fav} of {tot}"` favourable), holding in higher-quality and LMIC records but falling in the small sub-Saharan subset (@fig-rq17-harvest, @fig-rq17-robust). This should be read with care: a favourable "direction" here largely reflects the *absence* of reported harm, which (given how patchily harm is measured) is weaker reassurance than it appears. Absence of evidence of harm is not evidence of absence of harm.
+
+## Consistency across reviews
+
+```{python}
+#| label: overlap
+#| output: asis
+#| echo: false
+print(H.concordance_md(N))
+```
+
+Because safety is reported incidentally rather than by dedicated safety trials, the low-harm picture reflects a shared *inattention* to harm as much as a shared finding of safety.
+
+## Contributing records
+
+The strongest-contributing records are set out in @tbl-rq17. The table is the route to the reviews that do report safety and monitoring detail; the record identifiers lead into the extraction where each study's adverse-event reporting, monitoring practice and referral pathway (where present) can be read.
+
+```{python}
+#| label: tbl-rq17
+#| output: asis
+#| echo: false
+et, ntot = H.evidence_table_df(N)
+print(et.to_markdown(index=False))
+```
+
+: The strongest-contributing records (up to 15 of `{python} f"{ntot}"`). The complete set is in `dex_by_rq.xlsx`, sheet **RQ17**.
+
+## Representative evidence
+
+The extracts below, each with its verbatim source, illustrate both the low-harm findings and the reporting gaps; they are machine-extracted and illustrative, and they include reviews' own calls for better safety monitoring.
+
+```{python}
+#| label: quotes
+#| output: asis
+#| echo: false
+print(H.evidence_quotes_md(N, 6))
+```
+
+::: {.callout-important appearance="simple"}
+## RQ17 answer
+
+Low-intensity group interventions appear safe (reported adverse events are predominantly none or minimal, with no serious harm pattern) but the field measures safety poorly: only about half of records report on adverse events and only a quarter describe a referral pathway, and reviews call explicitly for better monitoring of negative psychological effects. GRADE-lite confidence is **`{python} gl`** and provisional, and applies to a body of largely incidental safety reporting. For the ULCM the implication is a design obligation rather than a clearance: build in the minimum monitoring the better studies use — suicide-risk screening, facilitator supervision, and a defined referral pathway to specialist care (the RQ12 backstop) — precisely because the interventions' apparent safety rests on evidence too thin to rely on, and because a lay-delivered service at scale must be able to detect and route the rare serious case.
+:::

@@ -1,0 +1,69 @@
+# Executive summary {.unnumbered}
+
+```{python}
+#| label: setup
+#| echo: false
+import chapter_helpers as H
+import figures as F
+N = len(H.summ)
+n_rev = int((H.summ["unit"] == "review").sum())
+n_prim = int((H.summ["unit"] == "primary_study").sum())
+ncontrib = len(H.contrib)
+```
+
+This report presents the evidence assembled for the design of the StrongMinds Ultra-Low-Cost Model (ULCM) — a group-based intervention for adult depression intended for delivery in low- and middle-income countries at approximately USD 1 per client. It answers the sixteen research questions of the rapid-review protocol, grouped into four workstreams, together with two added dimensions (safety and measurement) captured during extraction. Each question is treated in its own chapter with a short answer box; this summary draws the findings together and sets out the design space they support.
+
+```{python}
+#| label: summary-numbers
+#| output: asis
+print(f"""
+The evidence base comprises **{N:,} included records** ({n_rev:,} systematic reviews or
+meta-analyses and {n_prim:,} primary studies) from which **{ncontrib:,} study-to-question
+contributions** were extracted. Every value in this report is **machine-extracted and not yet
+human-verified**; the report characterises the evidence base for each design decision, and its
+provisional confidence in each, rather than issuing verified findings. Effects are described by
+direction and are not pooled.
+""")
+```
+
+## The evidence at a glance
+
+```{python}
+#| label: fig-egm
+#| fig-cap: "Evidence and gap map: each question by the volume of evidence and the share of its reviews reaching high or moderate quality. Most questions cluster low on the quality axis regardless of volume."
+#| echo: false
+_ = F.egm_bubble()
+```
+
+```{python}
+#| label: fig-quality
+#| fig-cap: "Methodological quality (AMSTAR-2) of the contributing reviews, by question. The evidence is predominantly low-quality across the board."
+#| echo: false
+_ = F.quality_by_rq()
+```
+
+Three features characterise the evidence base as a whole. It is **broad but shallow**: several questions rest on hundreds of reviews, yet across almost every question the large majority of those reviews are of low or critically low methodological quality (@fig-egm, @fig-quality). It is **geographically displaced from its target**: sub-Saharan African evidence is a small minority for most questions, and (as the chapters show repeatedly) the favourable signals that are robust to review quality and to LMIC settings tend to thin in the sub-Saharan subset specifically. And it is **descriptive rather than causal on the questions of mechanism**: the corpus evaluates whole interventions against controls, so it establishes that low-intensity group interventions work far better than it establishes which ingredient, dose or component is responsible.
+
+Within those limits the direction of evidence leans consistently one way: on the effectiveness questions the intervention is favoured in the high-80s to mid-90s per cent of records, and this leaning holds when the evidence is restricted to higher-quality reviews and to non-specialist delivery. That apparent consistency must be read with two large caveats, developed in the Methods and Discussion and repeated in each chapter. The counts are of systematic reviews, not independent studies, and those reviews re-analyse heavily overlapping sets of the same trials, so the weight behind a figure such as "1,026 of 1,095 records" is far smaller than it looks; and near-universal positivity of this kind is as consistent with the publication and reporting bias known to affect this literature as it is with genuine benefit. Accordingly, **confidence is capped at "Low" for every question in this report** — "Very low" where the direction is mixed. What the report offers is a consistent *direction* across questions, not a measure of how large or how certain the effects are; the percentages should be read as a coarse indicator of leaning, and nothing more.
+
+## What the evidence supports for the design
+
+::: {.callout-important appearance="default"}
+## Candidate design space for the minimum viable product
+
+Read as the design space the evidence *leans toward*, at low certainty throughout: confidence in every element below is capped at Low (see Methods), effects are unpooled, the supporting counts are of overlapping reviews rather than independent studies, and the values are machine-extracted and not yet human-verified.
+
+- **Intervention (RQ2, RQ5, RQ14).** A brief, structured, cognitive-behavioural group intervention built on behavioural activation, cognitive restructuring, problem-solving and psychoeducation. The *class* of intervention has consistent support across the evidence; the *choice among* its components does not.
+- **Dose (RQ7).** About eight weekly sessions of roughly an hour. The evidence supports a short weekly course but does **not** establish a floor below about six sessions; the Phase-3 signal of two sessions is not corroborated externally.
+- **Delivery and workforce (RQ13, RQ4).** Group, face-to-face, delivered by non-specialists — the task-shifting model is consistently supported. The optimal *training and supervision* of those non-specialists is not specified by the evidence and must be set directly.
+- **Care architecture (RQ12).** A stepped design with a lay-delivered low-intensity first step, escalation on non-response and on safety signals, and a specialist backstop retained.
+- **Engagement (RQ15).** Build in cultural adaptation, peer support, flexible and accessible delivery, and stigma-sensitive framing — the levers the evidence most directly ties to completion, and among the safest bets in the review.
+- **Severity routing (RQ7, RQ1).** Route more severe presentations to more sessions; the condition is predominantly psychosocial, supporting the psychosocial model.
+- **Measurement and safety (RQ18, RQ17).** Use the PHQ-9 at a cut-off of about ten; build in suicide-risk screening and a defined referral pathway.
+
+**Residual uncertainties for Phase 5** — the review cannot settle these: the minimum dose below ~6 sessions; whether effect holds at the **larger group sizes** a USD-1 model needs (RQ10); **which components** can be dropped (RQ5, RQ6); the **facilitator training dose** (RQ4); **long-term durability** and the need for boosters (RQ8); **sub-Saharan-specific effectiveness**, the weakest part of even the strongest findings; and (decisively) the **USD-1 cost target itself, which is two to three orders of magnitude below anything in the external literature (RQ16)** and must be evidenced by the model's own data.
+:::
+
+## How to read this report
+
+The report is organised by the protocol's four workstreams. **A · Context & drivers** (RQ1) maps who is affected and why. **B · Active ingredients & dose** (RQ2, 5, 6, 7, 8, 9, 14) covers what works, at what dose, and how durably. **C · Delivery, workforce & engagement** (RQ3, 4, 10, 12, 13, 15) covers how it is delivered, by whom, and how participants are kept engaged. **D · Cost & spillovers** (RQ11, 16) covers affordability and wider benefit. Two **added dimensions** (RQ17 safety, RQ18 measurement) follow. A cross-cutting discussion and a statement of limitations close the report. Every chapter follows the same structure — evidence base, direction and magnitude, robustness across subsets, question-specific detail, and a short answer box — so the questions are directly comparable. The methods chapter defines the terms used throughout (AMSTAR-2, the vote-count consistency rule, GRADE-lite, the corrected covered area) and states the machine-extraction caveat once, in full.

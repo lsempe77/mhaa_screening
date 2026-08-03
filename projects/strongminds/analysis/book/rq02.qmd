@@ -1,0 +1,112 @@
+```{python}
+#| label: setup
+#| echo: false
+import chapter_helpers as H
+import figures as F
+N = 2
+rs = H.rqstats.iloc[N - 1]
+cons, fav, tot = H.eff_consistency(N)
+sm = H.smd_magnitude(N)
+gl = H.grade_lite(N)
+```
+
+# RQ2 · Which low-intensity group interventions are effective {#sec-rq2}
+
+**Workstream B — Active ingredients & dose** · Stream 1 (Barbui et al. 2020 umbrella, refreshed for adult common mental disorder) · Direction of effect: **`{python} cons`** · GRADE-lite confidence (provisional): **`{python} gl`**
+
+> *Which low-intensity, group-based psychological interventions are effective for adult depression, and over what time-frame?*
+
+::: {.callout-note appearance="simple"}
+## Key messages
+
+- **This is the foundational finding, and it is affirmative.** Low-intensity, group-based psychological interventions reduce depressive symptoms across a broad family of formats — `{python} H._pct(fav, tot)` of the records reporting a direction favour the intervention, the largest and most consistent evidence base in the review.
+- **The benefit is not tied to one branded therapy.** It spans cognitive-behavioural, behavioural-activation, problem-solving, interpersonal and mindfulness-based programmes, delivered overwhelmingly in a group, face-to-face, in-person format.
+- **It is robust to quality and to non-specialist delivery**, holding at 87% in high-quality reviews and 94% among lay-delivered interventions — important for a task-shifted model.
+- **The one soft spot is the target setting.** In records focused on sub-Saharan Africa the share favouring the intervention falls to 74%, just below the consistency threshold — so even the review's strongest finding thins where the ULCM will operate.
+:::
+
+## The evidence base
+
+```{python}
+#| label: fig-rq2-context
+#| fig-cap: "Methodological quality of the contributing reviews (AMSTAR-2) and their geographic focus."
+#| echo: false
+_ = F.quality_geography(N)
+```
+
+The question draws on `{python} f"{int(rs['records']):,}"` records (the largest base in the review) of which `{python} int(rs['reviews'])` are systematic reviews or meta-analyses (@fig-rq2-context). Even at this volume the quality profile is the one seen across the review: `{python} int(rs['hq'])` reviews reach high or moderate quality on AMSTAR-2 against `{python} int(rs['lowq'])` low or critically low, and only `{python} int(rs['ssa'])` records focus on sub-Saharan Africa. The scale is a genuine strength here (this is the question the corpus is best able to answer) but it does not lift the underlying quality, and the geographic imbalance persists.
+
+## The interventions that work
+
+```{python}
+#| label: fig-rq2-techniques
+#| fig-cap: "Therapeutic techniques recorded across the effective interventions (multi-select)."
+#| echo: false
+_ = F.category_bar(N, "int_techniques", label="intervention techniques")
+```
+
+The interventions carrying the effect are a broad but recognisable family (@fig-rq2-techniques). The named programmes range across brief CBT, group interpersonal therapy, behavioural-activation and problem-solving-based approaches, mindfulness-based interventions and Problem Management Plus, and the underlying techniques are the recurring cognitive-behavioural set. Two delivery facts matter for the ULCM. The format is overwhelmingly group and face-to-face (around five in six records) and delivery is predominantly in-person and, as elsewhere in this workstream, largely by non-specialists. The breadth is itself the finding: effectiveness is a property of the low-intensity, group, cognitive-behavioural *class* of interventions rather than of any single programme, which gives the model latitude in exactly which format it adopts.
+
+## Direction and magnitude of effect
+
+```{python}
+#| label: fig-rq2-harvest
+#| fig-cap: "Harvest of the reported direction of effect (Ogilvie et al. 2008). Records are counted by direction, not pooled."
+#| echo: false
+_ = F.effect_direction(N)
+```
+
+The direction of effect is **`{python} cons`** and, on more than a thousand directional records, overwhelmingly one-sided: `{python} f"{fav} of {tot}"` favour the intervention (@fig-rq2-harvest). Magnitude is the usual caution: the standardized differences that are reported use different instruments and inconsistent sign conventions and are unverified, so no dependable average effect size can be recovered from them, and effects are not pooled. The value of this question is less in the effect size than in the breadth and consistency of the direction: across a large, heterogeneous set of low-intensity group interventions, the evidence points one way.
+
+## How robust is the signal?
+
+```{python}
+#| label: fig-rq2-robust
+#| fig-cap: "Share of records favouring the intervention across the subsets that test the headline. The dashed line is the 75% consistency threshold."
+#| echo: false
+_ = F.robustness(N)
+```
+
+The headline survives most of the caveats (@fig-rq2-robust). It holds in the high- and moderate-quality reviews (87%), in LMIC-focused records (89%), and (importantly for a task-shifted model) among non-specialist-delivered interventions (94%). The exception is the one that matters most for deployment: in records focused on sub-Saharan Africa the share favouring the intervention falls to 74% (27 records), just under the consistency threshold. Twenty-seven records is enough to take seriously and too few to be sure of, but the pattern is consistent across the workstream — the general case for these interventions is broad, and the setting-specific case for sub-Saharan Africa is weaker and thinner. The comparators, as elsewhere, are mostly usual care or no treatment, so this is evidence of benefit over little, not over an active alternative.
+
+## Consistency across reviews
+
+```{python}
+#| label: overlap
+#| output: asis
+#| echo: false
+print(H.concordance_md(N))
+```
+
+At this scale the independence of the evidence is the pressing question, and the answer is unflattering: the count is dominated by more than a thousand reviews that draw on a far smaller, overlapping body of primary trials, so the apparent weight of "over a thousand records" overstates the amount of separate evidence by a large margin. The consistency is real but should be read as consistency of a heavily re-counted literature, not of a thousand independent findings.
+
+## Contributing records
+
+The strongest-contributing records are set out in @tbl-rq2. With over a thousand records behind this question the table is necessarily a small, high-strength selection; it is most useful for identifying the major recent umbrella and meta-analytic reviews that anchor the effectiveness claim, each traceable by its record identifier into the full extraction.
+
+```{python}
+#| label: tbl-rq2
+#| output: asis
+#| echo: false
+et, ntot = H.evidence_table_df(N)
+print(et.to_markdown(index=False))
+```
+
+: The strongest-contributing records (up to 15 of `{python} f"{ntot}"`). The complete set is in `dex_by_rq.xlsx`, sheet **RQ02**.
+
+## Representative evidence
+
+The extracts below, each with its verbatim source, convey the breadth of the effectiveness signal across intervention types; they are machine-extracted and illustrative rather than adjudicated, and they span several programme families rather than pointing to one.
+
+```{python}
+#| label: quotes
+#| output: asis
+#| echo: false
+print(H.evidence_quotes_md(N, 6))
+```
+
+::: {.callout-important appearance="simple"}
+## RQ2 answer
+
+Low-intensity, group-based psychological interventions are effective for adult depression: across the review's largest evidence base, `{python} H._pct(fav, tot)` of records favour the intervention (*`{python} cons`*), the benefit spans a broad cognitive-behavioural family delivered in group, face-to-face, largely non-specialist formats, and it holds in high-quality reviews and under lay delivery. The reported effect sizes are too mixed in instrument and sign to average reliably, and are measured mostly against usual care; and (the one material qualification) the signal thins to 74% in the sub-Saharan-African subset. GRADE-lite confidence is **`{python} gl`** and provisional (machine-extracted, not yet human-verified). For the ULCM this is the foundational result: the *class* of intervention the model is built on has consistent, if low-certainty, support, which licenses proceeding to the design questions of ingredients, dose, delivery and cost — while carrying forward the caveat that setting-specific evidence for sub-Saharan Africa is the weakest part of even this, the best-evidenced, question.
+:::

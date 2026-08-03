@@ -1,0 +1,112 @@
+```{python}
+#| label: setup
+#| echo: false
+import chapter_helpers as H
+import figures as F
+N = 13
+rs = H.rqstats.iloc[N - 1]
+cons, fav, tot = H.eff_consistency(N)
+sm = H.smd_magnitude(N)
+gl = H.grade_lite(N)
+```
+
+# RQ13 · Non-specialist, lay and peer delivery {#sec-rq13}
+
+**Workstream C — Delivery, workforce & engagement** · Stream 1 (Barbui et al. 2020 umbrella, extended with lay/peer-delivery reviews) · Direction of effect: **`{python} cons`** · GRADE-lite confidence (provisional): **`{python} gl`**
+
+> *Can non-specialist providers (lay health workers, peers, and self-guided formats with a facilitator) deliver these interventions effectively?*
+
+::: {.callout-note appearance="simple"}
+## Key messages
+
+- **This is the enabling finding for a task-shifted model, and the evidence supports it.** Interventions delivered by non-specialists reduce depressive symptoms consistently — `{python} H._pct(fav, tot)` of records favour the intervention — and roughly seven in ten records in this evidence base are coded as non-specialist-delivered.
+- **The finding holds under the conditions that matter for the ULCM:** it is stable in high-quality reviews (85%), in LMIC-focused records (86%), and (by construction) among non-specialist delivery (91%).
+- **The delivery format is group and face-to-face**, matching the model's intended mode.
+- **The soft spots are the same two as elsewhere:** the sub-Saharan subset thins to 72%, and the extraction did not capture facilitator sub-type (lay vs peer vs volunteer) or training detail in a usable form, so *who exactly* delivers best is left to RQ4 and to Phase 5.
+:::
+
+## The evidence base
+
+```{python}
+#| label: fig-rq13-context
+#| fig-cap: "Methodological quality of the contributing reviews (AMSTAR-2) and their geographic focus."
+#| echo: false
+_ = F.quality_geography(N)
+```
+
+The question draws on `{python} f"{int(rs['records']):,}"` records, `{python} int(rs['reviews'])` of them systematic reviews or meta-analyses, and (unusually for this review) a comparatively strong sub-Saharan African presence (`{python} int(rs['ssa'])` records), reflecting that lay and peer delivery is where African evidence is relatively concentrated (@fig-rq13-context). Quality is nonetheless the usual constraint, with `{python} int(rs['hq'])` reviews rated high or moderate. This is a Stream 1 question, extended with dedicated lay- and peer-delivery reviews, so its evidence speaks directly to the workforce model the ULCM depends on.
+
+## The delivery model
+
+```{python}
+#| label: fig-rq13-format
+#| fig-cap: "Delivery format recorded across the contributing interventions."
+#| echo: false
+_ = F.category_bar(N, "del_format", label="delivery format")
+```
+
+The interventions in this evidence base are delivered as the ULCM intends (@fig-rq13-format): overwhelmingly group and face-to-face, with remote and hybrid variants behind them. On the workforce itself, the record-level flag for specialist delivery is negative in roughly seven of ten cases (that is, most interventions are delivered by non-specialists) and it is precisely these that carry the favourable direction. The one thing the evidence base does not resolve is the internal composition of "non-specialist": the extraction did not populate facilitator sub-type or training-hours fields in a usable form, so the corpus establishes *that* lay delivery works without discriminating cleanly between lay health workers, trained peers, and volunteer facilitators. That distinction is the subject of RQ4.
+
+## Direction and magnitude of effect
+
+```{python}
+#| label: fig-rq13-harvest
+#| fig-cap: "Harvest of the reported direction of effect (Ogilvie et al. 2008)."
+#| echo: false
+_ = F.effect_direction(N)
+```
+
+The direction of effect is **`{python} cons`**: `{python} f"{fav} of {tot}"` records favour the intervention (@fig-rq13-harvest), the reported standardized effects being too mixed in instrument and sign to yield a dependable magnitude. The significance for the model is that this favourable direction is *not* conditional on specialist involvement — the effect is present in the non-specialist-delivered evidence itself, not borrowed from specialist trials.
+
+## How robust is the signal?
+
+```{python}
+#| label: fig-rq13-robust
+#| fig-cap: "Share of records favouring the intervention across the subsets that test the headline."
+#| echo: false
+_ = F.robustness(N)
+```
+
+The task-shifting finding is among the better-supported in the review (@fig-rq13-robust). It holds in high- and moderate-quality reviews (85%) and in LMIC-focused records (86%), and it is by definition strong in the non-specialist subset (91%). The sub-Saharan subset falls to 72% on forty-three records — enough to register as a caution but not to overturn a finding this consistent elsewhere. As throughout, comparators are mostly usual care or no treatment, so the claim is that non-specialists can deliver benefit over little or nothing, which is exactly the claim a task-shifted model needs.
+
+## Consistency across reviews
+
+```{python}
+#| label: overlap
+#| output: asis
+#| echo: false
+print(H.concordance_md(N))
+```
+
+The task-shifting signal is carried by many overlapping reviews of a smaller set of lay- and peer-delivery trials, so (as throughout) the consistency is weaker than the record count implies; its value lies in that the favourable direction is present in the non-specialist evidence itself, not in the size of the count.
+
+## Contributing records
+
+The strongest-contributing records are set out in @tbl-rq13. The table is the route to the lay- and peer-delivery reviews specifically; its record identifiers lead into the extraction where each study's provider type and setting can be inspected, which is the level at which the facilitator-composition question would have to be answered.
+
+```{python}
+#| label: tbl-rq13
+#| output: asis
+#| echo: false
+et, ntot = H.evidence_table_df(N)
+print(et.to_markdown(index=False))
+```
+
+: The strongest-contributing records (up to 15 of `{python} f"{ntot}"`). The complete set is in `dex_by_rq.xlsx`, sheet **RQ13**.
+
+## Representative evidence
+
+The extracts below, each with its verbatim source, illustrate the delivery signal directly; they are machine-extracted and illustrative, and they emphasise effectiveness under lay and peer delivery across a range of settings.
+
+```{python}
+#| label: quotes
+#| output: asis
+#| echo: false
+print(H.evidence_quotes_md(N, 6))
+```
+
+::: {.callout-important appearance="simple"}
+## RQ13 answer
+
+Non-specialist delivery works. Interventions delivered by lay and peer providers reduce depressive symptoms consistently (`{python} H._pct(fav, tot)` of records favour the intervention, *`{python} cons`*), the finding holds in high-quality reviews and in LMIC settings, and the mode is the group, face-to-face format the ULCM plans to use. This is the single most important enabling finding for a task-shifted, USD-1 model: the effect does not depend on specialist involvement. GRADE-lite confidence is **`{python} gl`** and provisional. Two qualifications carry forward: the sub-Saharan-specific evidence, though relatively strong for this question, still thins to 72%; and the corpus cannot say which kind of non-specialist (lay worker, trained peer, volunteer) delivers best, nor how much training and supervision they need, which is RQ4's unmet question and a first-order Phase 5 design parameter.
+:::

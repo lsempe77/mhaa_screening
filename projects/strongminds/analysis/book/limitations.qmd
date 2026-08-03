@@ -1,0 +1,23 @@
+# Limitations {.unnumbered}
+
+The findings should be read against the following limitations, which are inherent to a rapid evidence-mapping approach and to the specific status of this report.
+
+**Machine-extracted and not yet human-verified.** This is the binding limitation. Every value in the report — counts, medians, directions, quality bands — was produced by an automated extraction and has not yet undergone the 100% human verification of quantitative fields the protocol requires before findings are relied upon. The report characterises the evidence base and the review's provisional confidence; it is not a set of verified results, and individual figures may change on verification.
+
+**Rapid-review methods and single screening.** Screening and extraction used streamlined rapid-review procedures with a single human reviewer augmented by a calibrated language model, rather than dual independent human screening. Calibration, adjudication and audit reduce but do not eliminate the risk of missed studies or misclassification.
+
+**Funder relationship.** The review was commissioned by the organisation developing the intervention it informs. Procedural safeguards — a separate internal-evidence stream, an independent adjudicator, and pre-registration of the Phase 3 signals as comparators rather than hypotheses — mitigate but do not remove the associated confirmation-bias risk, and interpretation should be read with that in mind.
+
+**Review-sourced primary evidence.** Both streams reach primary studies only through their entry-point systematic reviews, so recent trials and trials missed by all in-scope reviews are under-represented, and primary studies inherit the AMSTAR-2 band of their sourcing review rather than being individually appraised. Primary-study drill-down was further limited to the questions needing per-study granularity; the rest are answered at review level.
+
+**No pooling; direction only.** The synthesis is descriptive. Effects are counted by direction, not meta-analysed, and standardized effect sizes are reported in absolute terms because sign conventions are inconsistent across the extracted records. Statements about magnitude are therefore coarse.
+
+**Geographic asymmetry.** Sub-Saharan African evidence is weighted more heavily in interpretation for the context-sensitive questions, while the dose, single-session and stepped-care questions rest deliberately on high-income-dominated reviews. The resulting asymmetry is applied transparently at the point of interpretation, but it means the evidence is strongest for the general case and weakest for the model's own setting.
+
+**Cost comparability.** Cost figures are reported in their original currencies and years and are not standardised to a common basis in this descriptive report; the wide heterogeneity of metrics, currencies and perspectives means cost figures should be read as ranges, and the distance to the USD-1 target is the usable signal rather than any single number.
+
+**Scope exclusions.** English-language records only; adolescents and adolescent-only samples excluded; digital-only, fully self-guided interventions excluded; individual and specialist-delivered formats admitted only where a question specifically requires them. Findings should not be assumed to transfer to excluded populations or formats.
+
+**The added dimensions.** Safety (RQ17) and measurement (RQ18) were captured during extraction rather than being among the protocol's sixteen questions and were not served by dedicated searches; their evidence is opportunistic and should be treated as indicative.
+
+Taken together, these limitations define the report's proper use: to see the shape and consistency of the evidence across the design decisions, to locate where confidence is genuine and where it is thin, and to direct verification and Phase 5 testing — not to serve, on its own, as the final evidential basis for the model's specification.

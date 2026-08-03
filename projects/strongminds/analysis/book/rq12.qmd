@@ -1,0 +1,104 @@
+```{python}
+#| label: setup
+#| echo: false
+import chapter_helpers as H
+import figures as F
+N = 12
+rs = H.rqstats.iloc[N - 1]
+cons, fav, tot = H.eff_consistency(N)
+gl = H.grade_lite(N)
+```
+
+# RQ12 · Stepped-care model design {#sec-rq12}
+
+**Workstream C — Delivery, workforce & engagement** · Stream 2 (stepped-care reviews: Jeitani et al. 2024; Rivero-Santana et al. 2021; van Straten et al. 2015) · Direction of effect: **`{python} cons`** · GRADE-lite confidence (provisional): **`{python} gl`**
+
+> *How should a stepped-care model be designed — how many steps, what triggers a step-up, and where does specialist care sit?*
+
+::: {.callout-note appearance="simple"}
+## Key messages
+
+- **The reviewed models share a common architecture:** two to four steps, a brief low-intensity intervention as the first step, escalation for non-responders, and a specialist tier held in reserve. This is close to the ULCM's intended shape.
+- **A specialist backstop is the norm, not the exception.** A majority of the models retain access to specialist care at the higher steps, even when the first step is lay-delivered — the low-intensity entry point is not a standalone service.
+- **Step-up is triggered by non-response and by risk.** Where escalation rules are recorded they turn on persistent or worsening symptoms and, critically, on safety signals — suicidality, severe symptoms, psychosis.
+- **The evidence is favourable but thinner and less robust than the workstream's core questions**, and it is weakest exactly where the ULCM needs it: the sub-Saharan subset does not hold.
+:::
+
+## The evidence base
+
+```{python}
+#| label: fig-rq12-context
+#| fig-cap: "Methodological quality of the contributing reviews (AMSTAR-2) and their geographic focus."
+#| echo: false
+_ = F.quality_geography(N)
+```
+
+The question draws on `{python} f"{int(rs['records']):,}"` records, `{python} int(rs['reviews'])` of them systematic reviews or meta-analyses, with `{python} int(rs['ssa'])` focused on sub-Saharan Africa (@fig-rq12-context). This is a Stream 2 question (stepped-care architecture is not in the Barbui umbrella) built from dedicated stepped-care reviews, and it is a smaller and lower-quality base than the core effectiveness questions (`{python} int(rs['hq'])` high- or moderate-quality reviews). It is best read as describing the design space rather than adjudicating between designs.
+
+## What the reviewed models look like
+
+The most useful content of this question is descriptive: how the reviewed stepped-care models are actually structured. Three features recur across the recorded designs. First, the number of steps is small (typically two to four) with a brief, low-intensity, often group-based intervention as the first step: psychoeducation or problem-solving delivered by a non-specialist, with more intensive individual therapy or pharmacological treatment above it. Second, a specialist tier is retained: in a majority of the models a specialist backstop remains available at the higher steps, so the lay-delivered entry point sits inside a system that can escalate rather than replacing specialist care outright. Third, escalation is rule-governed: where step-up triggers are recorded they are non-response (symptoms remaining above a threshold, or difficulty engaging with the low-intensity step) and, prominently, safety — suicidality, severe symptoms, signs of psychosis. A minority of models record an explicit triage rule at entry; most route by response over time rather than by a formal severity gate at intake.
+
+## Direction of effect
+
+```{python}
+#| label: fig-rq12-harvest
+#| fig-cap: "Harvest of the reported direction of effect (Ogilvie et al. 2008)."
+#| echo: false
+_ = F.effect_direction(N)
+```
+
+Where a direction is codable the evidence is **`{python} cons`**: `{python} f"{fav} of {tot}"` records favour stepped care (@fig-rq12-harvest). The margin is narrower than in the effectiveness questions, consistent with a design question — the comparison is often stepped care against a single-level alternative, where the expected gain is efficiency rather than a large effect difference.
+
+## How robust is the signal?
+
+```{python}
+#| label: fig-rq12-robust
+#| fig-cap: "Share of records favouring the intervention across the subsets that test the headline."
+#| echo: false
+_ = F.robustness(N)
+```
+
+This is one of the less robust findings in the review (@fig-rq12-robust). The direction holds in the high- and moderate-quality reviews but falls in the LMIC subset and, most sharply, in the small sub-Saharan subset, where fewer than half of the handful of records favour the intervention. That pattern — a design that looks efficient in high-income systems and much less settled in low-income African settings — is the central caution: the *architecture* is transferable in principle, but the evidence that a stepped model outperforms a simpler one in the ULCM's setting is weak.
+
+## Consistency across reviews
+
+```{python}
+#| label: overlap
+#| output: asis
+#| echo: false
+print(H.concordance_md(N))
+```
+
+With few contributing reviews, cross-review overlap adds little; the constraint here is the small and setting-skewed evidence base rather than shared studies.
+
+## Contributing records
+
+The strongest-contributing records are set out in @tbl-rq12. Given the small base the table is close to an inventory of the stepped-care reviews; the record identifiers lead into the extraction where each model's step structure, triage rules and step-up triggers are recorded in full — the detail behind the architecture described above.
+
+```{python}
+#| label: tbl-rq12
+#| output: asis
+#| echo: false
+et, ntot = H.evidence_table_df(N)
+print(et.to_markdown(index=False))
+```
+
+: The strongest-contributing records (up to 15 of `{python} f"{ntot}"`). The complete set is in `dex_by_rq.xlsx`, sheet **RQ12**.
+
+## Representative evidence
+
+The extracts below, each with its verbatim source, give concrete examples of the reviewed step structures and escalation rules; they are machine-extracted and illustrative, and they show both the two-to-four-step shape and the reliance on response-based and safety-based step-up.
+
+```{python}
+#| label: quotes
+#| output: asis
+#| echo: false
+print(H.evidence_quotes_md(N, 6))
+```
+
+::: {.callout-important appearance="simple"}
+## RQ12 answer
+
+The reviewed stepped-care models share the architecture the ULCM envisages: a small number of steps, a brief low-intensity first step deliverable by non-specialists, escalation driven by non-response and by safety signals, and a specialist tier retained in reserve. That convergence is useful design guidance. What the evidence does not establish is that a stepped model outperforms a simpler one in the model's own setting: the direction favours stepped care overall but weakens markedly in LMIC and sub-Saharan records, on a small and lower-quality base. GRADE-lite confidence is **`{python} gl`** and provisional. For the ULCM this supports adopting a stepped design with a lay-delivered low-intensity first step, explicit step-up rules for non-response and risk, and a specialist backstop — while treating the *value added* by stepping, versus a single low-intensity offer, as an open question for Phase 5, and building in the safety-based escalation the models consistently include.
+:::

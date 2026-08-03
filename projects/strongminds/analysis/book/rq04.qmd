@@ -1,0 +1,100 @@
+```{python}
+#| label: setup
+#| echo: false
+import chapter_helpers as H
+import figures as F
+N = 4
+rs = H.rqstats.iloc[N - 1]
+cons, fav, tot = H.eff_consistency(N)
+gl = H.grade_lite(N)
+```
+
+# RQ4 · Facilitator training, supervision and background {#sec-rq4}
+
+**Workstream C — Delivery, workforce & engagement** · Stream 1 (Barbui et al. 2020 umbrella, extended with supervision-specific reviews) · Direction of effect: **`{python} cons`** · GRADE-lite confidence (provisional): **`{python} gl`**
+
+> *What facilitator training, supervision and clinical background are associated with effective delivery?*
+
+::: {.callout-note appearance="simple"}
+## Key messages
+
+- **The evidence confirms the workforce model but not its specification.** It establishes that non-specialist facilitators deliver effectively (the RQ13 finding), and the direction here is consistent — `{python} H._pct(fav, tot)` of records favour the intervention.
+- **The specific training and supervision parameters were not captured in a usable form.** The extraction fields for facilitator type, training hours, supervision arrangement and clinical background are largely unpopulated, so the review cannot state how much training or what supervision structure is optimal.
+- **This is a genuine gap, not a null finding.** The absence reflects what the source reviews report and what the extraction recorded, not evidence that training does not matter — supervision recurs qualitatively as important without being quantified.
+- **The design parameter is therefore under-specified** and is one of the clearest candidates for direct Phase 5 measurement.
+:::
+
+## The evidence base
+
+```{python}
+#| label: fig-rq4-context
+#| fig-cap: "Methodological quality of the contributing reviews (AMSTAR-2) and their geographic focus."
+#| echo: false
+_ = F.quality_geography(N)
+```
+
+The question draws on `{python} f"{int(rs['records']):,}"` records, `{python} int(rs['reviews'])` of them systematic reviews or meta-analyses, `{python} int(rs['ssa'])` focused on sub-Saharan Africa (@fig-rq4-context). It is a Stream 1 question extended with supervision-specific reviews. Its evidence base overlaps the non-specialist-delivery question (RQ13); the distinguishing content it should add (the facilitator's training, supervision and background) is exactly what the corpus turns out to document poorly.
+
+## What the evidence can and cannot say
+
+The core of this chapter is a limitation. The review can say, on the strength of RQ13 and the direction here, that trained non-specialists deliver these interventions effectively, and that a specialist backstop is retained in a substantial share of models. What it cannot say (because the relevant fields are largely unpopulated across the extracted records) is how much training a facilitator needs, what form and frequency of supervision works best, or which clinical background (lay, peer, nurse, counsellor) is preferable. The source reviews tend to report that facilitators were "trained" and "supervised" without consistently quantifying either, and the extraction reflects that. Where facilitator quality is mentioned it appears qualitatively — training quality is one of the engagement drivers in RQ15, and supervision recurs as a condition for fidelity — but none of this is captured at a resolution that would let the review specify a training model. The practical consequence is that the *existence* of a trained, supervised non-specialist workforce is supported, while its *specification* is not.
+
+## Direction and robustness
+
+```{python}
+#| label: fig-rq4-harvest
+#| fig-cap: "Harvest of the reported direction of effect (Ogilvie et al. 2008)."
+#| echo: false
+_ = F.effect_direction(N)
+```
+
+```{python}
+#| label: fig-rq4-robust
+#| fig-cap: "Share of records favouring the intervention across the subsets that test the headline."
+#| echo: false
+_ = F.robustness(N)
+```
+
+The direction of effect is **`{python} cons`** (`{python} f"{fav} of {tot}"` favour the intervention), holding across LMIC and non-specialist subsets but falling in the high-quality and sub-Saharan subsets (@fig-rq4-harvest, @fig-rq4-robust). As with RQ13, this speaks to non-specialist delivery working; it does not, and cannot, isolate the contribution of training or supervision, because those parameters are not resolved in the data.
+
+## Consistency across reviews
+
+```{python}
+#| label: overlap
+#| output: asis
+#| echo: false
+print(H.concordance_md(N))
+```
+
+Consistency of the whole-intervention direction (itself carried by overlapping reviews rather than independent trials) cannot in any case fill the specific gap on training and supervision parameters, which the extraction did not capture.
+
+## Contributing records
+
+The strongest-contributing records are set out in @tbl-rq4. The table is the route to the supervision-focused reviews; the record identifiers lead into the extraction, and inspecting them directly is currently the only way to recover facilitator-training detail, since it was not captured in the structured fields.
+
+```{python}
+#| label: tbl-rq4
+#| output: asis
+#| echo: false
+et, ntot = H.evidence_table_df(N)
+print(et.to_markdown(index=False))
+```
+
+: The strongest-contributing records (up to 15 of `{python} f"{ntot}"`). The complete set is in `dex_by_rq.xlsx`, sheet **RQ04**.
+
+## Representative evidence
+
+The extracts below, each with its verbatim source, illustrate how the reviews discuss facilitators; they are machine-extracted and illustrative, and they tend to affirm training and supervision as important without quantifying either.
+
+```{python}
+#| label: quotes
+#| output: asis
+#| echo: false
+print(H.evidence_quotes_md(N, 5))
+```
+
+::: {.callout-important appearance="simple"}
+## RQ4 answer
+
+The review supports the workforce model but cannot specify its training. Trained non-specialists deliver these interventions effectively (`{python} H._pct(fav, tot)` of records favour the intervention, consistent with RQ13), and a specialist backstop is commonly retained — but the specific parameters the question asks about (training hours, supervision structure, facilitator background) were not captured at a usable resolution, so the optimal training and supervision model is undetermined by this evidence. GRADE-lite confidence is **`{python} gl`** and provisional, and applies to the delivery-effectiveness direction, not to any training specification. For the ULCM this marks facilitator training and supervision as a first-order design parameter that the review leaves open: the model should adopt a trained, supervised non-specialist workforce with a specialist backstop, and treat the *dose* of training and supervision as something to set and measure directly in Phase 5, since the external evidence does not fix it.
+:::

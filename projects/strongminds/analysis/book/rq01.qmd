@@ -1,0 +1,112 @@
+```{python}
+#| label: setup
+#| echo: false
+import chapter_helpers as H
+import figures as F
+N = 1
+rs = H.rqstats.iloc[N - 1]
+gl = H.grade_lite(N)
+```
+
+# RQ1 · Determinants of adult depression {#sec-rq1}
+
+**Workstream A — Context & drivers** · Stream 2 (determinant reviews: De Sousa et al. 2025; Marx et al. 2023; Pedersen et al. 2019; Remes et al. 2021) · Evidence type: determinant / risk-factor mapping · GRADE-lite confidence (provisional): **`{python} gl`**
+
+> *What are the biological, psychosocial, economic and contextual determinants of adult depression in low- and middle-income countries, and which populations are most affected?*
+
+::: {.callout-note appearance="simple"}
+## Key messages
+
+- **The determinant literature is overwhelmingly psychosocial in emphasis.** Social and psychological factors are coded far more often than biological, economic or structural ones — a pattern of *coverage* (what the reviews study), not a measured ranking of causal importance, but one that fits a psychosocial rather than biomedical framing.
+- **A recognisable, mostly modifiable set of drivers recurs:** absence of social support, stigma, discrimination, social isolation, unemployment, poverty, low education and intimate partner violence, alongside fixed demographic markers — female sex and age — and comorbid anxiety.
+- **The evidence is not about a general adult population.** It is heavily weighted toward perinatal women and pandemic-era samples, which inflates female sex as a "determinant" and limits how far the picture generalises to the working-age adults the ULCM will mostly treat.
+- **The design payoff is in the overlap with delivery.** The leading *modifiable* drivers — social support, stigma, economic strain — are the same factors that RQ15 identifies as drivers of engagement, so addressing them serves both to reach the right people and to keep them in treatment.
+:::
+
+## The evidence base
+
+```{python}
+#| label: fig-rq1-context
+#| fig-cap: "Methodological quality of the contributing reviews (AMSTAR-2) and their geographic focus."
+#| echo: false
+_ = F.quality_geography(N)
+```
+
+The question draws on `{python} f"{int(rs['records']):,}"` records, `{python} int(rs['reviews'])` of them systematic reviews or meta-analyses, of which `{python} int(rs['ssa'])` focus on sub-Saharan Africa (@fig-rq1-context). Because determinants lie outside the Barbui umbrella's treatment scope, this is a Stream 2 question built from dedicated determinant reviews. Quality follows the review-wide picture (`{python} int(rs['hq'])` high or moderate), and — unlike the intervention questions — the outcome is an *association*, not an effect, so the harvest, vote-count and robustness tools used elsewhere are deliberately not applied. The chapter maps the landscape of risk rather than adjudicating a direction of benefit, and its confidence is very low.
+
+## The domains of risk
+
+```{python}
+#| label: fig-rq1-domains
+#| fig-cap: "Determinant domains recorded across the contributing reviews (multi-select; a record may span several)."
+#| echo: false
+_ = F.category_bar(N, "driver_domain", label="determinant domains")
+```
+
+At the level of broad domains, social and psychological factors are recorded far more often than biological, economic or structural ones, with environmental factors least common (@fig-rq1-domains). One caution has to be stated plainly, because the figure invites over-reading. These counts record how often each domain is *discussed* across the reviews, not the strength of association or the effect size of any determinant; a domain can be frequently coded because it is well studied or easily measured rather than because it contributes most, and the extraction does not carry comparable effect sizes that would let the domains be ranked by importance. Read as coverage rather than as a causal ranking, the pattern still orients the model: the determinant literature locates adult depression in these settings primarily in social circumstances and psychological state rather than in fixed biological vulnerability, which is consistent with a low-intensity psychosocial response.
+
+## The specific determinants
+
+```{python}
+#| label: fig-rq1-determinants
+#| fig-cap: "The most frequently named individual determinants, case-normalised and lightly merged (gender, social-support and education families). Counts are coverage, not effect sizes."
+#| echo: false
+_ = F.determinants_bar(N)
+```
+
+Beneath the domains, the individual determinants named most often form a coherent and, for the most part, addressable set (@fig-rq1-determinants). They fall into four groups. The largest is **social adversity**: the absence or inadequacy of social support, stigma, discrimination, social isolation, and intimate partner violence — relational and community conditions rather than individual traits. The second is **economic hardship**: unemployment, poverty and low education, the material determinants that sit furthest from a clinical intervention. The third is **demographic and reproductive**: female sex and age, together with unplanned pregnancy and the perinatal period, which recur throughout. The fourth is **clinical**: comorbid anxiety and prior depression. Social support appears on both sides of the ledger — named as protective where present and as a risk where absent — which marks it out as the single most consistently implicated modifiable factor.
+
+## Direction of association
+
+Almost every determinant the reviews record is coded as *increasing* the risk of depression; the small number of protective factors are led by social support, and secondarily by resilience and social cohesion. This near-uniform "raises risk" coding is partly a framing artefact — determinant reviews are written to identify risk factors — but it does carry one useful signal for design: the drivers are predominantly adversities to be buffered rather than strengths to be built on, and the one protective factor that recurs, social support, is precisely the mechanism a group-based intervention supplies by construction.
+
+## Who the evidence is actually about
+
+The determinant evidence is not drawn from a representative adult population, and this materially shapes how it should be read. A large share of the records concern **perinatal women** — pregnant and postpartum samples recur throughout — and a further tranche comes from **pandemic-era** general-population and healthcare-worker studies. This skew has two consequences. First, it inflates *female sex* as a headline determinant: much of that signal reflects a literature built on perinatal cohorts rather than a sex effect in the general adult population. Second, and more broadly, the samples are overwhelmingly **severity-unstratified** — the reviews pool people across the whole range of symptom severity without separating them — so the determinants describe correlates of depression in mixed, often reproductive-health or crisis-period populations, not calibrated risk factors for the working-age adults the ULCM will mostly recruit. The determinant map is useful for orienting who to look for; it is weaker as a basis for a general-population risk model.
+
+## Mechanism, where the reviews reach for it
+
+A minority of records go beyond association to test *how* a determinant operates: formal mediation analyses are reported in a modest number of records, and the mediators they name are themselves psychosocial — resilience and rumination, food insecurity, physical activity, perceived stress and social cohesion. The picture is too sparse to build a mechanistic model on, but its direction is consistent with the rest of the chapter: where the literature does look for mechanism, it finds psychological and social processes rather than biological ones, reinforcing the case for a psychosocial intervention while leaving the specific causal pathways unresolved.
+
+## Modifiable versus fixed — the design cut
+
+For the ULCM the useful division is not by domain but by whether a determinant can be acted on. Two of the leading drivers are **fixed**: female sex and age cannot be changed, though they can be used to target recruitment (for instance, the recurrent perinatal risk argues for a clear antenatal/postnatal entry point). The remainder are, to varying degrees, **modifiable or bufferable**: social support and isolation are directly addressed by a group format; stigma and discrimination can be worked on through framing, setting and peer delivery; intimate partner violence and economic strain sit largely outside a clinical intervention but define who is at risk and what a safety pathway (RQ17) must anticipate. The strategically important point is the overlap with engagement: the modifiable drivers here — social support, stigma, economic accessibility — are the same factors RQ15 finds to raise completion, so a single set of design choices addresses both the drivers of the condition and the drivers of staying in treatment.
+
+## Sub-Saharan relevance
+
+A distinct value of this question is its setting signal: a meaningful minority of the recorded determinants are flagged as relevant to sub-Saharan Africa, more than most questions in this review offer, reflecting the protocol's decision to prioritise sub-Saharan evidence for the context-sensitive questions. The flagged determinants echo the general picture — social adversity, economic hardship, stigma, intimate partner violence — without a distinctively different profile, so the main import is confirmatory: the drivers the model would design around appear to travel to the target setting, even though, as everywhere here, the underlying reviews are mostly low quality.
+
+## Consistency and certainty
+
+The determinant landscape is consistent in its broad shape — social and psychological adversity to the fore, almost all of it raising risk — across the contributing reviews (which, as elsewhere, overlap in the primary evidence they cite). But "consistency" here is of a qualitative mapping and of a literature written to find risk factors, not of an effect direction, and the effect-magnitude and vote-count tools used elsewhere are deliberately not applied. GRADE-lite confidence is **`{python} gl`**, reflecting the low quality of the determinant reviews, the population skew, and the descriptive, coverage-based nature of the evidence.
+
+## Contributing records
+
+The strongest-contributing records are set out in @tbl-rq1. The table is the route into the determinant reviews; the record identifiers lead into the extraction where each review's named determinants, their coded domain and their direction of association can be inspected — the level at which a specific risk factor can be traced to its source and its population checked.
+
+```{python}
+#| label: tbl-rq1
+#| output: asis
+#| echo: false
+et, ntot = H.evidence_table_df(N)
+print(et.to_markdown(index=False))
+```
+
+: The strongest-contributing records (up to 15 of `{python} f"{ntot}"`). The complete set is in `dex_by_rq.xlsx`, sheet **RQ01**.
+
+## Representative evidence
+
+The extracts below, each with its verbatim source, illustrate the kinds of determinant the reviews identify and how often they are framed around perinatal or crisis-period populations; they are machine-extracted and illustrative, and they recur on social adversity, stigma and economic hardship as the dominant drivers.
+
+```{python}
+#| label: quotes
+#| output: asis
+#| echo: false
+print(H.evidence_quotes_md(N, 6))
+```
+
+::: {.callout-important appearance="simple"}
+## RQ1 answer
+
+The determinant reviews frame adult depression in low- and middle-income settings as predominantly psychosocial: the drivers named most often are social adversity (absent social support, stigma, discrimination, isolation, intimate partner violence), economic hardship (unemployment, poverty, low education) and demographic-reproductive markers (female sex, age, the perinatal period), with almost all coded as raising risk and social support the pivotal protective factor. This is a mapping of what the literature studies, not a measured ranking of causal importance, and it comes from a base skewed toward perinatal and pandemic-era, severity-unstratified populations, so it generalises only cautiously to the working-age adults the model will mostly treat. GRADE-lite confidence is **`{python} gl`** and provisional. For the ULCM the payoff is twofold: the condition is psychosocial in origin, which supports the intervention class; and the leading *modifiable* drivers — social support, stigma, economic accessibility — coincide with the factors that drive engagement (RQ15), so designing to address them serves both to reach the right people and to keep them in care. The perinatal prominence, finally, argues for an explicit antenatal/postnatal entry point into the model.
+:::

@@ -1,0 +1,153 @@
+```{python}
+#| label: setup
+#| echo: false
+import chapter_helpers as H
+import figures as F
+N = 7
+rs = H.rqstats.iloc[N - 1]
+cons, fav, tot = H.eff_consistency(N)
+sm = H.smd_magnitude(N)          # (n, median|SMD|, q1, q3, share>=0.2)
+gl = H.grade_lite(N)
+```
+
+# RQ7 · Minimum viable dose {#sec-rq7}
+
+**Workstream B — Active ingredients & dose** · Stream 2 (dose-response evidence, anchored on Robinson et al. 2020 with the Barbui et al. 2020 umbrella as context) · Direction of effect: **`{python} cons`** · GRADE-lite confidence (provisional): **`{python} gl`**
+
+> *What is the minimum viable dose (session length multiplied by the number of sessions) for a low-intensity group intervention to reduce depressive symptoms, and how does it vary by baseline severity?*
+
+::: {.callout-note appearance="simple"}
+## Key messages
+
+- **A short group course is consistently associated with symptom reduction.** Of the records reporting a direction of effect, `{python} f"{fav} of {tot}"` (`{python} H._pct(fav, tot)`) favour the intervention (*consistent* on the review's pre-specified vote-count rule) though the magnitude of that benefit cannot be reliably quantified from these mixed, unverified records.
+- **The modal course is brief and weekly:** a median of eight sessions of about an hour, over roughly eight weeks (about six to seven hours of contact in total). "Brief" is the most common dose band.
+- **The evidence sits close in structure to the ULCM even where it is geographically distant.** Delivery is overwhelmingly group and face-to-face and, in three-quarters of records, by non-specialists; the interventions are built on behavioural activation, cognitive restructuring, problem-solving and psychoeducation.
+- **How far the dose can be cut is unresolved, and severity is rarely stratified.** Most records describing a dose–response report that more sessions help, a minority a threshold at six to eight sessions, and almost none compare a single session with a course head-to-head. Where severity is examined, more severe patients show larger effects and may need more, not fewer, sessions.
+:::
+
+## The evidence base
+
+```{python}
+#| label: fig-rq7-context
+#| fig-cap: "Methodological quality of the contributing reviews (AMSTAR-2) and geographic focus of the records addressing the dose question."
+#| echo: false
+_ = F.quality_geography(N)
+```
+
+The dose question is addressed by `{python} f"{int(rs['records']):,}"` records, `{python} int(rs['reviews'])` of them systematic reviews or meta-analyses, the remainder primary studies; meta-analyses and systematic reviews dominate the designs. Two features set the terms for everything that follows (@fig-rq7-context). Methodological quality is low — only `{python} int(rs['hq'])` of the rated reviews reach high or moderate quality on AMSTAR-2 against `{python} int(rs['lowq'])` rated low or critically low — and the evidence is concentrated in high- and upper-middle-income or mixed settings, with only `{python} int(rs['ssa'])` records (`{python} H._pct(int(rs['ssa']), int(rs['records']))`) focused on sub-Saharan Africa. This geographic concentration is a deliberate feature of the protocol rather than a gap: dose-response evidence lives overwhelmingly in high-income trials, and the review admits it for exactly that reason. The transfer of these dose figures to low-income African settings is therefore an assumption the evidence base cannot itself test.
+
+## The interventions behind the dose evidence
+
+```{python}
+#| label: fig-rq7-techniques
+#| fig-cap: "Therapeutic techniques used by the interventions in the dose evidence (multi-select; a record may report several)."
+#| echo: false
+_ = F.category_bar(N, "int_techniques", label="intervention techniques")
+```
+
+Before reading the dose figures it helps to know what interventions produced them, because a dose is only interpretable against the content it delivers (@fig-rq7-techniques). The evidence base is built on the brief, structured techniques the ULCM is itself considering: behavioural activation and cognitive restructuring appear most often, followed by problem-solving and psychoeducation, with supportive counselling and mindfulness-based approaches behind them. At the programme level the records are a mix, but the named families include problem-solving-based programmes, group interpersonal therapy, brief CBT and Problem Management Plus. Two delivery features matter for the ULCM. First, delivery is overwhelmingly group and face-to-face — around four in five records report a group face-to-face format. Second, and correcting a natural reading of the protocol's decision to admit specialist dose evidence, the interventions are predominantly delivered by non-specialists: roughly three-quarters of records are coded as not specialist-delivered. The dose evidence is thus close in structure to the ULCM (brief, group, non-specialist) even though it is geographically distant from it.
+
+## Direction and magnitude of effect
+
+```{python}
+#| label: fig-rq7-harvest
+#| fig-cap: "Harvest of the reported direction of effect (Ogilvie et al. 2008). Records are counted by direction, not pooled."
+#| echo: false
+_ = F.effect_direction(N)
+```
+
+Applying the review's pre-specified vote-count rule, the direction of effect is **`{python} cons`**: `{python} f"{fav} of {tot}"` records with a codable direction favour the intervention, with only a small remainder null or unfavourable (@fig-rq7-harvest). Magnitude cannot be pinned down. Among the records reporting a standardized mean difference the instruments and sign conventions are inconsistent, and the values unverified, so no dependable average effect size can be recovered from them; this is why direction is taken from the harvest above rather than from the sign or size of these records, and why (following the protocol) no effects are pooled. The defensible reading is that a short group course reliably points towards benefit, on low-certainty evidence, at a magnitude the evidence cannot quantify.
+
+## How robust is the signal?
+
+```{python}
+#| label: fig-rq7-robust
+#| fig-cap: "Share of records favouring the intervention, overall and in the subsets that test the headline. The dashed line is the review's 75% consistency threshold."
+#| echo: false
+_ = F.robustness(N)
+```
+
+A one-sided count only carries weight if it survives the caveats, so it is worth checking where the direction holds and where it thins (@fig-rq7-robust). It holds where it is tested hardest: restricting to the high- and moderate-quality reviews the share favouring the intervention is essentially unchanged (25 of 28, 89%), it remains high in LMIC-focused records (31 of 36, 86%), and (importantly for the ULCM) it is undiminished among non-specialist-delivered interventions (154 of 168, 92%). The signal is therefore not an artefact of weak reviews, and it carries into the delivery mode the model will use. The exception is the target setting itself: in records focused on sub-Saharan Africa the share favouring the intervention falls to 73% (8 of 11), just below the consistency threshold — though eleven records are too few to conclude anything beyond "not yet demonstrated here". Two further qualifications shape how the effect should be read. The comparators are almost entirely usual care, no-treatment or mixed controls, with only three records using an active psychological comparator, so the evidence speaks to benefit over little or nothing rather than superiority over an alternative therapy. And the question's highest-quality anchors are brief-intervention and moderator meta-analyses drawn largely from high-income settings, not African group-delivery trials. The headline stands, with the sub-Saharan and active-comparator evidence as its main soft spots.
+
+## The dose profile
+
+```{python}
+#| label: fig-rq7-sessions
+#| fig-cap: "Number of sessions across the records that report it, with the median marked."
+#| echo: false
+_ = F.numeric_hist(N, "dose_n_sessions", unit=" sessions")
+```
+
+```{python}
+#| label: tbl-rq7-dose
+#| output: asis
+#| echo: false
+specs = [("dose_n_sessions", "Number of sessions", "sessions"),
+         ("dose_duration_wk", "Course length", "weeks"),
+         ("dose_session_min", "Session length", "minutes"),
+         ("dose_total_contact_min", "Total contact time", "minutes")]
+print(H.numeric_profile(N, specs).to_markdown(index=False))
+```
+
+: Central tendency of the dose dimensions among the records reporting each (median [interquartile range]).
+
+Where the dose is quantified, the records converge on a short, weekly course (@fig-rq7-sessions, @tbl-rq7-dose). The number of sessions centres on a median of eight, with the middle half of records between six and ten; course length centres on about eight weeks; session length on about an hour; and total contact time on roughly six to seven hours. Where frequency is reported it is almost always weekly. Together these describe a canonical format of about eight weekly hour-long sessions, and the most common dose band reported is "brief" — consistent with a field testing progressively shorter formats rather than lengthening them.
+
+## Dose–response and baseline severity
+
+```{python}
+#| label: fig-rq7-curve
+#| fig-cap: "Shape of the dose–response relationship among the records that characterise it."
+#| echo: false
+_ = F.category_bar(N, "dose_response_curve", label="reported dose–response shape")
+```
+
+Whether fewer sessions would still work is the decision-critical question, and it is not resolved (@fig-rq7-curve). Most records that characterise the dose–response relationship describe it as linear (more sessions, larger effects) but a substantial minority report a threshold or a plateau, in which benefit accrues up to a point and then flattens. Where an inflection is named it clusters at five to eight sessions or about eight weeks; one meta-regression reported that raising frequency from one to two sessions a week increased the effect (g = 0.45). These readings have opposite design implications: a linear relationship argues against cutting sessions, whereas a threshold would license a shorter course once the threshold is met.
+
+The question also asks how the dose varies by baseline severity, and here the evidence is thin: the large majority of records draw on mixed, unstratified populations, so severity-specific dose recommendations cannot be read off this base. Where severity is examined, the direction is consistent and important for design — more severely depressed patients tend to show larger treatment effects, and several records suggest they may require *more* sessions, with brief formats better suited to milder presentations. This points towards severity-based routing rather than a single universal dose.
+
+## Single versus multi-session
+
+A "minimum viable dose" implies a comparison against something shorter, yet almost none of the records addressing this question compare a single session with a multi-session course head-to-head — the overwhelming majority are not designed as dose comparisons at all. The minimum-dose signal here is therefore inferred from the distribution of doses that were effective, not from direct single-versus-multi contrasts. The head-to-head evidence on single-session formats is taken up under RQ9, and the durability of short courses under RQ8; read together with this chapter they bear directly on how far the ULCM can compress its dose.
+
+## Consistency across reviews
+
+```{python}
+#| label: overlap
+#| output: asis
+#| echo: false
+print(H.concordance_md(N))
+```
+
+Because so many reviews address this question, their independence is the pressing issue — and they are not independent: the direction count is review-dominated, and those reviews re-analyse overlapping sets of the same dose-response trials, so the consistency is of a re-counted literature rather than of many separate studies.
+
+## Contributing records
+
+The strongest-contributing records are set out in @tbl-rq7. The table is a route into the underlying evidence rather than a results summary: it is dominated by recent meta-analyses and individual-participant-data analyses, spans high-income and mixed settings, and (consistent with the picture above) its highest-strength entries are reviews rather than single trials. Readers who want to trace a specific figure back to its source should start here and follow the record identifier into the full extraction.
+
+```{python}
+#| label: tbl-rq7
+#| output: asis
+#| echo: false
+et, ntot = H.evidence_table_df(N)
+print(et.to_markdown(index=False))
+```
+
+: The strongest-contributing records (up to 15 of `{python} f"{ntot}"`, ordered by contribution strength then recency). The complete, fully-columned set is in `dex_by_rq.xlsx`, sheet **RQ07**.
+
+## Representative evidence
+
+The extracts below illustrate the qualitative signal behind the counts, each paired with the verbatim sentence from the source that grounds the extracted finding. They are illustrative rather than exhaustive, and (like all values in this report) are machine-extracted and not yet human-verified; they are shown to convey the texture of the evidence, not as adjudicated results.
+
+```{python}
+#| label: quotes
+#| output: asis
+#| echo: false
+print(H.evidence_quotes_md(N, 6))
+```
+
+::: {.callout-important appearance="simple"}
+## RQ7 answer
+
+A short, weekly group course is consistently associated with reduced depressive symptoms — `{python} H._pct(fav, tot)` of records with a codable direction favour the intervention (*`{python} cons`*), at a magnitude the evidence cannot reliably quantify — and the modal format is about eight weekly hour-long sessions over eight weeks, delivered in a group by non-specialists. That delivery profile matches the ULCM's intended form. What the evidence does **not** establish is a minimum floor: the dose–response literature is split between "more is better" and a threshold at six to eight sessions, severity is rarely stratified (with more severe patients tending to need more, not fewer, sessions), and single-versus-multi-session comparisons are essentially absent. It matters because the Phase 3 pilot pointed to a floor of about two sessions; the external evidence does not corroborate cutting that far and sits closer to six to eight. GRADE-lite confidence is **`{python} gl`** and provisional — values are machine-extracted and not yet human-verified. The pragmatic reading is to adopt a short weekly group course with some confidence, route more severe presentations to more sessions, and treat any compression below roughly six sessions as a Phase 5 hypothesis, not a settled parameter.
+:::

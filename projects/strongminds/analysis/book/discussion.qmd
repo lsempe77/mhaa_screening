@@ -1,0 +1,41 @@
+# Cross-cutting discussion {.unnumbered}
+
+```{python}
+#| label: setup
+#| echo: false
+import chapter_helpers as H
+import figures as F
+```
+
+Read across the eighteen questions, the evidence tells a coherent story with a small number of cross-cutting themes that matter more for the design decision than any single question's answer.
+
+## The intervention class is consistently supported; the details are not
+
+The strongest and most repeated finding is at the level of the intervention *class*. Low-intensity, group-based, cognitive-behavioural interventions reduce depressive symptoms consistently — favoured in the high-80s to mid-90s per cent of records on the effectiveness questions (RQ2, RQ5, RQ14) — and this holds when the evidence is restricted to higher-quality reviews. What the evidence cannot do is resolve the design details *within* that class. Which component drives the effect (RQ5), which could be dropped (RQ6), the mechanism of action (RQ14), the minimum dose (RQ7), the optimal group size (RQ10) and the training a facilitator needs (RQ4) are all underdetermined, because the corpus evaluates whole packages against controls rather than isolating parameters. The practical consequence is a clear division of labour: the review can specify the *package* with reasonable confidence and hand the *tuning* of it to Phase 5.
+
+## Task-shifting is the key enabler
+
+For a USD-1 model the single most important finding is that the effect does not depend on specialist involvement. Non-specialist, lay and peer delivery is effective (RQ13, 91% favouring), the dose evidence is itself predominantly non-specialist and group-delivered (RQ7), and the favourable direction on nearly every effectiveness question is undiminished (sometimes strengthened) in the non-specialist subset. Task-shifting is the mechanism by which the model reaches its price point, and it is among the best-supported propositions in the review — with the standing caveat, below, that "best-supported" here still means low-certainty.
+
+## Why is almost everything positive?
+
+The most striking feature of the results is also the most cautionary: on every effectiveness question the intervention is favoured in the high-80s to mid-90s per cent of records. A near-uniform positive result across eighteen heterogeneous questions is not, in itself, reassuring — it is a pattern that demands an explanation, and three of the available explanations have nothing to do with the interventions working. First, the counts are of systematic reviews, not independent studies, and reviews of this literature re-analyse overlapping sets of the same trials; a positive trial is therefore counted once in each review that includes it, so a modest body of positive primary evidence can generate an overwhelming-looking review-level majority. Second, the depression-intervention literature is known to be affected by publication and reporting bias, and a vote-count is maximally sensitive to it: if null and negative trials are less likely to be published, and reviews inherit that skew, the harvest will lean positive regardless of the true distribution of effects. Third, most comparators are waitlist, usual care or no treatment, against which almost any structured attention tends to look beneficial. None of this shows the interventions do not work (the consistency is equally compatible with a genuine, if modest, effect) but it means the uniform positivity cannot be taken at face value, and it is the reason this report caps its confidence at "Low" and treats the percentages as a direction of lean rather than a strength of evidence. The position is that the direction is probably right and the magnitude and reliability are unknown.
+
+## Quality is the ceiling, and sub-Saharan Africa is the soft spot
+
+```{python}
+#| label: fig-geo
+#| fig-cap: "Geographic focus of the evidence by question. Sub-Saharan African and other-LMIC records are a minority for most questions."
+#| echo: false
+_ = F.geography_by_rq()
+```
+
+Two limitations recur in every chapter. Methodological quality is low almost everywhere: even the best-evidenced questions rest largely on reviews rated low or critically low on AMSTAR-2, which is why the review's confidence is capped at "Low" for every question. And the evidence is geographically displaced from the model's setting (@fig-geo). The robustness analyses make the pattern precise: the favourable signals generally survive restriction to LMIC records but *thin in the sub-Saharan subset specifically* — to 74% on the foundational effectiveness question (RQ2), 73% on dose (RQ7), 72% on non-specialist delivery (RQ13), and below the consistency threshold on stepped care and cost. The gap is one of volume, not of contradicting evidence: there are too few sub-Saharan records to confirm the general findings in the exact setting the model will operate. This is the review's central caution (the general case is strong, the setting-specific case is thin) and it points directly at where Phase 5 evidence is most valuable.
+
+## Where the external evidence and the internal signals meet
+
+The review was commissioned to triangulate the Phase 3 pilot, and two contact points stand out. On dose, the pilot's signal of a two-session floor is *not* corroborated: the external evidence clusters effective courses at six to eight sessions with a dose-response that is often increasing, so cutting to two sessions would move ahead of the evidence (RQ7, RQ9). On active ingredients, the pilot's emphasis on psychoeducation and problem-solving *is* consistent with the external picture, in which those techniques recur among the effective components — though the external evidence, like the pilot, cannot prove they are the operative ones (RQ5). The one place the external evidence offers no help is cost: nothing in the literature approaches a dollar per client (RQ16), so the USD-1 target is unprecedented and can only be evidenced by the model's own data.
+
+## What the review supports, and what it leaves open
+
+The review supports, with provisional but cross-cutting confidence: a brief cognitive-behavioural group intervention; delivered weekly over roughly eight sessions; by trained non-specialists; within a stepped-care design with a specialist backstop and safety monitoring; measured with the PHQ-9; and made engaging through cultural adaptation, peer support and stigma-sensitive delivery. It leaves open, for Phase 5 to resolve: the minimum dose below six sessions; the group-size ceiling a USD-1 model needs; which components can be dropped; the facilitator training and supervision dose; long-term durability and the role of boosters; sub-Saharan-specific effectiveness; and the USD-1 cost itself. These open questions are not marginal (several are first-order design parameters) which is why the review's role is to define a defensible starting design and a focused testing agenda, not to finalise the specification.

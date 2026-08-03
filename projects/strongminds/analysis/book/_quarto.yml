@@ -1,0 +1,71 @@
+project:
+  type: book
+  execute-dir: project
+  output-dir: _book
+
+book:
+  title: "StrongMinds ULCM rapid evidence review"
+  subtitle: "Findings by research question, for the design of the Ultra-Low-Cost Model"
+  author: "3ie — ULCM review team"
+  date: today
+  chapters:
+    - index.qmd
+    - background.qmd
+    - methods.qmd
+    - part: "A · Context & drivers"
+      chapters:
+        - rq01.qmd
+    - part: "B · Active ingredients & dose"
+      chapters:
+        - rq02.qmd
+        - rq05.qmd
+        - rq06.qmd
+        - rq07.qmd
+        - rq08.qmd
+        - rq09.qmd
+        - rq14.qmd
+    - part: "C · Delivery, workforce & engagement"
+      chapters:
+        - rq03.qmd
+        - rq04.qmd
+        - rq10.qmd
+        - rq12.qmd
+        - rq13.qmd
+        - rq15.qmd
+    - part: "D · Cost & spillovers"
+      chapters:
+        - rq11.qmd
+        - rq16.qmd
+    - part: "Added dimensions"
+      chapters:
+        - rq17.qmd
+        - rq18.qmd
+    - discussion.qmd
+    - limitations.qmd
+
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 2
+    number-sections: false
+    fig-width: 8
+    fig-height: 5
+    fig-dpi: 140
+    code-fold: true
+    df-print: paged
+  pdf:
+    documentclass: scrreprt
+    geometry: margin=2.3cm
+    number-sections: false
+    fig-width: 7
+    fig-height: 4.5
+    fig-dpi: 200
+    colorlinks: true
+    pdf-engine: xelatex
+
+execute:
+  echo: false
+  warning: false
+  message: false
+  cache: false
