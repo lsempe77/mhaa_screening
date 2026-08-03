@@ -63,6 +63,11 @@ format:
     fig-dpi: 200
     colorlinks: true
     pdf-engine: xelatex
+  docx:
+    toc: true
+    number-sections: false
+    fig-width: 6.5
+    fig-height: 4
 
 execute:
   echo: false
