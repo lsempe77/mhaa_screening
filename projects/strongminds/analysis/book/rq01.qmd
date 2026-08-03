@@ -23,6 +23,8 @@ gl = H.grade_lite(N)
 - **The design payoff is in the overlap with delivery.** The leading *modifiable* drivers — social support, stigma, economic strain — are the same factors that RQ15 identifies as drivers of engagement, so addressing them serves both to reach the right people and to keep them in treatment.
 :::
 
+
+
 ## The evidence base
 
 ```{python}
@@ -31,6 +33,7 @@ gl = H.grade_lite(N)
 #| echo: false
 _ = F.quality_geography(N)
 ```
+
 
 The question draws on `{python} f"{int(rs['records']):,}"` records, `{python} int(rs['reviews'])` of them systematic reviews or meta-analyses, of which `{python} int(rs['ssa'])` focus on sub-Saharan Africa (@fig-rq1-context). Because determinants lie outside the Barbui umbrella's treatment scope, this is a Stream 2 question built from dedicated determinant reviews. Quality follows the review-wide picture (`{python} int(rs['hq'])` high or moderate), and — unlike the intervention questions — the outcome is an *association*, not an effect, so the harvest, vote-count and robustness tools used elsewhere are deliberately not applied. The chapter maps the landscape of risk rather than adjudicating a direction of benefit, and its confidence is very low.
 

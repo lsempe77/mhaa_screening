@@ -6,7 +6,6 @@ import figures as F
 N = 7
 rs = H.rqstats.iloc[N - 1]
 cons, fav, tot = H.eff_consistency(N)
-sm = H.smd_magnitude(N)          # (n, median|SMD|, q1, q3, share>=0.2)
 gl = H.grade_lite(N)
 ```
 

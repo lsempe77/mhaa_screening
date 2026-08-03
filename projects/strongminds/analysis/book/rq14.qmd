@@ -6,7 +6,6 @@ import figures as F
 N = 14
 rs = H.rqstats.iloc[N - 1]
 cons, fav, tot = H.eff_consistency(N)
-sm = H.smd_magnitude(N)
 gl = H.grade_lite(N)
 ```
 
