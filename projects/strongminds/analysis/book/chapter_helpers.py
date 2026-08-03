@@ -269,6 +269,58 @@ def direction_subsets(n):
     return out
 
 
+_STD_METRICS = {"SMD", "Hedges g", "Cohen d"}
+_DIR_SIGN = {"Favours-intervention": 1, "Favours-control": -1, "Null": 0}
+
+
+def oriented_effects(n, clip=3.0):
+    """Direction-oriented standardized effect sizes for the forest-without-pooling
+    (protocol section 4.5.2). Magnitude is |eff_value| for the standardized metrics
+    only (SMD, Hedges g, Cohen d); implausible values (|v| > clip, mostly extraction
+    errors) are dropped; and the SIGN is set from the clean eff_direction field, not
+    from the value's own inconsistent sign (Favours-intervention = +, Favours-control
+    = -, Null = 0). These are mostly review-level pooled effects, not per-primary-study,
+    and are unverified: a distribution to read, not a meta-analysis. Returns (df, summary)
+    with df sorted by the oriented effect."""
+    ids = set(_sub(n)["record_id"])
+    w = wide[wide["record_id"].isin(ids)].copy()
+    w["_v"] = pd.to_numeric(w["eff_value"], errors="coerce")
+    keep = (w["eff_metric"].isin(_STD_METRICS) & w["_v"].notna()
+            & (w["_v"].abs() <= clip) & w["eff_direction"].isin(_DIR_SIGN))
+    d = w[keep].copy()
+    if not len(d):
+        return d, {"n": 0}
+    d["oriented"] = d["_v"].abs() * d["eff_direction"].map(_DIR_SIGN)
+    d = d.sort_values("oriented").reset_index(drop=True)
+    ov = d["oriented"]
+    summary = {"n": int(len(d)), "median": float(ov.median()),
+               "q1": float(ov.quantile(.25)), "q3": float(ov.quantile(.75)),
+               "lo": float(ov.min()), "hi": float(ov.max()),
+               "n_fav": int((d["eff_direction"] == "Favours-intervention").sum()),
+               "n_null": int((d["eff_direction"] == "Null").sum()),
+               "n_ctrl": int((d["eff_direction"] == "Favours-control").sum())}
+    return d, summary
+
+
+def harvest_geo_counts(n):
+    """Direction-of-effect counts stratified by geographic focus (protocol section
+    4.5.1). Returns [(band, [n_fav, n_null, n_ctrl, n_unclear]), ...] over the geography
+    bands present, in GEO order, keeping only bands with at least one codable direction.
+    Stream stratification is deliberately omitted: the stream field is degenerate."""
+    ids = set(_sub(n)["record_id"])
+    w = wide[wide["record_id"].isin(ids)]
+    dirs = ["Favours-intervention", "Null", "Favours-control", "Unclear"]
+    order = ["SSA", "other-LMIC", "HIC-UMIC", "mixed"]
+    rows = []
+    for g in order:
+        sub = w[w["geo_focus"] == g]
+        c = Counter(sub["eff_direction"])
+        counts = [c.get(dd, 0) for dd in dirs]
+        if sum(counts) > 0:
+            rows.append((g, counts))
+    return rows
+
+
 def comparator_summary(n):
     """(Counter of comparators, n_active_psychological, n_reporting) for an RQ."""
     ids = set(_sub(n)["record_id"])

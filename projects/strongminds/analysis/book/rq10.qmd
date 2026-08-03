@@ -7,6 +7,7 @@ N = 10
 rs = H.rqstats.iloc[N - 1]
 cons, fav, tot = H.eff_consistency(N)
 gl = H.grade_lite(N)
+oe_df, oe = H.oriented_effects(N)
 ```
 
 # RQ10 · Group-size ranges {#sec-rq10}
@@ -56,13 +57,27 @@ _ = F.effect_direction(N)
 ```
 
 ```{python}
+#| label: fig-rq10-harvest-geo
+#| fig-cap: "The same harvest stratified by geographic focus (protocol §4.5.1). Counts by direction within each setting band."
+#| echo: false
+_ = F.harvest_geo(N)
+```
+
+```{python}
 #| label: fig-rq10-robust
 #| fig-cap: "Share of records favouring the intervention across the subsets available for this small base."
 #| echo: false
 _ = F.robustness(N)
 ```
 
-The direction of effect is **`{python} cons`** (`{python} f"{fav} of {tot}"` favour the intervention) and holds under non-specialist delivery, though the LMIC subset is small and softens (@fig-rq10-harvest, @fig-rq10-robust). But the direction is about group interventions working at the sizes tested; it carries no information about the size question itself, which the sparse size data leave open.
+The direction of effect is **`{python} cons`** (`{python} f"{fav} of {tot}"` favour the intervention) and holds under non-specialist delivery, though the LMIC subset is small and softens (@fig-rq10-harvest, @fig-rq10-robust); stratified by setting the favourable direction is present in every band, but the sub-Saharan and other-LMIC counts are small (@fig-rq10-harvest-geo). Across the group-delivery evidence the oriented standardized effects centre on a small-to-moderate benefit (median about `{python} f"{oe['median']:.2f}"`, interquartile range `{python} f"{oe['q1']:.2f}"`–`{python} f"{oe['q3']:.2f}"` over `{python} oe['n']` records; @fig-rq10-forest), shown as a distribution rather than a pooled estimate. All of this speaks to group interventions *working* at the sizes tested; it carries no information about the size question itself, which the sparse size data leave open.
+
+```{python}
+#| label: fig-rq10-forest
+#| fig-cap: "Distribution of the reported standardized effect sizes across the group-delivery evidence, oriented to favour the intervention and shown without pooling (protocol §4.5.2). This describes the magnitude of the group-delivery effect, not the effect of group size, which the evidence does not resolve."
+#| echo: false
+_ = F.effect_forest(N)
+```
 
 ## Consistency across reviews
 

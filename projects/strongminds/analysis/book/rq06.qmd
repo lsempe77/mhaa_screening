@@ -55,7 +55,14 @@ The components under consideration are the same brief cognitive-behavioural set 
 _ = F.effect_direction(N)
 ```
 
-At the level of whole interventions the direction of effect is **`{python} cons`**: `{python} f"{fav} of {tot}"` records favour the intervention (@fig-rq6-harvest), the reported standardized effects being too heterogeneous in instrument and sign to yield a dependable magnitude. But this is the effect of *packages*, not of components, and it cannot on its own tell us which part is doing the work — the central difficulty of the question.
+At the level of whole interventions the direction of effect is **`{python} cons`**: `{python} f"{fav} of {tot}"` records favour the intervention (@fig-rq6-harvest), the reported standardized effects being too heterogeneous in instrument and sign to yield a dependable magnitude. The direction holds in every geographic stratum (@fig-rq6-harvest-geo), though the sub-Saharan and other-LMIC counts are small. But this is the effect of *packages*, not of components, and it cannot on its own tell us which part is doing the work — the central difficulty of the question.
+
+```{python}
+#| label: fig-rq6-harvest-geo
+#| fig-cap: "The same harvest stratified by geographic focus (protocol §4.5.1). Counts by direction within each setting band."
+#| echo: false
+_ = F.harvest_geo(N)
+```
 
 ## How robust is the signal?
 

@@ -45,7 +45,7 @@ The code hard-codes category strings; these were **audited against the data** an
 | `amstar2_band` | `High`, `Moderate` (= hq) / `Low`, `Critically-low` (= lowq) | `Not-applicable` correctly excluded from "rated reviews" |
 | `eff_direction` | `Favours-intervention`, `Null`, `Favours-control`, `Unclear` | `Not-applicable` / `Not-reported` correctly excluded — the vote-count denominator is "records with a **codable** direction" |
 | `specialist_delivered_flag` | `"False"` = non-specialist, `"True"` = specialist | string values |
-| `eff_metric` | `"SMD"` (only, in the now-unused `smd_magnitude`) | |
+| `eff_value` + `eff_metric` | standardized metrics `SMD`, `Hedges g`, `Cohen d`; absolute value ≤ 3 | the effect-size forest (`oriented_effects`, §4.5.2); sign set from `eff_direction`, not the value |
 | `rq_contribution_direction` | `Confirms`, `Qualifies`, `Neutral`, `Refutes` | `Not-applicable` excluded |
 | `rq_contribution_strength` | `High`…`Critically-low` | |
 | `rq_contribution_data_fields` | stringified list → per-RQ field set (`FIELDSETS`) | drives the parameter tables/prose |
@@ -68,8 +68,14 @@ barrier; PHQ-9 the leading named instrument, cut-off ≈ 10; mixed cost currenci
   stream-stratified harvest (§4.5.1) is **not** reproduced; geography stratification is clean.
 - **RQ18** raw `psychom_instrument` top value is the `Other` catch-all; it is filtered from the
   figure and the prose refers to PHQ-9 as the leading *named* instrument.
-- **`smd_magnitude()` is retained but unused** — the |SMD| median was removed from the prose
-  (it averaged mixed-sign, mixed-instrument values); the function is kept as a utility only.
+- **Effect magnitude is now a distribution, not a discarded number.** The old `|SMD|` median
+  (mixed sign, mixed instrument, outliers) was removed; magnitude is now handled per protocol
+  §4.5.2 by `oriented_effects` / `F.effect_forest` — standardized metrics only, implausible
+  values clipped, sign set from the clean `eff_direction` field, shown as an unpooled
+  distribution for RQ5/7/10. The legacy `smd_magnitude()` remains only as an unused utility.
+- **The harvest is geography-stratified** (`harvest_geo_counts` / `F.harvest_geo`, §4.5.1) in the
+  effectiveness chapters (RQ2, RQ5–RQ8, RQ10, RQ13, RQ14). Stream stratification is omitted (the
+  `stream` field is degenerate), which is stated in Methods.
 
 ## How the report was written
 
@@ -114,8 +120,11 @@ The first draft over-sold weak evidence; the following were corrected so the rep
   review base; now Low throughout (Very low where direction is mixed).
 - **Publication bias.** Added — near-universal positivity is treated as a warning (Methods
   section + a "Why is almost everything positive?" Discussion analysis), not a green light.
-- **Meaningless numbers removed.** The |SMD| median (mixed sign/instrument) and the mixed-currency
-  cost median were dropped; magnitude is described as unrecoverable, cost as a range far above USD 1.
+- **Meaningless numbers removed, then magnitude done properly.** The raw `|SMD|` median (mixed
+  sign/instrument) and the mixed-currency cost median were dropped. Magnitude was later reinstated
+  the protocol's way (§4.5.2): a direction-oriented, unpooled effect-size distribution for the
+  dose, ingredients and group-size questions (RQ7/5/10), read as a spread (~0.5 median SMD), not a
+  pooled estimate. Cost remains a range far above USD 1.
 - **RQ1 rebuilt** as a full determinants chapter (named-determinant figure, four themes, the
   perinatal/pandemic population skew, mechanism, modifiable-vs-fixed cut); **RQ3** given a real
   moderator/effect-modification section; a **population/severity-heterogeneity** caveat added to

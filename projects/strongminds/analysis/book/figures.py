@@ -178,6 +178,79 @@ def robustness(n):
     return fig
 
 
+def effect_forest(n):
+    """Protocol 4.5.2: the distribution of reported standardized effect sizes for a
+    dose / ingredient / group-size question, oriented to favour the intervention and
+    shown WITHOUT pooling. One dot per record (mostly review-level pooled effects),
+    coloured by geographic focus; the black line marks the median and the bar the
+    interquartile range. The sign is reconstructed from the coded direction of effect,
+    so the picture is a distribution to read, not a meta-analytic estimate."""
+    d, s = H.oriented_effects(n)
+    if s["n"] < 5:
+        return _placeholder("Too few standardized effect sizes to plot a distribution")
+    fig, ax = plt.subplots(figsize=(6.8, 3.1))
+    rng = np.random.default_rng(n)          # deterministic jitter, seeded by RQ number
+    yj = rng.uniform(-1, 1, size=len(d))
+    geos = d["geo_focus"].tolist()
+    ax.axvline(0, color=MUTED, lw=1, zorder=1)
+    ax.scatter(d["oriented"], yj, s=20, c=[GEO_COL.get(g, MUTED) for g in geos],
+               alpha=0.55, edgecolor=SURFACE, linewidth=0.4, zorder=3)
+    ax.plot([s["q1"], s["q3"]], [0, 0], color=INK, lw=3, solid_capstyle="round", zorder=4)
+    ax.plot([s["median"], s["median"]], [-1.3, 1.3], color=INK, lw=2, zorder=5)
+    ax.text(s["median"], 1.55,
+            f"median {s['median']:.2f}   (IQR {s['q1']:.2f}–{s['q3']:.2f})",
+            color=INK, fontsize=9, va="bottom", ha="center")
+    ax.set_ylim(-2, 2.5); ax.set_yticks([])
+    ax.set_xlabel("standardized effect, oriented to favour the intervention  →")
+    ax.set_title(f"Distribution of reported effect sizes (n = {s['n']}, not pooled)")
+    ax.grid(axis="y", visible=False)
+    present = [g for g in GEO_ORDER if g in set(geos)]
+    handles = [mpl.lines.Line2D([], [], marker="o", ls="", color=GEO_COL[g],
+               markersize=7, label=g) for g in present]
+    ax.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, -0.22),
+              frameon=False, fontsize=8.5, ncol=len(present))
+    fig.tight_layout()
+    return fig
+
+
+def harvest_geo(n):
+    """Protocol 4.5.1: the harvest of reported direction of effect stratified by
+    geographic focus. Each row is a geography band; the stacked segments are the count
+    of records by direction (favours intervention / null / favours control / unclear).
+    Stream stratification is omitted because the stream field is degenerate."""
+    rows = H.harvest_geo_counts(n)
+    if not rows:
+        return _placeholder("Direction of effect not recorded by geography")
+    dirs = ["Favours-intervention", "Null", "Favours-control", "Unclear"]
+    tot = [sum(r[1]) for r in rows]
+    maxtot = max(tot)
+    fig, ax = plt.subplots(figsize=(6.8, 0.8 + 0.5 * len(rows)))
+    y = np.arange(len(rows))[::-1]
+    left = np.zeros(len(rows))
+    for j, dd in enumerate(dirs):
+        vals = np.array([r[1][j] for r in rows], float)
+        if vals.sum() == 0:
+            continue
+        ax.barh(y, vals, left=left, color=EFFDIR_COL[dd], height=0.6,
+                label=dd.replace("-", " "))
+        for yi, v, l in zip(y, vals, left):
+            if v > 0 and v >= 0.09 * maxtot:
+                ax.text(l + v / 2, yi, f"{int(v)}", va="center", ha="center",
+                        fontsize=8, color=SURFACE, fontweight="bold")
+        left += vals
+    for yi, t in zip(y, tot):
+        ax.text(t + 0.4, yi, f"n={t}", va="center", ha="left", fontsize=8.5, color=INK2)
+    ax.set_yticks(y); ax.set_yticklabels([r[0] for r in rows])
+    ax.set_xlim(0, maxtot * 1.16)
+    ax.set_xlabel("records, by reported direction of effect")
+    ax.set_title("Direction of effect by geographic focus")
+    ax.grid(axis="y", visible=False)
+    ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.30), frameon=False,
+              fontsize=8, ncol=4)
+    fig.tight_layout()
+    return fig
+
+
 _DET_NORM = {
     "poor social support": "lack of social support", "lack of social support": "lack of social support",
     "female gender": "female sex/gender", "female sex": "female sex/gender", "gender": "female sex/gender",

@@ -7,6 +7,7 @@ N = 7
 rs = H.rqstats.iloc[N - 1]
 cons, fav, tot = H.eff_consistency(N)
 gl = H.grade_lite(N)
+oe_df, oe = H.oriented_effects(N)
 ```
 
 # RQ7 · Minimum viable dose {#sec-rq7}
@@ -55,7 +56,23 @@ Before reading the dose figures it helps to know what interventions produced the
 _ = F.effect_direction(N)
 ```
 
-Applying the review's pre-specified vote-count rule, the direction of effect is **`{python} cons`**: `{python} f"{fav} of {tot}"` records with a codable direction favour the intervention, with only a small remainder null or unfavourable (@fig-rq7-harvest). Magnitude cannot be pinned down. Among the records reporting a standardized mean difference the instruments and sign conventions are inconsistent, and the values unverified, so no dependable average effect size can be recovered from them; this is why direction is taken from the harvest above rather than from the sign or size of these records, and why (following the protocol) no effects are pooled. The defensible reading is that a short group course reliably points towards benefit, on low-certainty evidence, at a magnitude the evidence cannot quantify.
+Applying the review's pre-specified vote-count rule, the direction of effect is **`{python} cons`**: `{python} f"{fav} of {tot}"` records with a codable direction favour the intervention, with only a small remainder null or unfavourable (@fig-rq7-harvest). That favourable direction is not confined to the settings that supply most of the evidence: stratified by geography (@fig-rq7-harvest-geo), it is near-universal in the high-income and mixed-setting records that dominate the base and is reproduced, on far fewer records, in the other-LMIC and sub-Saharan strata — so the dose signal at least *points* the same way where the ULCM will operate, even though the African evidence is too thin to stand on its own.
+
+```{python}
+#| label: fig-rq7-harvest-geo
+#| fig-cap: "The same harvest stratified by geographic focus (protocol §4.5.1). Counts by direction within each setting band; stream stratification is omitted because the stream field is degenerate."
+#| echo: false
+_ = F.harvest_geo(N)
+```
+
+Magnitude is harder, but not beyond description. Pooling is ruled out — the raw values use different instruments and inconsistent sign conventions and are unverified — but the standardized effects that *can* be placed on a common scale, oriented so that each favours the intervention, form a coherent distribution (@fig-rq7-forest). Restricted to the standardized metrics and to plausible values, the `{python} oe['n']` oriented effects centre on a median of about `{python} f"{oe['median']:.2f}"` (interquartile range `{python} f"{oe['q1']:.2f}"`–`{python} f"{oe['q3']:.2f}"`) — a small-to-moderate benefit — with a right tail of larger effects. This is shown as a distribution, not a pooled estimate: most of these are review-level pooled effects rather than independent trials, the sign is reconstructed from the coded direction rather than the value, and the values are machine-extracted. Read with those caveats, the defensible statement is not that the magnitude is unrecoverable but that a short group course points to a small-to-moderate benefit on low-certainty evidence, at an effect size the evidence brackets rather than pins down.
+
+```{python}
+#| label: fig-rq7-forest
+#| fig-cap: "Distribution of the reported standardized effect sizes, oriented to favour the intervention and shown without pooling (protocol §4.5.2). Each point is one record, coloured by geographic focus; the black bar is the interquartile range and the line the median."
+#| echo: false
+_ = F.effect_forest(N)
+```
 
 ## How robust is the signal?
 
@@ -148,5 +165,5 @@ print(H.evidence_quotes_md(N, 6))
 ::: {.callout-important appearance="simple"}
 ## RQ7 answer
 
-A short, weekly group course is consistently associated with reduced depressive symptoms — `{python} H._pct(fav, tot)` of records with a codable direction favour the intervention (*`{python} cons`*), at a magnitude the evidence cannot reliably quantify — and the modal format is about eight weekly hour-long sessions over eight weeks, delivered in a group by non-specialists. That delivery profile matches the ULCM's intended form. What the evidence does **not** establish is a minimum floor: the dose–response literature is split between "more is better" and a threshold at six to eight sessions, severity is rarely stratified (with more severe patients tending to need more, not fewer, sessions), and single-versus-multi-session comparisons are essentially absent. It matters because the Phase 3 pilot pointed to a floor of about two sessions; the external evidence does not corroborate cutting that far and sits closer to six to eight. GRADE-lite confidence is **`{python} gl`** and provisional — values are machine-extracted and not yet human-verified. The pragmatic reading is to adopt a short weekly group course with some confidence, route more severe presentations to more sessions, and treat any compression below roughly six sessions as a Phase 5 hypothesis, not a settled parameter.
+A short, weekly group course is consistently associated with reduced depressive symptoms — `{python} H._pct(fav, tot)` of records with a codable direction favour the intervention (*`{python} cons`*), at a small-to-moderate magnitude (the oriented standardized effects centre on about `{python} f"{oe['median']:.2f}"`) that the evidence brackets rather than pins down — and the modal format is about eight weekly hour-long sessions over eight weeks, delivered in a group by non-specialists. That delivery profile matches the ULCM's intended form. What the evidence does **not** establish is a minimum floor: the dose–response literature is split between "more is better" and a threshold at six to eight sessions, severity is rarely stratified (with more severe patients tending to need more, not fewer, sessions), and single-versus-multi-session comparisons are essentially absent. It matters because the Phase 3 pilot pointed to a floor of about two sessions; the external evidence does not corroborate cutting that far and sits closer to six to eight. GRADE-lite confidence is **`{python} gl`** and provisional — values are machine-extracted and not yet human-verified. The pragmatic reading is to adopt a short weekly group course with some confidence, route more severe presentations to more sessions, and treat any compression below roughly six sessions as a Phase 5 hypothesis, not a settled parameter.
 :::

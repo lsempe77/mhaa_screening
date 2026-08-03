@@ -55,7 +55,14 @@ The interventions carrying the effect are a broad but recognisable family (@fig-
 _ = F.effect_direction(N)
 ```
 
-The direction of effect is **`{python} cons`** and, on more than a thousand directional records, overwhelmingly one-sided: `{python} f"{fav} of {tot}"` favour the intervention (@fig-rq2-harvest). Magnitude is the usual caution: the standardized differences that are reported use different instruments and inconsistent sign conventions and are unverified, so no dependable average effect size can be recovered from them, and effects are not pooled. The value of this question is less in the effect size than in the breadth and consistency of the direction: across a large, heterogeneous set of low-intensity group interventions, the evidence points one way.
+The direction of effect is **`{python} cons`** and, on more than a thousand directional records, overwhelmingly one-sided: `{python} f"{fav} of {tot}"` favour the intervention (@fig-rq2-harvest). Magnitude is the usual caution: the standardized differences that are reported use different instruments and inconsistent sign conventions and are unverified, so no dependable average effect size can be recovered from them, and effects are not pooled. The value of this question is less in the effect size than in the breadth and consistency of the direction: across a large, heterogeneous set of low-intensity group interventions, the evidence points one way. That one-sidedness is not an artefact of where the evidence sits — stratified by geographic focus it favours the intervention in every setting band (@fig-rq2-harvest-geo), near-universally in the high-income and mixed records that supply most of the volume and, on smaller counts, in the other-LMIC and sub-Saharan strata.
+
+```{python}
+#| label: fig-rq2-harvest-geo
+#| fig-cap: "The same harvest stratified by geographic focus (protocol §4.5.1). Counts by direction within each setting band; stream stratification is omitted because the stream field is degenerate."
+#| echo: false
+_ = F.harvest_geo(N)
+```
 
 ## How robust is the signal?
 

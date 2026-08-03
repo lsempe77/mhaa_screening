@@ -44,7 +44,14 @@ The question draws on `{python} f"{int(rs['records']):,}"` records, `{python} in
 _ = F.effect_direction(N)
 ```
 
-The direction of effect is **`{python} cons`**: `{python} f"{fav} of {tot}"` records favour the intervention (@fig-rq8-harvest), the reported standardized effects being too heterogeneous to summarise as a single magnitude. That headline, however, mixes immediate and later time-points; the question of durability is specifically about what happens *after* the course ends, which the next section isolates.
+The direction of effect is **`{python} cons`**: `{python} f"{fav} of {tot}"` records favour the intervention (@fig-rq8-harvest), the reported standardized effects being too heterogeneous to summarise as a single magnitude. The direction is favourable in every geographic stratum (@fig-rq8-harvest-geo), though the sub-Saharan and other-LMIC counts are small. That headline, however, mixes immediate and later time-points; the question of durability is specifically about what happens *after* the course ends, which the next section isolates.
+
+```{python}
+#| label: fig-rq8-harvest-geo
+#| fig-cap: "The same harvest stratified by geographic focus (protocol §4.5.1). Counts by direction within each setting band."
+#| echo: false
+_ = F.harvest_geo(N)
+```
 
 ## How robust is the signal?
 

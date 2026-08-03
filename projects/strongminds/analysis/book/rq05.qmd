@@ -7,6 +7,7 @@ N = 5
 rs = H.rqstats.iloc[N - 1]
 cons, fav, tot = H.eff_consistency(N)
 gl = H.grade_lite(N)
+oe_df, oe = H.oriented_effects(N)
 ```
 
 # RQ5 · Components that drive symptom reduction {#sec-rq5}
@@ -55,7 +56,23 @@ A small set of components recurs across the interventions that show benefit (@fi
 _ = F.effect_direction(N)
 ```
 
-The direction of effect is **`{python} cons`** on the vote-count rule: `{python} f"{fav} of {tot}"` records with a codable direction favour the intervention (@fig-rq5-harvest). The reported standardized mean differences use different instruments and inconsistent sign conventions, so a dependable average magnitude cannot be recovered from them; direction is read from the harvest rather than from the sign or size of these records, and no effects are pooled.
+The direction of effect is **`{python} cons`** on the vote-count rule: `{python} f"{fav} of {tot}"` records with a codable direction favour the intervention (@fig-rq5-harvest). It holds in every geographic stratum (@fig-rq5-harvest-geo) — overwhelmingly favourable in the high-income and mixed records that make up most of the base, and reproduced in the smaller other-LMIC and sub-Saharan sets — so the component signal is not an artefact of where the evidence happens to concentrate.
+
+```{python}
+#| label: fig-rq5-harvest-geo
+#| fig-cap: "The same harvest stratified by geographic focus (protocol §4.5.1). Counts by direction within each setting band."
+#| echo: false
+_ = F.harvest_geo(N)
+```
+
+Magnitude is not poolable — the reported standardized differences use different instruments and inconsistent sign conventions and are unverified — but the effects that can be placed on a common oriented scale (SMD, Hedges *g* and Cohen *d*) form a coherent distribution (@fig-rq5-forest): the `{python} oe['n']` oriented effects centre on a median of about `{python} f"{oe['median']:.2f}"` (interquartile range `{python} f"{oe['q1']:.2f}"`–`{python} f"{oe['q3']:.2f}"`), a small-to-moderate benefit with a right tail. This is a distribution to read, not a pooled estimate: the points are mostly review-level pooled effects, the sign is reconstructed from the coded direction, and the values are machine-extracted. Direction is still taken from the harvest, and no effects are pooled.
+
+```{python}
+#| label: fig-rq5-forest
+#| fig-cap: "Distribution of the reported standardized effect sizes, oriented to favour the intervention and shown without pooling (protocol §4.5.2). Each point is one record, coloured by geographic focus; the black bar is the interquartile range and the line the median."
+#| echo: false
+_ = F.effect_forest(N)
+```
 
 ## How robust is the signal?
 
@@ -111,5 +128,5 @@ print(H.evidence_quotes_md(N, 6))
 ::: {.callout-important appearance="simple"}
 ## RQ5 answer
 
-Effective low-intensity interventions for adult depression are built on a small, recurring set of components (cognitive restructuring, behavioural activation, problem-solving and psychoeducation) and the direction of benefit is highly consistent (`{python} H._pct(fav, tot)` of records favour the intervention, *`{python} cons`*), at a magnitude the mixed, unverified records do not allow to be summarised reliably, and robust across quality, geography and delivery subsets. The decisive limitation is causal: dismantling and mediation studies are scarce, so the evidence names the components *present in* effective packages but cannot rank them or isolate the one that drives improvement. GRADE-lite confidence is **`{python} gl`** and provisional (machine-extracted, not yet human-verified). For the ULCM this supports building the intervention around that brief cognitive-behavioural core with reasonable confidence, while treating the *choice among* those components (and any decision to drop one) as underdetermined by the current evidence and a matter for RQ6 and for Phase 5 testing rather than for the review to settle.
+Effective low-intensity interventions for adult depression are built on a small, recurring set of components (cognitive restructuring, behavioural activation, problem-solving and psychoeducation) and the direction of benefit is highly consistent (`{python} H._pct(fav, tot)` of records favour the intervention, *`{python} cons`*), at a small-to-moderate magnitude (the oriented standardized effects centre on about `{python} f"{oe['median']:.2f}"`, not pooled), and robust across quality, geography and delivery subsets. The decisive limitation is causal: dismantling and mediation studies are scarce, so the evidence names the components *present in* effective packages but cannot rank them or isolate the one that drives improvement. GRADE-lite confidence is **`{python} gl`** and provisional (machine-extracted, not yet human-verified). For the ULCM this supports building the intervention around that brief cognitive-behavioural core with reasonable confidence, while treating the *choice among* those components (and any decision to drop one) as underdetermined by the current evidence and a matter for RQ6 and for Phase 5 testing rather than for the review to settle.
 :::

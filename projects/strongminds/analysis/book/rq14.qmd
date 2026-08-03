@@ -55,7 +55,14 @@ Where a therapeutic model is named it is dominated by cognitive-behavioural ther
 _ = F.effect_direction(N)
 ```
 
-The direction of effect is **`{python} cons`**: `{python} f"{fav} of {tot}"` records favour the intervention (@fig-rq14-harvest), the reported standardized effects being too heterogeneous to summarise as a single magnitude. The consistency across a family of cognitive-behavioural models is itself informative: it suggests the benefit is a property of the broad approach rather than of one specific therapy or brand.
+The direction of effect is **`{python} cons`**: `{python} f"{fav} of {tot}"` records favour the intervention (@fig-rq14-harvest), the reported standardized effects being too heterogeneous to summarise as a single magnitude. The direction is favourable in every geographic stratum (@fig-rq14-harvest-geo), though the sub-Saharan and other-LMIC counts are small. The consistency across a family of cognitive-behavioural models is itself informative: it suggests the benefit is a property of the broad approach rather than of one specific therapy or brand.
+
+```{python}
+#| label: fig-rq14-harvest-geo
+#| fig-cap: "The same harvest stratified by geographic focus (protocol §4.5.1). Counts by direction within each setting band."
+#| echo: false
+_ = F.harvest_geo(N)
+```
 
 ## How robust is the signal?
 

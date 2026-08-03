@@ -55,7 +55,14 @@ The interventions in this evidence base are delivered as the ULCM intends (@fig-
 _ = F.effect_direction(N)
 ```
 
-The direction of effect is **`{python} cons`**: `{python} f"{fav} of {tot}"` records favour the intervention (@fig-rq13-harvest), the reported standardized effects being too mixed in instrument and sign to yield a dependable magnitude. The significance for the model is that this favourable direction is *not* conditional on specialist involvement — the effect is present in the non-specialist-delivered evidence itself, not borrowed from specialist trials.
+The direction of effect is **`{python} cons`**: `{python} f"{fav} of {tot}"` records favour the intervention (@fig-rq13-harvest), the reported standardized effects being too mixed in instrument and sign to yield a dependable magnitude. Unusually for this review, the sub-Saharan and other-LMIC evidence is relatively well populated here, and the direction favours the intervention in every geographic stratum (@fig-rq13-harvest-geo) — the task-shifting signal is present in the LMIC records themselves, not only in high-income settings. The significance for the model is that this favourable direction is *not* conditional on specialist involvement — the effect is present in the non-specialist-delivered evidence itself, not borrowed from specialist trials.
+
+```{python}
+#| label: fig-rq13-harvest-geo
+#| fig-cap: "The same harvest stratified by geographic focus (protocol §4.5.1). Counts by direction within each setting band."
+#| echo: false
+_ = F.harvest_geo(N)
+```
 
 ## How robust is the signal?
 
