@@ -73,7 +73,7 @@ _ = F.harvest_geo(N)
 _ = F.robustness(N)
 ```
 
-The model-level signal is robust (@fig-rq14-robust): the share favouring the intervention holds in high- and moderate-quality reviews (92%), in LMIC records (89%), and under non-specialist delivery (94%), softening only in the small sub-Saharan subset (83%, twelve records). As elsewhere in this workstream, robustness of the whole-model direction does not extend to any claim about individual ingredients.
+The model-level signal is robust (@fig-rq14-robust): the share favouring the intervention holds in high- and moderate-quality reviews (`{python} H.subp(N,'hq')`), in LMIC records (`{python} H.subp(N,'lmic')`), and under non-specialist delivery (`{python} H.subp(N,'nonspec')`), softening only in the small sub-Saharan subset (`{python} H.subp(N,'ssa')`, `{python} H.subset(N,'ssa')['tot']` records). As elsewhere in this workstream, robustness of the whole-model direction does not extend to any claim about individual ingredients.
 
 ## Do we know why it works?
 

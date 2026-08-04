@@ -45,12 +45,25 @@ def rating(v):
     return "slight" if v <= 5 else "moderate" if v <= 10 else "high" if v <= 15 else "very-high"
 
 
+def load_exclude(path: str) -> set:
+    """Record ids adjudicated 'drop' by the human eligibility review."""
+    if not path:
+        return set()
+    import csv as _csv
+    return {str(row.get("record_id", "")).strip()
+            for row in _csv.DictReader(open(path, encoding="utf-8-sig"))
+            if (row.get("action") or "").strip().lower() == "drop"}
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--results", required=True)
     ap.add_argument("--out", required=True)
     ap.add_argument("--min-shared", type=int, default=2)
+    ap.add_argument("--exclude", default="",
+                    help="CSV of eligibility decisions (record_id, action); action='drop' removed")
     a = ap.parse_args()
+    exclude = load_exclude(a.exclude)
 
     # per review: rq tags, study keys, effect-direction sign
     rq_reviews = defaultdict(list)
@@ -61,6 +74,8 @@ def main():
             continue
         r = json.loads(line)
         if r.get("_error") or r.get("unit_of_extraction") != "review":
+            continue
+        if str(r.get("record_id", "")).strip() in exclude:
             continue
         f = r.get("fields", {})
         ids = (f.get("included_study_ids") or {}).get("value")

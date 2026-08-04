@@ -19,9 +19,9 @@ gl = H.grade_lite(N)
 ## Key messages
 
 - **This is the enabling finding for a task-shifted model, and the evidence supports it.** Interventions delivered by non-specialists reduce depressive symptoms consistently — `{python} H._pct(fav, tot)` of records favour the intervention — and roughly seven in ten records in this evidence base are coded as non-specialist-delivered.
-- **The finding holds under the conditions that matter for the ULCM:** it is stable in high-quality reviews (85%), in LMIC-focused records (86%), and (by construction) among non-specialist delivery (91%).
+- **The finding holds under the conditions that matter for the ULCM:** it is stable in high-quality reviews (`{python} H.subp(N,'hq')`), in LMIC-focused records (`{python} H.subp(N,'lmic')`), and (by construction) among non-specialist delivery (`{python} H.subp(N,'nonspec')`).
 - **The delivery format is group and face-to-face**, matching the model's intended mode.
-- **The soft spots are the same two as elsewhere:** the sub-Saharan subset thins to 72%, and the extraction did not capture facilitator sub-type (lay vs peer vs volunteer) or training detail in a usable form, so *who exactly* delivers best is left to RQ4 and to Phase 5.
+- **The soft spots are the same two as elsewhere:** the sub-Saharan subset thins to `{python} H.subp(N,'ssa')`, and the extraction did not capture facilitator sub-type (lay vs peer vs volunteer) or training detail in a usable form, so *who exactly* delivers best is left to RQ4 and to Phase 5.
 :::
 
 ## The evidence base
@@ -73,7 +73,7 @@ _ = F.harvest_geo(N)
 _ = F.robustness(N)
 ```
 
-The task-shifting finding is among the better-supported in the review (@fig-rq13-robust). It holds in high- and moderate-quality reviews (85%) and in LMIC-focused records (86%), and it is by definition strong in the non-specialist subset (91%). The sub-Saharan subset falls to 72% on forty-three records — enough to register as a caution but not to overturn a finding this consistent elsewhere. As throughout, comparators are mostly usual care or no treatment, so the claim is that non-specialists can deliver benefit over little or nothing, which is exactly the claim a task-shifted model needs.
+The task-shifting finding is among the better-supported in the review (@fig-rq13-robust). It holds in high- and moderate-quality reviews (`{python} H.subp(N,'hq')`) and in LMIC-focused records (`{python} H.subp(N,'lmic')`), and it is by definition strong in the non-specialist subset (`{python} H.subp(N,'nonspec')`). The sub-Saharan subset falls to `{python} H.subp(N,'ssa')` on `{python} H.subset(N,'ssa')['tot']` records — enough to register as a caution but not to overturn a finding this consistent elsewhere. As throughout, comparators are mostly usual care or no treatment, so the claim is that non-specialists can deliver benefit over little or nothing, which is exactly the claim a task-shifted model needs.
 
 ## Consistency across reviews
 
@@ -114,5 +114,5 @@ print(H.evidence_quotes_md(N, 6))
 ::: {.callout-important appearance="simple"}
 ## RQ13 answer
 
-Non-specialist delivery works. Interventions delivered by lay and peer providers reduce depressive symptoms consistently (`{python} H._pct(fav, tot)` of records favour the intervention, *`{python} cons`*), the finding holds in high-quality reviews and in LMIC settings, and the mode is the group, face-to-face format the ULCM plans to use. This is the single most important enabling finding for a task-shifted, USD-1 model: the effect does not depend on specialist involvement. GRADE-lite confidence is **`{python} gl`** and provisional. Two qualifications carry forward: the sub-Saharan-specific evidence, though relatively strong for this question, still thins to 72%; and the corpus cannot say which kind of non-specialist (lay worker, trained peer, volunteer) delivers best, nor how much training and supervision they need, which is RQ4's unmet question and a first-order Phase 5 design parameter.
+Non-specialist delivery works. Interventions delivered by lay and peer providers reduce depressive symptoms consistently (`{python} H._pct(fav, tot)` of records favour the intervention, *`{python} cons`*), the finding holds in high-quality reviews and in LMIC settings, and the mode is the group, face-to-face format the ULCM plans to use. This is the single most important enabling finding for a task-shifted, USD-1 model: the effect does not depend on specialist involvement. GRADE-lite confidence is **`{python} gl`** and provisional. Two qualifications carry forward: the sub-Saharan-specific evidence, though relatively strong for this question, still thins to `{python} H.subp(N,'ssa')`; and the corpus cannot say which kind of non-specialist (lay worker, trained peer, volunteer) delivers best, nor how much training and supervision they need, which is RQ4's unmet question and a first-order Phase 5 design parameter.
 :::

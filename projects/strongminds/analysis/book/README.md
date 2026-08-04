@@ -59,11 +59,18 @@ barrier; PHQ-9 the leading named instrument, cut-off ≈ 10; mixed cost currenci
 
 ### Known, intentional data notes
 
-- **"Records" ≠ "directional records".** A chapter's record count (`rqstats`, from `summ`,
-  2,670 includes) is deliberately larger than its harvest denominator (`wide`, records with a
-  codable `eff_direction`). These are different quantities; the prose says "of the records
-  reporting a direction" precisely for this reason. `summ` (2,670) also carries 2 extraction-error
-  rows absent from `wide` (2,668) — a ≤2-record, negligible corpus-wide difference.
+- **Corpus = the human-confirmed eligible set (2,347).** Extraction produced 2,670 includes; the
+  human eligibility review of the 457 possibly-ineligible records (committed, PII-free, at
+  `../../../docs/eligibility_decisions_457.csv`) dropped 323 and kept 134, so the report analyses
+  **2,347**. The `--exclude` flag on `dex_export.py` / `dex_overlap.py` / `dex_overlap_by_rq.py`
+  applies this at report-generation time; `dex_wide_by_rq.py` inherits it from the derived CSVs.
+  Dropping the 323 barely moves the conclusions (overall favouring 81.1% → 80.9%) but corrects
+  every denominator.
+- **"Records" ≠ "directional records".** A chapter's record count (`rqstats`, from `summ`, 2,347)
+  is deliberately larger than its harvest denominator (`wide`, records with a codable
+  `eff_direction`). These are different quantities; the prose says "of the records reporting a
+  direction" precisely for this reason. `summ` (2,347) also carries 2 extraction-error rows absent
+  from `wide` (2,345) — a ≤2-record, negligible difference.
 - **`stream` is unreliable** (≈94% `Stream2-seed`, only 44 `Stream1`), so the protocol's
   stream-stratified harvest (§4.5.1) is **not** reproduced; geography stratification is clean.
 - **RQ18** raw `psychom_instrument` top value is the `Other` catch-all; it is filtered from the

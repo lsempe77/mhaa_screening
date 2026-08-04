@@ -62,7 +62,7 @@ _ = F.harvest_geo(N)
 _ = F.robustness(N)
 ```
 
-The overall benefit is robust — 92% in high- and moderate-quality reviews, 89% in LMIC records, 94% under non-specialist delivery (@fig-rq8-robust). But robustness of *direction* is not the same as persistence of *effect*: a record can favour the intervention at post-treatment and still show a decaying trajectory afterwards. The durability question therefore turns on the trajectory evidence below, not on the harvest.
+The overall benefit is robust — `{python} H.subp(N,'hq')` in high- and moderate-quality reviews, `{python} H.subp(N,'lmic')` in LMIC records, `{python} H.subp(N,'nonspec')` under non-specialist delivery (@fig-rq8-robust). But robustness of *direction* is not the same as persistence of *effect*: a record can favour the intervention at post-treatment and still show a decaying trajectory afterwards. The durability question therefore turns on the trajectory evidence below, not on the harvest.
 
 ## Does the benefit last?
 

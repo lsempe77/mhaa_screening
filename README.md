@@ -36,7 +36,7 @@ ground-truth labels (sensitivity, Cohen's κ, ECE, Brier, reliability).
 > | **FTR** ✅ done | 4,125 includes | `full_text_retrieval/pdfs/` | PDFs retrieved (see [FTR README](pipeline/ftr/README.md)) |
 > | **FTS (full text)** ✅ done | 2,721 PDFs | `includes_fts.ris` | **1,769 includes** (0 unresolved) |
 > | **RIS determinants correction** ✅ done | 17,033 `EXCLUDE_INTERVENTION_TOPIC` | `includes_fts_final_2670.ris` | +1,670 TA recovered → 1,066 PDFs (no Sci-Hub) → **+901 FTS includes**. Full-text includes **1,769 → 2,670** |
-> | **DEX (data extraction)** ✅ done | 2,670 full-text includes | `reports/dex_*.csv` + `dex_review.xlsx` | **2,668/2,670 extracted** (Sonnet, k=1, grounded, audit-stamped). Review queue 1,200 (eligibility + high-stakes). 2 residual (oversized umbrella reviews). [`dex_extraction_process.md`](projects/strongminds/docs/dex_extraction_process.md) |
+> | **DEX (data extraction)** ✅ done | 2,670 full-text includes | `reports/dex_*.csv` + `dex_review.xlsx` | **2,668/2,670 extracted** (Sonnet, k=1, grounded, audit-stamped). Eligibility review of the 457 possibly-ineligible **complete → drop 323 / keep 134**, so the analysed corpus is **2,347** ([`eligibility_decisions_457.csv`](projects/strongminds/docs/eligibility_decisions_457.csv)). 2 residual (oversized umbrella reviews). [`dex_extraction_process.md`](projects/strongminds/docs/dex_extraction_process.md) |
 >
 > FTS prompt **v1.9-fts**, run 2026-07-27/28. Write-ups:
 > [`fts_screening_process.md`](projects/strongminds/docs/fts_screening_process.md) ·
@@ -574,14 +574,19 @@ Prerequisites: Python deps (`pandas`, `matplotlib`, `openpyxl`, `tabulate`), [Qu
 ```powershell
 # 0. Data extraction itself (LLM extractor over the 2,670 includes) — see pipeline/extraction/README.md
 #    -> …/dex_full_2670.jsonl
+#    Human eligibility review of the 457 possibly-ineligible records is captured in the
+#    committed, PII-free decisions file (record_id, action, concern):
+#    projects/strongminds/docs/eligibility_decisions_457.csv  (drop 323 / keep 134)
+#    Passing --exclude removes the 323 'drop' records -> analysed corpus = 2,347.
+EX=projects/strongminds/docs/eligibility_decisions_457.csv
 
 # 1. Flatten extraction -> review tables (summary / long / outcomes / rq_contributions / queue + Excel)
 python pipeline/extraction/dex_export.py `
-  --results …/dex_full_2670.jsonl --records …/records_extract_final_2670.jsonl --out-dir …/reports
+  --results …/dex_full_2670.jsonl --records …/records_extract_final_2670.jsonl --out-dir …/reports --exclude $EX
 
 # 2. Cross-review overlap (global + per-RQ CCA / discordance)
-python pipeline/extraction/dex_overlap.py       --results …/dex_full_2670.jsonl --out-dir …/reports
-python pipeline/extraction/dex_overlap_by_rq.py --results …/dex_full_2670.jsonl --out …/reports/dex_overlap_by_rq.csv
+python pipeline/extraction/dex_overlap.py       --results …/dex_full_2670.jsonl --out-dir …/reports --exclude $EX
+python pipeline/extraction/dex_overlap_by_rq.py --results …/dex_full_2670.jsonl --out …/reports/dex_overlap_by_rq.csv --exclude $EX
 
 # 3. Wide all-fields table (dex_wide.csv) + per-RQ Excel workbook (dex_by_rq.xlsx)
 python pipeline/extraction/dex_wide_by_rq.py `

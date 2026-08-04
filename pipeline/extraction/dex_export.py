@@ -51,14 +51,36 @@ def cellval(fields: dict, key: str):
     return c.get("value") if isinstance(c, dict) else None
 
 
+def load_exclude(path: str) -> set:
+    """Record ids adjudicated 'drop' by the human eligibility review (record_id, action).
+    Only rows whose action is 'drop' are excluded; 'keep' stays in the corpus."""
+    if not path:
+        return set()
+    import csv as _csv
+    ids = set()
+    for row in _csv.DictReader(open(path, encoding="utf-8-sig")):
+        if (row.get("action") or "").strip().lower() == "drop":
+            ids.add(str(row.get("record_id", "")).strip())
+    return ids
+
+
 def main():
     p = argparse.ArgumentParser(description="Flatten DEX results into review tables.")
     p.add_argument("--results", required=True)
     p.add_argument("--records", required=True)
     p.add_argument("--out-dir", default="projects/strongminds/data/extraction/reports")
+    p.add_argument("--exclude", default="",
+                   help="CSV of human eligibility decisions (record_id, action); rows with "
+                        "action='drop' are removed from every output table.")
     a = p.parse_args()
 
     results = load_results(a.results)
+    exclude = load_exclude(a.exclude)
+    if exclude:
+        before = len(results)
+        results = {rid: r for rid, r in results.items() if str(rid).strip() not in exclude}
+        print(f"Eligibility review: excluded {before - len(results)} records "
+              f"(of {len(exclude)} marked drop) → {len(results)} remain")
     recmeta = {str(json.loads(l)["record_id"]): json.loads(l)
                for l in open(a.records, encoding="utf-8") if l.strip()}
     out_dir = Path(a.out_dir); out_dir.mkdir(parents=True, exist_ok=True)

@@ -1,0 +1,458 @@
+record_id,action,eligibility_concern
+130312279,drop,Intervention is physical activity not psychological intervention
+130312308,drop,No intervention - determinants/measurement study
+130312457,drop,"Population is COVID-19 bereaved adults, not depression/CMD; no psychological intervention reported"
+130312622,drop,No psychological intervention described; focuses on literacy as determinant not intervention
+130312939,drop,Review focuses on tornadoes not depression interventions
+130312982,drop,Population not adult depression/CMD - focuses on emergency department personnel PTSD/anxiety
+130313167,drop,"Review focuses on COVID-19 stigmatization, not depression treatment interventions"
+130313246,keep,Population not adult depression/CMD - focuses on LGBQ+ self-acceptance rather than depression
+130313258,drop,"Focus on cannabis use disorder comorbidity, not psychological intervention for depression"
+130313308,keep,Population not adult depression/CMD - healthcare workers without depression diagnosis
+130313310,keep,No psychological intervention reported - prevalence study only
+130313542,drop,Not focused on depression-specific interventions or outcomes
+130313558,keep,Cross-sectional design not intervention study
+130313559,drop,Population diabetes patients not depression/CMD; determinants study may be eligible for RQ1
+130313599,drop,"No psychological intervention reported, focuses on cognitive assessment"
+130313613,drop,Population not adult depression/CMD - construction workers with general mental health problems
+130313867,keep,Population not adult depression/CMD - focuses on FGM/C outcomes
+130314066,keep,"No psychological intervention reported, determinants study only"
+130315876,keep,No psychological intervention described - determinants/measurement study only
+130316040,keep,Population not adult depression/CMD - breast cancer patients with depression as outcome
+130317124,keep,No psychological intervention described - prevalence study only
+130317438,keep,"Population is TBI patients, not depression/CMD; no psychological intervention"
+130317453,drop,No psychological intervention described - determinants/measurement focus
+130317558,drop,"Population stroke survivors, not adult depression/CMD; no psychological intervention"
+130317844,drop,Review focuses on disclosure decisions rather than depression treatment interventions
+130317871,keep,No psychological intervention - observational study of occupational physical activity
+130318102,drop,Focus on suicidal ideation rather than depression symptoms as primary outcome
+130318143,drop,"Population is stroke patients, not adult depression/CMD; no psychological intervention described"
+130318452,drop,"Population perinatal women, outcome sleep not depression"
+130319259,drop,Population not adult depression/CMD - caregivers of children with autism
+130319295,keep,No psychological intervention - determinants study only
+130319869,drop,No psychological intervention - determinants study examining violent victimisation as risk factor
+130319911,keep,No psychological intervention - observational study of sedentary behavior
+130320177,keep,Population not adult depression/CMD - focuses on children and families affected by migration policies
+130320393,keep,Population not adult depression/CMD - focuses on shift workers not depression
+130320404,drop,Focus on screening barriers not depression intervention effectiveness
+130320524,keep,"Population is older adults with cancer, not depression/CMD as primary condition"
+130321380,drop,No psychological intervention - observational study of menopausal transition as risk factor
+130321912,drop,Population not adult depression/CMD - focuses on general athlete mental health rather than depression specifically
+130322250,keep,No psychological intervention described - prevalence study only
+130322581,keep,No intervention - observational network analysis study
+130322661,drop,Population not adult depression/CMD - factitious disorder patients
+130322935,drop,Population bereaved families not adult depression/CMD
+130323613,keep,No psychological intervention described - exposure to COVID-19 not intervention
+130323703,drop,"Population is stroke patients, not adult depression/CMD"
+130323755,drop,Population not adult depression/CMD - healthcare workers psychological impact
+130323923,drop,"No psychological intervention described, observational study of healthcare worker mental health"
+130323946,keep,"Review focuses on healthcare workers, not adult depression patients receiving psychological interventions"
+130324312,keep,No psychological intervention described - determinants review only
+130324966,keep,Population not adult depression/CMD - caregivers of cancer patients
+130326074,keep,No psychological intervention - retirement is life transition not intervention
+130326391,keep,"Population mixed adult+adolescent college students, no adult-only subgroup reported"
+130327033,keep,No psychological intervention described - prevalence study only
+130327720,drop,No psychological intervention described - observational study of caregiver burden
+130328131,keep,No psychological intervention reported - epidemiological study only
+130328251,drop,"No psychological intervention reported, correlational study only"
+130329404,drop,Population not adult depression/CMD - focuses on intimate partner violence survivors
+130330253,keep,"Population includes children and adolescents, not adult-only depression sample"
+130332808,keep,No psychological intervention reported - prevalence study only
+130336344,drop,Cross-sectional design without intervention for determinants route
+130338226,drop,Population not adult depression/CMD - visual impairment population
+130338776,keep,Population not adult depression/CMD - focuses on LGB minorities and social media use
+130339782,drop,No psychological intervention - focuses on comorbidity prevalence only
+130340194,drop,Not focused on depression interventions in LMICs
+130340427,keep,"Population is perimenopausal women, not adult depression/CMD"
+130340590,keep,"No psychological intervention described, observational studies only"
+130340685,drop,No psychological intervention studied - determinants research only
+130340751,drop,Pharmacological intervention not psychological intervention
+130340818,drop,Population not adult depression/CMD - LGBTQ+ epidemiology study without intervention
+130341740,keep,"Population is people who inject drugs, not adults with depression"
+130342534,keep,No psychological intervention described - determinants study only
+130342545,keep,"Population not adult depression/CMD, COVID-19 infection focus"
+130343098,drop,Naturalistic study without intervention - not intervention-focused
+130343272,keep,No psychological intervention - determinants study only
+130343339,drop,No intervention described - prognosis study only
+130343443,drop,"Environmental exposure study, not psychological intervention for depression treatment"
+130343651,keep,Cannabis exposure not psychological intervention
+130343708,drop,"Outcome is coronary heart disease, not depression symptoms"
+130344337,drop,"No psychological intervention described, focuses on depression as risk factor for dementia"
+130344641,drop,Outcome is hip fracture not depression symptoms
+130345003,drop,Population COVID-19 patients not adult depression/CMD; no psychological intervention
+130345223,drop,"Suicidal ideation outcome, not depression symptoms as primary focus"
+130345443,drop,Population: treatment-resistant depression not standard depression/CMD
+130345728,keep,Population not adult depression/CMD - focuses on hip fracture patients
+130346073,keep,No psychological intervention - observational study of OSA-depression association
+130346125,drop,No intervention - natural recovery study
+130346133,keep,No psychological intervention described - observational study of arthritis as depression risk factor
+130346197,keep,No psychological intervention reported - observational study of stroke as risk factor
+130346494,keep,Not group-based psychological intervention for depression
+130348981,keep,"Population is COVID-19 patients, not general adult depression/CMD population"
+130349577,keep,No psychological intervention - observational study of depression as risk factor
+130349929,keep,No psychological intervention - observational study of depression as risk factor
+130349961,drop,Cross-sectional design without intervention - determinants study
+130350426,drop,No psychological intervention studied - prevalence study only
+130350449,drop,No psychological intervention described - epidemiological study only
+130350506,drop,No intervention - prevalence study of mental health outcomes after bushfire exposure
+130350595,drop,No psychological intervention reported - prevalence study only
+130350756,keep,No psychological intervention described - observational study of pandemic impact on mental health
+130351146,keep,Population not adult depression/CMD - police officers prevalence study
+130351304,drop,No intervention - determinants/measurement study
+130351564,drop,No intervention - observational study of determinants
+130351960,drop,Population not adult depression/CMD; intervention not psychological
+130352153,keep,Population not adult depression/CMD - former elite athletes without depression diagnosis
+130352335,drop,No psychological intervention - focuses on antidepressant prescribing patterns only
+130352483,keep,Physical activity intervention not group-based psychological intervention
+130352733,drop,No psychological intervention reported - observational study of MERS survivors
+130353034,keep,Population has epilepsy not depression as primary condition
+130353041,drop,No psychological intervention - epidemiological study of suicide rates
+130353462,drop,No psychological intervention - observational study of sport participation
+130355410,drop,"Population is post-stroke patients, not primary depression/CMD"
+130355478,keep,Focus on occupational health rather than depression specifically
+130377409,drop,"Cross-sectional design, no intervention tested"
+130377486,drop,No intervention - cross-sectional prevalence study only
+130377544,keep,Cross-sectional study design without intervention - determinants/measurement routes only
+130749476,keep,No psychological intervention - observational study of nausea as risk factor
+130749517,drop,No psychological intervention reported - observational study of depression and mortality
+130749583,keep,No psychological intervention - observational study of depression risk factors only
+130749656,keep,No psychological intervention - observational study of risk factors only
+130749657,keep,No psychological intervention - observational study of obesity-depression relationship
+130749681,drop,Population not depression/CMD; intervention not psychological
+130749683,keep,No psychological intervention tested - observational study of attention and depression
+130749694,drop,No psychological intervention - observational study of alcohol consumption patterns
+130749715,keep,"No psychological intervention reported, observational study design"
+130749829,keep,No psychological intervention - observational study of work-related risk factors
+130749892,keep,No psychological intervention described - observational study of elder abuse and depression relationship
+130750195,keep,"No psychological intervention reported, observational study of depression-dynapenia association"
+130750902,keep,No psychological intervention delivered - observational study of psychological resources
+130750983,keep,No psychological intervention - observational study of COVID outcomes
+130751028,drop,Focus on wearable AI technology rather than psychological intervention for depression
+130751030,keep,Physical activity intervention not psychological intervention
+130751051,keep,No psychological intervention - physical activity is exposure not intervention
+130751075,keep,No psychological intervention - observational study of depression trajectories
+130751086,keep,No intervention - observational study of risk factors
+130751361,keep,No psychological intervention - observational study of physical activity determinants
+130751424,drop,No psychological intervention - machine learning prediction study only
+130751446,keep,No intervention - determinants study only
+130751474,drop,No psychological intervention described; observational study of distress determinants only
+130751480,keep,No psychological intervention - observational study of risk factors only
+130751669,drop,No psychological intervention reported - observational study of lifestyle factors
+130751703,drop,No psychological intervention reported - observational study of hyperemesis gravidarum as risk factor
+130751705,keep,No psychological intervention delivered; feasibility study only
+130751781,keep,No psychological intervention - observational study of financial determinants
+130751963,keep,No psychological intervention - internet use is exposure not intervention
+130752650,keep,Cross-sectional study without intervention - determinants/measurement focus only
+130753250,drop,Not group-based psychological intervention for depression
+23KTK86F,drop,Population not adult depression/CMD - focuses on eco-anxiety in general population
+2B7GRNJG,keep,"Population is cancer caregivers, not adults with depression"
+2DRZ44GV,drop,"Population is cancer patients, not depression/CMD; intervention is prevention not treatment"
+2EYDJ7FK,keep,"Population includes adolescents, not adult-only depression sample"
+2GJIQC24,drop,Population nursing students not adult depression/CMD
+2PNIS3DG,drop,Population perinatal women not adult depression
+2UE5CWUE,drop,No psychological intervention described - observational study of Ebola survivors' experiences
+2YHZW47G,keep,"HIC setting (USA), not LMIC population"
+2YU9FVNX,drop,Population not adult depression/CMD - hemodialysis patients with psychological distress
+3GJZ4J2T,drop,Mixed population includes severe mental disorders beyond depression
+3JQ6M9CI,drop,Population not adult depression/CMD - focuses on PTSD in public safety personnel
+3K2HFYNW,drop,Population not adult depression/CMD - cognitively healthy older adults
+3MKMLQVX,keep,"Population includes diabetes patients, not specifically depression/CMD focus"
+3PZ5P2EC,drop,Population not adult depression/CMD - postpartum care guidelines
+3VVSJSPW,keep,Population HIV-infected not general adult depression
+434J9ZR8,keep,No psychological intervention reported - observational study of stigma associations
+4455SUM4,drop,Population not adult depression/CMD - vision impairment specific
+45WS7XWM,keep,"Population is dementia caregivers, not adults with depression"
+46K9EHLY,drop,"Population is acquired brain injury, not depression/CMD specifically"
+4B73QYVU,drop,Population not adult depression/CMD - Parkinson's disease specific
+4BR7JTL8,keep,Population includes adolescents under 18; mixed adult+adolescent sample without separate adult reporting
+4C7U6UBG,drop,Population lung cancer not adult depression/CMD; no group-based psychological intervention
+4EWU82NT,drop,Population not adult depression/CMD - dementia caregivers
+4FM7JT2E,keep,Population not LMIC adults - older adults in long-term care facilities
+4G7ZYRBJ,drop,Telepsychotherapy not group-based psychological intervention
+4HC48T69,drop,Population not adult depression/CMD - traumatic brain injury focus
+4JPIIVVR,drop,Single-arm design without control group
+4MLZVA3C,drop,REBT intervention not group-based psychological intervention for depression
+4RTYE4TV,drop,Population cancer patients not adult depression/CMD
+4TE24S6T,keep,Population not adult depression/CMD - CABG patients with depression/anxiety
+4WBSEN9E,drop,Population not adult depression/CMD - transgender gender dysphoria
+4WTFPAS2,drop,Population not adult depression/CMD - breast cancer patients
+4YZFHPWJ,drop,"Population is miscarriage-specific, not general adult depression"
+52EGKMBT,drop,Population is OCD not depression/CMD
+52JYGIKB,drop,Population not adult depression - cancer caregivers
+5EGAPZHM,drop,Population not adult depression/CMD but MCI/dementia
+5NVTQLN2,drop,Population not adult depression - health workers treating malaria in children
+5PG2Q46T,keep,Population is caregivers not adults with depression
+5Q3J9IDK,keep,"Population is autism spectrum disorder, not adult depression/CMD as per inclusion criteria"
+5TWS4SKZ,drop,Population diabetes not depression; intervention not group-based psychological
+65F7DUVF,drop,Population breast cancer not depression/CMD; outcome anxiety/depression not primary depression focus
+65MY43IG,drop,Population autism spectrum disorders not depression/CMD
+68YBN3ZI,drop,Population cancer patients not general adult depression
+6DAVLEP2,drop,Population not adult depression/CMD - mothers of children with disabilities
+6FTM2G7Q,drop,Population stroke patients not adult depression/CMD
+6K29LN23,drop,Population IBD patients not adult depression/CMD
+6L3XTKFC,drop,Population cervical cancer not depression/CMD; intervention not group-based
+6PF2AMMR,keep,"Population is Alzheimer's patients, not general adult depression/CMD"
+6SFTC6ZV,keep,Population not adult depression/CMD - dementia caregivers
+6UAYA56K,drop,Intervention targets healthcare professionals not patients with depression
+74J6E5QW,drop,Population not adult depression/CMD - hematopoietic stem cell transplant patients
+76L8SSPB,drop,Population is CAD patients not general adult depression
+78Z55YNC,drop,Population: OCD not depression/CMD; Intervention: pharmacological not psychological
+7DF3LCWZ,drop,Population diabetes not depression; intervention not group-based lay-delivered
+7GH7INEH,drop,Population head and neck cancer patients not general adult depression
+7I64MSL9,drop,No intervention - observational study of risk factors
+7IUVDUK6,drop,"Non-clinical settings, not LMIC focus"
+7JGSAJLA,drop,"Population is Parkinson's disease patients, not general adult depression"
+7VZLLBA9,drop,Population not adult depression/CMD - CVD patients without mental health diagnosis
+7Y6NPNPX,drop,"Population includes children under 18, not adult depression focus"
+84BBZD5M,drop,Not group-based psychological intervention for depression in LMICs
+85L2HBBN,keep,"Population has epilepsy comorbidity, not primary depression/CMD"
+8B9SARVN,drop,Population not adult depression/CMD - cancer patients
+8BKJZMCQ,drop,Conference abstracts collection not intervention study
+8EG4SBKM,drop,"Population is IPV survivors, not depression/CMD specifically"
+8FHK8AIQ,drop,Population coronary artery disease not adult depression/CMD
+8P79K6VI,drop,Intervention not group-based psychological intervention by non-specialists
+8Q7GHBQB,drop,Population has IBD not depression; outcomes anxiety/depression in medical condition
+8UNCGCGE,keep,Population not adult depression/CMD but parents of children with special needs
+8YUPSZE5,drop,"Philosophical essay on spatial boundaries, not depression intervention research"
+8ZHVHAC9,drop,Population not adult depression/CMD - breast cancer survivors
+94SX9AK6,drop,"Population is prostate cancer patients, not adult depression/CMD"
+97Z3AVFA,keep,Population is TBI patients not primary depression
+98PVR8A4,keep,Population not adult depression/CMD - focuses on general older adults mental health promotion
+9EEC6YNG,drop,Population children/adolescents not adults with depression
+9IMU5AHR,drop,"Appendix only, no intervention or depression outcomes reported"
+9LMF2XJN,drop,Population is caregivers not persons with depression
+9MP98J2I,drop,Population not adult depression/CMD but phantom limb pain
+9N5SCMNA,keep,Population not LMIC; heart failure patients in high-income countries
+9QYTU7DN,drop,"Population includes children/adolescents with ASD, not adult depression"
+9VGXP4I8,drop,Population is intellectual disabilities not depression/CMD
+9ZS6ZUVW,drop,Population is cancer patients not depression/CMD
+A3FYS57J,drop,Population not adult depression - children with obesity
+A8HYGGT3,keep,Population not adult depression/CMD - focuses on ESRD patients with depression
+AAFXBPE7,keep,Population not adult depression/CMD - university students mixed age
+AAJP6HAD,keep,Primary focus PTSD not depression
+AT499PLG,drop,Conference proceedings without intervention or depression outcomes
+AX2NHMEX,keep,"Population is stroke survivors, not depression/CMD adults"
+AXG7GD9M,keep,Population cancer patients not depression/CMD
+AXJMYWCN,drop,Population heart failure not depression/CMD
+B2P7N32A,keep,Population cancer patients not adult depression/CMD
+B4MRB55I,keep,"Population is Parkinson's disease patients, not adult depression/CMD"
+B6V8XQAK,drop,Population not adult depression/CMD - focuses on parental distress in NICU setting
+BHMZUWYX,drop,"High-income countries (USA, Ireland) not LMIC"
+BQT2AN4R,keep,Population not adult depression/CMD - head and neck cancer patients
+BVWEZU3S,drop,Population includes adults under 65; not focused on group-based interventions
+BYL4JZ6T,drop,Population stroke patients not depression/CMD; intervention technology-based not psychological
+C54RIIH8,keep,"Population is Parkinson's disease patients, not general adult depression"
+CGB4B2MG,drop,Population not adult depression/CMD - focuses on sexual/gender minorities
+CH9Z45F4,drop,Population not adult depression/CMD - COPD patients with anxiety/depression
+CI5E734P,keep,No control group - observational study of attendance predictors
+CILDIFS2,keep,Population not adult depression/CMD - focuses on migrant domestic workers without depression diagnosis
+CPAHI4A2,drop,Population not adult depression - menopausal breast cancer symptoms
+CR8H676D,drop,Population not adult depression/CMD but healthcare worker mental health
+CUJP5QB4,drop,Focus on eating disorders not depression
+CUQKPY4A,drop,"Population is cancer patients, not depression/CMD; no psychological intervention described"
+CZRIGUCU,drop,Population not adult depression - focuses on adolescents and subjective well-being
+D4QTWNPX,drop,"Specialist-delivered intervention, not lay/non-specialist delivered"
+DB9UYZ79,keep,Population heart failure not depression; intervention not group-based
+DD2HDFFM,drop,"HIC setting, not LMIC; conference abstract with limited detail"
+DEWEK57P,drop,Population not adult depression/CMD - cancer patients with mental health outcomes
+DEXW624C,drop,Population coronary heart disease not depression/CMD; intervention not group-based
+DFTU7QD5,drop,Single-arm pre-post design without control group
+DIKDR2ZF,drop,Population not adult depression - caregivers of breast cancer patients
+DNLT23S9,drop,Population not adult depression/CMD - contraceptive users
+DNR42AGK,drop,"Population includes children 0-19, not adult depression focus"
+DS8LNFGS,keep,Post-stroke depression population may not meet adult depression criteria for intervention routes
+DTXQXQHG,keep,Population post-stroke depression not adult depression/CMD
+E8N4JUPN,drop,Population not adult depression/CMD - focuses on older adults with dementia
+EKLRZ6Z4,keep,Population heart failure not depression/CMD
+ELPB8DWW,drop,Population not adult depression/CMD - focuses on neurocognitive disorders with comorbid depression
+EM5PFPIU,drop,"Document type is corrigendum, not research study"
+EPJUXZ8F,drop,Population not adult depression/CMD - focuses on leprosy-affected persons
+F28JVZCX,drop,Population not adult depression/CMD - cancer patients
+F4GP8DTC,drop,Population is multiple sclerosis not depression/CMD
+F6724SLX,keep,Population is caregivers not people with depression
+F6S8KZHG,drop,Population not adult depression/CMD - focuses on older adults with various health conditions
+F8UWUHQ2,drop,"Population is psoriasis patients, not depression/CMD"
+FDG78J3S,drop,"Population postpartum mothers, not adult depression/CMD"
+FLSYYGEC,keep,"Focus on high-income countries, not LMICs as required by protocol"
+FP3TG5K2,drop,Population diabetes comorbidity not primary depression focus
+FR7IRIMV,drop,Review focuses on determinants/associations rather than psychological interventions for depression treatment
+G2DNV7XF,drop,Population not adult depression/CMD - ICU survivors with depressive symptoms
+G2R3YK5V,drop,"Population is dementia patients, not adult depression/CMD"
+G6XVJXP6,drop,"Population is carers of people with dementia, not adults with depression"
+GEBA3ZCX,keep,Non-clinical working population may not meet depression criteria for intervention routes
+GG8W8XTQ,drop,"Population is traumatic brain injury patients, not depression/CMD"
+GH5XTYBK,drop,Not focused on depression/CMD outcomes; urban planning intervention not psychological intervention
+GWZFGKA8,keep,Population cancer patients not depression/CMD
+GX2JGKFC,drop,Review focuses on narrative foreclosure concept rather than depression intervention
+H2UFGIFL,drop,Social phobia not depression; anxiety disorder focus
+H3FH5XTN,drop,Population seasonal affective disorder not standard depression; HIC setting not LMIC
+H5CQBBGR,drop,Population has fibromyalgia not primary depression; may not meet adult depression criteria
+HA57V3EA,drop,"Population is dementia carers, not adults with depression"
+HBU2CFLF,drop,Population not adult depression/CMD - focuses on IBD patients with anxiety/depression as secondary symptoms
+HDZMRQUE,drop,"Population is stroke survivors, not depression/CMD; outcomes include depression but not primary focus"
+HG6NFYIY,drop,Population not adult depression/CMD but cancer caregivers
+HHTCIENA,drop,"Philosophical essay on spatial boundaries, not depression intervention research"
+HI9QEW8F,drop,Population cancer patients not LMIC adults with depression
+HR7DEGAE,drop,"Population is family carers, not adults with depression"
+HSJXPKCT,drop,Population not adult depression/CMD - focuses on postnatal women generally
+HT6PWFT4,drop,No intervention or depression outcome; basic science study on fluoxetine protein expression
+HWRXSTTL,drop,"Population is poststroke patients, not adult depression/CMD"
+I4XBJUIN,drop,Population HIV-infected not depression-specific
+I5WNXDBJ,drop,Population has cognitive impairment rather than depression as primary condition
+I95RVNVA,drop,Population breast cancer survivors not adult depression/CMD
+IFDZNC58,keep,Population not adult depression/CMD - university students general mental health
+IH4F34PL,drop,Single-arm design without control group
+ISZBJJ8T,drop,Population not adult depression/CMD - Parkinson's disease patients
+IVN65QL7,keep,Population age criterion - participants ≥55 not ≥18
+IWJNCWLT,keep,"Population is poststroke depression, not general adult depression"
+J2XEC54Y,drop,Population is PTSD not depression; outcome is PTSD symptoms not depression
+J3RF5H7Q,drop,Population is MCI not depression; outcomes are mood not depression-specific
+J7FECILT,keep,Population not adult depression - focuses on adolescent bullying outcomes
+J9XAMHK5,drop,"Population is IBD patients, not depression/CMD; intervention not group-based psychological"
+JAEPQRN3,drop,Population not adult depression - parents of children with brain injury
+JIFPRETW,drop,Focus on trauma/PTSD rather than depression; not group-based psychological intervention for depression
+JKUAX2DR,drop,"Addendum only provides missing references, no research content"
+JR9I6YFL,drop,"Population is cancer patients, not depression/CMD"
+JTG2M7ZC,drop,"Population includes dementia patients, not adult depression/CMD"
+JZZSS3KQ,drop,"Population is spinal cord injury, not adult depression/CMD"
+K8SLCRCY,keep,Population not adult depression/CMD in LMICs - focuses on sexual minority women in Western settings
+K9NBE6L9,drop,Population diabetes patients not depression-focused
+K9XWV5MF,drop,Population not adult depression/CMD - athletes with general psychological distress
+KK29NK9R,drop,Population dementia not depression/CMD
+KLRASN4E,drop,Population: adjustment disorders not depression/CMD
+KWY2BCF9,drop,Population not adult depression/CMD - hemodialysis patients with anxiety/depression
+L6F8FURH,drop,"Population adolescents 11-19 years, not exclusively adults"
+L8WL9QVJ,drop,Population not depression/CMD; intervention not psychological; outcomes not depression-relevant
+L9CWW5T8,drop,Population breast cancer not general adult depression
+LGHUH73T,drop,Population not adult depression/CMD but Parkinson's disease
+LPK8BH7K,drop,Population not adult depression/CMD - focuses on psychosis
+LPXCIFM4,drop,Population not adult depression/CMD - cancer patients with fatigue
+LUJ7XISG,drop,"Population is adolescents, not adults with depression"
+LVG65DTS,drop,"Population is cardiac patients, not general adult depression population"
+LX3P47HX,drop,Population diabetes patients not adult depression/CMD
+LX6LM7DW,keep,"High-income country focus, not LMIC setting"
+M487PWDP,drop,Population is dementia caregivers not adults with depression
+M4MEMWE9,drop,Population spinal cord injury not depression/CMD
+M8AYYH5S,drop,"High-income countries only, not LMIC focus"
+M9KCH8PV,drop,Population not adult depression/CMD - focuses on skin-NTDs psychosocial wellbeing
+MC5WDD2I,drop,Population not adult depression/CMD - post-stroke depression specific population
+MEWVJYQ4,drop,"Population is epilepsy patients, not depression/CMD"
+MF67JLTA,drop,"Population is post-stroke depression, not general adult depression/CMD"
+MFVI962H,drop,"Population is Parkinson's disease patients, not adult depression/CMD"
+MIS2CGUZ,keep,"Population is adolescents, not adults with depression"
+MQ8YDP26,drop,"Population includes adolescents 14-24 years, not exclusively adults ≥18"
+MSGHVTWY,drop,Population cancer survivors not depression/CMD; intervention not group-based psychological
+MSI5T6KP,drop,Population not adult depression/CMD - focuses on PTSD in transportation workers
+MUGSPINW,drop,"Animal model study, not human adult depression population"
+MYIBIIY6,drop,Population not adult depression/CMD - hemodialysis patients
+N24CYUZ5,drop,Population not adult depression/CMD - pulmonary hypertension patients
+N774T6X2,keep,Population cancer patients not general adult depression
+N9Z29IE8,keep,"Population is Parkinson's disease patients, not adult depression/CMD"
+NCHM8NVN,drop,Population not adult depression/CMD - healthcare students
+NDQ9KX97,drop,"Population is prostate cancer patients, not adult depression/CMD"
+NFVTF4BD,drop,Population cardiovascular disease not depression/CMD primary
+NGINFJPD,drop,Population not adult depression/CMD - focuses on parental distress in NICU setting
+NJJUTXLE,drop,Population not adult depression/CMD - cancer patients
+NLVF4ZCB,drop,Conference abstracts collection not systematic review of psychological interventions for depression
+NMV6NFXL,drop,Population not adult depression/CMD - focuses on pharmacy personnel training
+NRI3BEEH,drop,Population COPD not depression/CMD
+NUV7XD6E,drop,"Population includes cancer patients, not specifically depression/CMD"
+NZYAXX6H,drop,Not focused on depression or psychological interventions
+P3BVZXU6,drop,No psychological intervention reported - observational study of pandemic impact on depression
+PCXVVHGE,drop,"Population older adults in care homes, not community-based depression interventions"
+PNSZN743,drop,Population cancer patients not adult depression/CMD
+PT7NUVRP,drop,"Population elderly with dementia, not adult depression/CMD"
+PXPJ83KA,keep,"Population has dementia, not depression/CMD as primary condition"
+Q2438GEP,drop,Population not adult depression/CMD - focuses on life-threatening illnesses rather than depression specifically
+Q4LEUI9Y,keep,Population is cancer caregivers not adults with depression
+Q7H7SJX5,keep,"Population is cancer patients, not general adult depression/CMD population"
+QABMABJ8,drop,Population not adult depression/CMD - transgender families
+QCZ5S72Y,drop,Population not adult depression/CMD - focuses on TB survivors with post-TB sequelae
+QMEJ4QJH,drop,Population is stroke survivors not depression/CMD; outcomes include depression but not primary focus
+QPWWY2JS,drop,Population adolescents not adults with depression
+QX22WPRG,keep,Population HIV-positive not depression/CMD; outcome mental health not depression-specific
+QZ3BZCQS,drop,"High-income country setting (USA), not LMIC"
+R2I7MQFX,drop,Intervention not group-based psychological intervention by non-specialists
+REC8R7U7,drop,Population not adult depression/CMD - caregivers of dementia patients
+REZWSSCS,keep,Population not LMIC; chronic neurological conditions in high-income countries
+RIUIS4PC,drop,Intervention is smoking cessation not depression treatment
+RJ6P4DSW,drop,Population dementia not depression/CMD
+RJFGMHZY,drop,Population is family caregivers not adults with depression
+RLCKRKHK,drop,Population not adult depression/CMD - healthcare workers during emergencies
+RLSQ9FRV,drop,"Population is Parkinson's disease patients, not general adult depression"
+RM5HDJSZ,drop,Population cancer patients not depression/CMD; intervention not brief group psychological
+RN3SXL2B,drop,"High-income country setting, not LMIC"
+RNFJSGW4,drop,"Philosophical essay on spatial boundaries, not depression intervention research"
+RPIGCL85,drop,Population not adult depression/CMD but grief/bereavement
+RY3FR7JY,drop,Population brain tumor patients not depression/CMD
+RY5KPQ65,drop,Population not adult depression - perinatal women with pregnancy loss
+RYK98DQB,drop,No psychological intervention described - determinants study only
+S2X52VTH,drop,"HIC setting, computerised delivery not group-based"
+S2Z4NNMN,keep,Population has epilepsy not primary depression/CMD
+S4G4878F,drop,Population head and neck cancer not depression/CMD
+S82HIY37,drop,Population is MCI not adult depression
+SAQDHK6N,drop,"Conference abstract only, insufficient detail for full extraction"
+SETHV9TT,drop,"Population is dementia caregivers, not adults with depression"
+SGDULBIM,keep,Population is dementia caregivers not adults with depression
+SNXENX2P,drop,Population not adult depression/CMD - focuses on university faculty mental health broadly
+SRPDNBE9,drop,Population not adult depression/CMD - nurses without depression diagnosis
+SSMQM8L3,drop,"Specialist-delivered CBT in high-income countries, not lay-delivered in LMICs"
+STDS7VLD,drop,Intervention not group-based or lay-delivered
+SXIWC84F,drop,"HIC setting, not LMIC; specialist-delivered intervention"
+T9R37G5P,drop,Population not adult depression/CMD - neurological conditions
+TG5PFXLF,drop,Intervention targets posttraumatic growth rather than depression symptoms specifically
+TGZ82CGB,keep,"Population has spinal cord injury, not general adult depression"
+TMFJ8BBZ,drop,Savouring interventions not group-based psychological interventions for depression
+TNMIY7CG,drop,Population cancer patients not depression/CMD; outcome cancer distress not depression-specific
+TRJV9E2H,drop,Population breast cancer not depression/CMD; outcome not depression-specific
+TRSLZFWE,keep,Population dementia/MCI not adult depression
+TVWB2YUT,keep,Cancer population not depression-specific LMIC setting
+U2PK2YFB,drop,Population cancer patients not depression/CMD; outcomes not depression-specific
+U56I2RTK,drop,Population cancer patients not depression/CMD; intervention not group-based psychological
+U6J6EMMX,keep,"Population includes refugees/asylum seekers, not specifically adult depression/CMD"
+U84FA4UQ,drop,Single-arm feasibility study without control group
+UC3NKLT4,drop,Conference abstracts collection not focused on psychological interventions for depression
+UKFZKNP6,drop,"Workplace setting not LMIC-focused, adult population unclear depression diagnosis"
+ULE6TYC5,keep,Population myocardial infarction patients not adult depression/CMD
+UQE5GXJ5,drop,Population is opioid use disorder not depression
+UVVJWPKF,drop,"Population not depression-focused, trauma-exposed adults"
+VDZ67T4V,drop,Cancer population not depression-specific adult sample
+VFZCFSD7,drop,Population not adult depression/CMD - caregivers of neurocognitive disorder
+VG3RJ5LP,drop,Population breast cancer patients not general adult depression
+VIBWI7SB,drop,Population not adult depression/CMD - health professional students
+VPD5GTPA,drop,"Population includes adolescents 11-19 years, not adult depression"
+VR3EE55Q,drop,Gratitude interventions not group-based psychological interventions for depression
+W6BL8MUK,drop,Population not adult depression/CMD - ESRD patients
+W7LWH4YX,drop,Population not adult depression/CMD - heart failure patients
+W97GCBG6,drop,Population not adult depression/CMD - parents of children with developmental disabilities
+WL4ZP9VP,drop,"Population is epilepsy patients, not adult depression/CMD"
+WMFTUM2R,drop,Population not adult depression but cancer caregivers
+WV4AFXQV,drop,"Population is hemodialysis patients, not adult depression/CMD"
+WWHT3LU2,drop,Population not depression-specific; includes dementia and normal cognitive function
+WZV84VYQ,keep,"Population is COPD patients, not primary depression/CMD"
+X2GC3TWJ,drop,Population cancer survivors not depression/CMD; intervention ACT not group-based psychological
+X54QQNPP,drop,"Population has Parkinson's disease, not primary depression"
+XK6JTJI5,drop,Population is dementia caregivers not adults with depression
+XM5BWGJM,drop,Population not adult depression/CMD - perinatal anxiety/pain focus
+XUHGPS8T,drop,Population hemodialysis patients not general adult depression
+Y9AVNDTT,drop,Population includes MCI/dementia rather than adult depression
+Y9BIKZE3,drop,"Population is Parkinson's disease patients, not adult depression/CMD"
+YC5MTLJB,drop,Population not adult depression/CMD - focuses on trauma/PTSD prevention
+YDMYLT8F,drop,Population is cancer patients not depression/CMD
+YECXH85S,drop,Population not adult depression/CMD - focuses on functional decline in nursing homes
+YG8NTDCK,drop,Population is dementia caregivers not adults with depression
+YHSAA4PC,drop,Population not adult depression/CMD - focuses on nursing students with suicidal behaviors rather than depression treatment
+YHZTJBX3,drop,Single-arm design without control group
+YNH3I22F,drop,Population not depression/CMD - focuses on psychotic symptoms
+YX4Q649D,drop,"Population has traumatic brain injury, not primary depression"
+YY9TA9RZ,drop,"Population is heart failure patients, not depression/CMD"
+Z6GN97NZ,drop,"Population includes adolescents 12-17, not exclusively adults"
+Z7HSCB3S,drop,Population not adult depression/CMD - dementia caregivers
+Z8SCCWXJ,drop,Population not primary depression but ACS with comorbid anxiety/depression
+ZEYYZ96F,keep,"Philosophical essay on spatial boundaries, not depression intervention research"
+ZFQZBEQP,drop,Population is dementia caregivers not adults with depression
+ZJX8S7MM,drop,"Population is breast cancer patients, not depression/CMD"
+ZMKE9IMA,drop,Population is fathers not adults with depression; interventions not group-based psychological
+ZMSQPUTZ,drop,"Review focuses on COVID-19 survivors mental health, not depression-specific psychological interventions"
+ZQZTBQBS,drop,Population not adult depression/CMD - post-MI cardiac patients
+ZR55FM8A,drop,Population not adult depression but caregiver burden/anxiety/depression

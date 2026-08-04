@@ -45,13 +45,26 @@ def study_key(s: str) -> str | None:
     return f"{surname}:{year}"
 
 
+def load_exclude(path: str) -> set:
+    """Record ids adjudicated 'drop' by the human eligibility review."""
+    if not path:
+        return set()
+    import csv as _csv
+    return {str(row.get("record_id", "")).strip()
+            for row in _csv.DictReader(open(path, encoding="utf-8-sig"))
+            if (row.get("action") or "").strip().lower() == "drop"}
+
+
 def main():
     p = argparse.ArgumentParser(description="Cross-review overlap / CCA analysis.")
     p.add_argument("--results", required=True)
     p.add_argument("--out-dir", default="projects/strongminds/data/extraction/reports")
     p.add_argument("--min-shared", type=int, default=2,
                    help="min shared studies to link two reviews into a cluster")
+    p.add_argument("--exclude", default="",
+                   help="CSV of eligibility decisions (record_id, action); action='drop' removed")
     a = p.parse_args()
+    exclude = load_exclude(a.exclude)
 
     # review_id -> set(study keys); keep only reviews that listed studies
     rev_studies: dict[str, set] = {}
@@ -61,6 +74,8 @@ def main():
             continue
         r = json.loads(line)
         if r.get("_error"):
+            continue
+        if str(r.get("record_id", "")).strip() in exclude:
             continue
         f = r.get("fields", {})
         cell = f.get("included_study_ids") or {}

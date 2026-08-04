@@ -83,7 +83,7 @@ _ = F.effect_forest(N)
 _ = F.robustness(N)
 ```
 
-This is one of the more robust signals in the review (@fig-rq5-robust). The share favouring the intervention is essentially unchanged in the high- and moderate-quality reviews (94%), in LMIC-focused records (94%), and among non-specialist-delivered interventions (94%); only the sub-Saharan-Africa-only subset falls, to 80%, and that rests on ten records. The chief qualification is not robustness but comparison: only twelve records use an active psychological comparator, the rest measuring against usual care, no treatment or mixed controls. The components therefore have good evidence of helping relative to little or nothing, and almost none of one component outperforming another.
+This is one of the more robust signals in the review (@fig-rq5-robust). The share favouring the intervention is essentially unchanged in the high- and moderate-quality reviews (`{python} H.subp(N,'hq')`), in LMIC-focused records (`{python} H.subp(N,'lmic')`), and among non-specialist-delivered interventions (`{python} H.subp(N,'nonspec')`); only the sub-Saharan-Africa-only subset falls, to `{python} H.subp(N,'ssa')`, and that rests on `{python} H.subset(N,'ssa')['tot']` records. The chief qualification is not robustness but comparison: only eleven records use an active psychological comparator, the rest measuring against usual care, no treatment or mixed controls. The components therefore have good evidence of helping relative to little or nothing, and almost none of one component outperforming another.
 
 ## Which component actually drives the effect?
 

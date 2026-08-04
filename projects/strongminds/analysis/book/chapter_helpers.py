@@ -269,6 +269,37 @@ def direction_subsets(n):
     return out
 
 
+_SUBSET_LABEL = {"all": "All records", "hq": "High/moderate-quality reviews",
+                 "lmic": "LMIC-focused records", "ssa": "Sub-Saharan Africa only",
+                 "nonspec": "Non-specialist delivery"}
+
+
+def subset(n, which):
+    """One robustness subset's favouring share, keyed by short name
+    ('all','hq','lmic','ssa','nonspec'). Returns {'fav','tot','pct'} or None when the
+    subset is too small to report (fewer than 3 directional records). Wraps
+    direction_subsets so the robustness numbers in the prose are computed inline
+    (data-traceable) rather than hand-transcribed."""
+    d = {lab: (f, t) for lab, f, t in direction_subsets(n)}
+    lab = _SUBSET_LABEL[which]
+    if lab not in d:
+        return None
+    f, t = d[lab]
+    return {"fav": f, "tot": t, "pct": round(100 * f / t) if t else 0}
+
+
+def subp(n, which):
+    """'89%' for a subset (empty string if the subset is too small)."""
+    s = subset(n, which)
+    return f"{s['pct']}%" if s else ""
+
+
+def subn(n, which):
+    """'25 of 28' for a subset (empty string if the subset is too small)."""
+    s = subset(n, which)
+    return f"{s['fav']} of {s['tot']}" if s else ""
+
+
 _STD_METRICS = {"SMD", "Hedges g", "Cohen d"}
 _DIR_SIGN = {"Favours-intervention": 1, "Favours-control": -1, "Null": 0}
 

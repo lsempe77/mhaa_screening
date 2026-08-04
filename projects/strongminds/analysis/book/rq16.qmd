@@ -70,7 +70,7 @@ Where a cost-effectiveness or effectiveness judgement is codable, the direction 
 _ = F.robustness(N)
 ```
 
-The cost-effectiveness direction is reasonably robust to quality (85%) and holds in LMIC records (86%), but the sub-Saharan subset collapses to a handful of records (@fig-rq16-robust), so the setting whose cost structure matters most to the ULCM is essentially unrepresented in the cost-effectiveness evidence.
+The cost-effectiveness direction is reasonably robust to quality (`{python} H.subp(N,'hq')`) and holds in LMIC records (`{python} H.subp(N,'lmic')`), but the sub-Saharan subset collapses to a handful of records (@fig-rq16-robust), so the setting whose cost structure matters most to the ULCM is essentially unrepresented in the cost-effectiveness evidence.
 
 ## Consistency across reviews
 

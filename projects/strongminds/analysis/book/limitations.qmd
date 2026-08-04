@@ -10,7 +10,7 @@ The findings should be read against the following limitations, which are inheren
 
 **Review-sourced primary evidence.** Both streams reach primary studies only through their entry-point systematic reviews, so recent trials and trials missed by all in-scope reviews are under-represented, and primary studies inherit the AMSTAR-2 band of their sourcing review rather than being individually appraised. Primary-study drill-down was further limited to the questions needing per-study granularity; the rest are answered at review level.
 
-**No pooling; direction only.** The synthesis is descriptive. Effects are counted by direction, not meta-analysed, and standardized effect sizes are reported in absolute terms because sign conventions are inconsistent across the extracted records. Statements about magnitude are therefore coarse.
+**No pooling; direction and distribution only.** The synthesis is descriptive. Effects are counted by direction, not meta-analysed. For the dose, ingredients and group-size questions the standardized effects are shown as an unpooled distribution, oriented by each record's coded direction because the raw sign conventions are inconsistent (§4.5.2); this describes the spread of reported effects, not a pooled estimate, and statements about magnitude remain coarse.
 
 **Geographic asymmetry.** Sub-Saharan African evidence is weighted more heavily in interpretation for the context-sensitive questions, while the dose, single-session and stepped-care questions rest deliberately on high-income-dominated reviews. The resulting asymmetry is applied transparently at the point of interpretation, but it means the evidence is strongest for the general case and weakest for the model's own setting.
 

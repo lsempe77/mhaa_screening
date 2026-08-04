@@ -73,7 +73,7 @@ _ = F.harvest_geo(N)
 _ = F.robustness(N)
 ```
 
-The overall benefit is robust: essentially unchanged in high- and moderate-quality reviews (93%), in LMIC records (94%), and among non-specialist delivery (93%), with the sub-Saharan subset resting on only four records (@fig-rq6-robust). None of this, however, bears on component redundancy; it establishes that the interventions work across conditions, not that any element is surplus.
+The overall benefit is robust: essentially unchanged in high- and moderate-quality reviews (`{python} H.subp(N,'hq')`), in LMIC records (`{python} H.subp(N,'lmic')`), and among non-specialist delivery (`{python} H.subp(N,'nonspec')`), with the sub-Saharan subset resting on only `{python} H.subset(N,'ssa')['tot']` records (@fig-rq6-robust). None of this, however, bears on component redundancy; it establishes that the interventions work across conditions, not that any element is surplus.
 
 ## Can any component be dropped?
 

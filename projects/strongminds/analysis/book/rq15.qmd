@@ -73,7 +73,7 @@ _ = F.effect_direction(N)
 _ = F.robustness(N)
 ```
 
-At the level of intervention effect the direction is **`{python} cons`** (`{python} f"{fav} of {tot}"` favour the intervention), and it is robust to quality and to LMIC focus, softening in the sub-Saharan subset to 78% (@fig-rq15-harvest, @fig-rq15-robust). But the engagement value of this chapter is less in the effect direction than in the driver-and-barrier detail above, which is descriptive rather than comparative and does not depend on the harvest.
+At the level of intervention effect the direction is **`{python} cons`** (`{python} f"{fav} of {tot}"` favour the intervention), and it is robust to quality and to LMIC focus, softening in the sub-Saharan subset to `{python} H.subp(N,'ssa')` (@fig-rq15-harvest, @fig-rq15-robust). But the engagement value of this chapter is less in the effect direction than in the driver-and-barrier detail above, which is descriptive rather than comparative and does not depend on the harvest.
 
 ## Consistency across reviews
 
