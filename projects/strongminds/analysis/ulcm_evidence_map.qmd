@@ -869,8 +869,9 @@ The evidence base was assembled in four stages. Title/abstract screening reduced
 records to an include set; a ground-truth check identified a screening configuration error
 that had excluded determinant and measurement studies, and correcting it raised the
 title/abstract includes to 5,795. Full-text retrieval fetched the corresponding PDFs
-(open-access and publisher routes), and full-text screening produced the 2,670 included
-records extracted here. Each stage used a two-model panel with a router and a tie-breaker;
+(open-access and publisher routes), and full-text screening produced 2,670 included
+records; the human eligibility review then retained the 2,347 analysed here (323 dropped as
+out of scope). Each stage used a two-model panel with a router and a tie-breaker;
 the stages are documented in the accompanying process files.
 
 ## Data extraction
